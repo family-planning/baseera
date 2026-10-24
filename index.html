@@ -218,7 +218,7 @@ yes:['نعم','Yes'],no:['لا','No'],hInd:['المؤشر','Indicator'],hVal:['�
 shSum:['ملخص','Summary'],shDay:['يومياً','Daily'],shDist:['توزيع الإجابات','Distribution'],shMeth:['الوسائل','Methods'],shResp:['الإجابات','Responses'],
 sId:['رقم المشاركة','Response ID'],sDate:['تاريخ المشاركة','Response date'],sLang:['لغة الواجهة','Interface language'],sRec:['الوسيلة المرشحة رقم ','Recommended method #'],
 sEx:['عدد الوسائل المستبعدة','Number of excluded methods'],sStop:['ظهرت رسالة توقف','Stop message shown'],sRef:['عدد رسائل الإحالة للطبيبة','Number of referral messages'],sOpen:['عدد الوسائل التي فتحت تفاصيلها','Number of method details opened'],
-vAr:['عربي','Arabic'],secCharts:['الرسوم البيانية','Charts'],chDaily:['الزيارات والمشاركات يومياً','Daily visits and responses'],dlPng:['تنزيل الصورة (PNG)','Download image (PNG)'],dlAll:['تنزيل كل الرسوم (صور PNG)','Download all charts (PNG images)'],pngFail:['تعذر إنشاء الصورة على هذا المتصفح.','Could not create the image in this browser.']
+vAr:['عربي','Arabic'],resBtn:['نتائج بنمط SPSS (فصل النتائج)','SPSS-style results (results chapter)'],resUse:['إجابات الموقع (الاستخدام)','Site answers (usage)'],resEv:['تقييمات السيدات (ليكرت)','Women\'s evaluations (Likert)'],secCharts:['الرسوم البيانية','Charts'],chDaily:['الزيارات والمشاركات يومياً','Daily visits and responses'],dlPng:['تنزيل الصورة (PNG)','Download image (PNG)'],dlAll:['تنزيل كل الرسوم (صور PNG)','Download all charts (PNG images)'],pngFail:['تعذر إنشاء الصورة على هذا المتصفح.','Could not create the image in this browser.']
 };
 function t(k){var v=X[k];return v?v[isAr()?0:1]:k}
 function post(o){if(!URL_)return;try{fetch(URL_,{method:'POST',mode:'no-cors',body:JSON.stringify(o),keepalive:true}).catch(function(){})}catch(e){}}
@@ -301,11 +301,11 @@ function calc(){
 }
 function tbl(h,rows){return'<div style="overflow-x:auto"><table class="bt"><thead><tr>'+h.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return'<tr>'+r.map(function(c){return'<td>'+E(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
 function shell(kp){
- $i('admOut').innerHTML='<div class="bc noprint"><div class="ex"><label>'+E(t('from'))+' <input type="date" id="admF"></label><label>'+E(t('to'))+' <input type="date" id="admU"></label></div><p class="hint">'+E(t('dateHint'))+'</p><div class="ex"><button id="exX">'+E(t('xlsx'))+'</button><button id="exC" class="ghost">'+E(t('csv'))+'</button><button id="exP" class="ghost">'+E(t('print'))+'</button></div><div class="ex" style="margin-top:8px"><button id="exS">'+E(t('spssCsv'))+'</button><button id="exY" class="ghost">'+E(t('spssSps'))+'</button></div><p id="exM" class="hint"></p></div><div id="admRep"></div>';
+ $i('admOut').innerHTML='<div class="bc noprint"><div class="ex"><label>'+E(t('from'))+' <input type="date" id="admF"></label><label>'+E(t('to'))+' <input type="date" id="admU"></label></div><p class="hint">'+E(t('dateHint'))+'</p><div class="ex"><button id="exX">'+E(t('xlsx'))+'</button><button id="exC" class="ghost">'+E(t('csv'))+'</button><button id="exP" class="ghost">'+E(t('print'))+'</button></div><div class="ex" style="margin-top:8px"><button id="exS">'+E(t('spssCsv'))+'</button><button id="exY" class="ghost">'+E(t('spssSps'))+'</button><button id="exR">'+E(t('resBtn'))+'</button></div><p id="exM" class="hint"></p></div><div id="admRep"></div>';
  if(kp){$i('admF').value=kp.f||'';$i('admU').value=kp.u||''}
  $i('admF').onchange=$i('admU').onchange=draw;
  $i('admRep').onclick=function(e){var b=e.target.closest&&e.target.closest('[data-dl]');if(!b)return;var k=b.getAttribute('data-dl');if(k==='all'){dlAll();return}var c=CH[+k];if(c)png(c.svg,c.w,c.h,'baseera-chart-'+c.name+'.png')};
- $i('exC').onclick=csv;$i('exS').onclick=spssCsv;$i('exY').onclick=spssSps;$i('exX').onclick=xlsx;$i('exP').onclick=function(){window.print()};
+ $i('exC').onclick=csv;$i('exS').onclick=spssCsv;$i('exY').onclick=spssSps;$i('exR').onclick=openRes;$i('exX').onclick=xlsx;$i('exP').onclick=function(){window.print()};
  draw();
 }
 function draw(){
@@ -463,9 +463,26 @@ function spssSps(){
  L.push(isAr()?'* جدول إضافي: العمر مقابل الوسيلة الأولى المرشحة.':'* Extra table: age vs. first recommended method.');
  L.push('CROSSTABS /TABLES=q1 BY top1 /CELLS=COUNT ROW .');
  dl('baseera-spss-syntax-'+lg()+'.sps',new Blob(['\ufeff'+L.join('\r\n')],{type:'text/plain;charset=utf-8'}))}
+function ds0(name,cols,n){return{name:name,cols:cols,n:n}}
+function usageDS(m){
+ var d=spssBuild(m),cols=d.cols.map(function(c,i){var raw=d.rows.map(function(r){var v=r[i];return v===''||v==null?null:v}),o={name:c.n,label:c.l,raw:raw};
+  if(c.n==='id'||c.n==='date')o.hint={kind:'skip'};
+  else if(c.v){o.map={};c.v.forEach(function(p){o.map[p[0]]=p[1]});o.hint={kind:'cat'}}
+  else o.hint={kind:'num'};return o});
+ return ds0('baseera-usage',cols,d.rows.length)}
+function evalDS(){
+ if(!DATA||!DATA.eval||!DATA.eval.length)return null;
+ var ev=isAr()?['سهل عليّ استخدام الموقع','كانت الأسئلة واضحة ومفهومة','كانت النتيجة واضحة ومفهومة','وجدت المعلومات عن الوسائل مفيدة','أنصح غيري باستخدام الموقع']:['The website was easy to use','The questions were clear and understandable','The result was clear and understandable','I found the information about the methods useful','I would recommend the website to others'],rows=DATA.eval,lab=isAr()?['لا أوافق إطلاقاً','لا أوافق','محايدة','أوافق','أوافق تماماً']:['Strongly disagree','Disagree','Neutral','Agree','Strongly agree'],cols=[];
+ cols.push({name:'lang',label:isAr()?'لغة الواجهة':'Interface language',raw:rows.map(function(r){return r[1]==='en'?2:1}),map:{1:isAr()?'عربي':'Arabic',2:'English'},hint:{kind:'cat'}});
+ for(var k=0;k<5;k++)(function(k){cols.push({name:'e'+(k+1),label:ev[k]||('Q'+(k+1)),raw:rows.map(function(r){var v=r[3+k];return v===''||v==null?null:Number(v)}),hint:{kind:'lik',scale:isAr()?'تقييم الموقع':'Website evaluation',inst:isAr()?'تقييم الموقع':'Website evaluation',labels:lab,start:1}})})(k);
+ return ds0('baseera-evaluations',cols,rows.length)}
+function openRes(){
+ if(!window.RES)return;var m=LAST||calc();
+ RES.open({sources:[{name:t('resUse'),get:function(){return usageDS(m)}},{name:t('resEv'),get:function(){return evalDS()}}]})}
+function evalPost(a){if(!URL_||!a||a.length!==5)return;post({type:'eval',lang:lg(),sid:sid,a:a})}
 function init(){visit();chk()}
 window.addEventListener('load',init);window.addEventListener('hashchange',chk);
-return{results:results};
+return{results:results,evalPost:evalPost};
 })();
 
 </script>
@@ -693,7 +710,7 @@ function evalView(){
  $('#app').innerHTML=h;
  $('#evf').addEventListener('submit',function(e){e.preventDefault();
   var a=EV.map(function(s,i){return+document.querySelector('input[name=e'+i+']:checked').value}),c=$('#ecm').value.trim();
-  try{var l=JSON.parse(localStorage.getItem('fp_eval')||'[]');l.push({a:a,c:c,t:Date.now()});localStorage.setItem('fp_eval',JSON.stringify(l))}catch(x){}
+  try{BSR.evalPost(a)}catch(x){}try{var l=JSON.parse(localStorage.getItem('fp_eval')||'[]');l.push({a:a,c:c,t:Date.now()});localStorage.setItem('fp_eval',JSON.stringify(l))}catch(x){}
   var txt=L('تقييم «')+U.site_title_ar+'»\n'+EV.map(function(s,i){return s+': '+a[i]+'/5'}).join('\n')+(c?L('\nملاحظات: ')+c:'');
   $('#evo').innerHTML=L('<p class="note info">شكراً لكِ. حُفظ تقييمك على هذا الجهاز فقط. لإرساله لفريق الموقع انسخي النص التالي وأرسليه لهم.</p><textarea id="evt" rows="7" readonly>')+esc(txt)+L('</textarea><div class="row" style="margin-top:8px"><button id="evc">نسخ التقييم</button></div>');
   copyBox('evt','evc')})}
@@ -814,411 +831,476 @@ go(view);
 var _sl=null;try{_sl=localStorage.getItem('fp_lang')}catch(e){}
 if(_sl==='en')setData(true);boot();
 </script>
-<!-- ============ كتلة تحليل بحث RA الكاملة (v2) ============ -->
 <script>
-(function(){
-'use strict';
-if(window.__RA_LAB_V2) return; window.__RA_LAB_V2 = 1;
-
-/* ===== 1) قالب البحث ===== */
-var RA_TEMPLATE = {
-  demog: [
-    { n:'age',      l:'Age',              vals:[[1,'20 < 30'],[2,'30 < 40'],[3,'40 < 50'],[4,'50 ≥ 60']] },
-    { n:'marital',  l:'Marital status',   vals:[[1,'Single'],[2,'Married'],[3,'Divorced'],[4,'Widow']] },
-    { n:'residence',l:'Residence',        vals:[[1,'Rural'],[2,'Urban']] },
-    { n:'education',l:'Level of education', vals:[[1,'Ignorant'],[2,'Secondary'],[3,'University']] },
-    { n:'onset',    l:'Onset of disease', vals:[[1,'1-3 y'],[2,'>3-5 y'],[3,'>5 y']] },
-    { n:'chronic',  l:'Presence of chronic disease', vals:[[0,'No'],[1,'Yes']] }
-  ],
-  kessler: {
-    items: 10, offset: 6,
-    likert: [[1,'None of the time'],[2,'A little of the time'],[3,'Some of the time'],[4,'Most of the time'],[5,'All of the time']],
-    reverse: [],
-    cutoffs: [[10,19,'Mild'],[20,29,'Moderate'],[30,50,'Severe']]
-  },
-  sf36: {
-    domains: [
-      { key:'pf', name:'Restrictions on activities', items:10, max:800, offset:16 },
-      { key:'rp', name:'Physical health problems',   items:4,  max:400, offset:26 },
-      { key:'re', name:'Emotional health problems',  items:3,  max:300, offset:30 },
-      { key:'sf', name:'Social Activities',          items:1,  max:75,  offset:33 },
-      { key:'bp', name:'Pain',                       items:2,  max:150, offset:34 },
-      { key:'vt', name:'Energy and Emotions',        items:10, max:645, offset:36 },
-      { key:'gh', name:'General health',             items:6,  max:475, offset:46 }
-    ],
-    reverse: [31,32,33,34,35],
-    cutoffs: [[0,59,'Low'],[60,79,'Average'],[80,100,'High']]
-  }
-};
-
-/* ===== 2) دوال رياضية ===== */
-function lgamma(x){var g=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5],y=x,t=x+5.5;t+=(x+0.5)*Math.log(t)-t;var s=1.000000000190015;for(var j=0;j<6;j++)s+=g[j]/++y;return -t+Math.log(2.5066282746310005*s/x)}
-function gammp(a,x){if(x<=0)return 0;if(x<a+1){var ap=a,dd=1/a,sum=dd;for(var n=1;n<1000;n++){ap++;dd*=x/ap;sum+=dd;if(Math.abs(dd)<Math.abs(sum)*1e-14)break}return sum*Math.exp(-x+a*Math.log(x)-lgamma(a))}var b=x+1-a,c=1/1e-30,d=1/b,h=d;for(var i=1;i<1000;i++){var an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-30)d=1e-30;c=b+an/c;if(Math.abs(c)<1e-30)c=1e-30;d=1/d;h*=d*c;if(Math.abs(d*c-1)<1e-14)break}return 1-Math.exp(-x+a*Math.log(x)-lgamma(a))*h}
-function betacf(a,b,x){var F=1e-30,qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<F)d=F;d=1/d;var h=d;for(var m=1;m<1000;m++){var m2=2*m,aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<F)d=F;c=1+aa/c;if(Math.abs(c)<F)c=F;d=1/d;var del=d*c;h*=del;if(Math.abs(del-1)<1e-14)break}return h}
-function ibeta(a,b,x){if(x<=0)return 0;if(x>=1)return 1;var bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b}
-function tP(t,df){return df<=0?1:ibeta(df/2,0.5,df/(t*t+df))}
-function chiP(c,df){return df<=0?1:1-gammp(df/2,c/2)}
-function fP(F,d1,d2){return d1<=0||d2<=0?1:ibeta(d2/2,d1/2,d2/(d2+d1*F))}
-function mean(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s/a.length}
-function varr(a){var m=mean(a),s=0;for(var i=0;i<a.length;i++)s+=(a[i]-m)*(a[i]-m);return s/(a.length-1)}
-function quant(a,p){var s=a.slice().sort(function(x,y){return x-y}),i=(s.length-1)*p,l=Math.floor(i),h=Math.min(l+1,s.length-1);return s[l]+(s[h]-s[l])*(i-l)}
-function ranks(a){var ix=a.map(function(v,i){return[v,i]}).sort(function(x,y){return x[0]-y[0]}),r=new Array(a.length),i=0;while(i<ix.length){var j=i;while(j+1<ix.length&&ix[j+1][0]===ix[i][0])j++;var rk=(i+j)/2+1;for(var k=i;k<=j;k++)r[ix[k][1]]=rk;i=j+1}return r}
-
-/* ===== 3) محرك الدرجات ===== */
-function cutLevel(v, cutoffs){
-  for(var i=0;i<cutoffs.length;i++){var c=cutoffs[i];if(v>=c[0]&&v<=c[1])return c[2]}
-  return null;
-}
-function computeScores(rows){
-  var T=RA_TEMPLATE, scores=[];
-  rows.forEach(function(r){
-    var kItems=[];
-    for(var i=0;i<T.kessler.items;i++){
-      var v=Number(r[T.kessler.offset+i]);
-      if(T.kessler.reverse.indexOf(i+1)>=0) v=6-v;
-      if(!isNaN(v)) kItems.push(v);
-    }
-    var kTotal=kItems.reduce(function(a,b){return a+b},0);
-    var kLevel=cutLevel(kTotal,T.kessler.cutoffs)||'None';
-    var sf={}, sfTotalRaw=0, sfMaxRaw=0;
-    T.sf36.domains.forEach(function(d){
-      var sum=0;
-      for(var j=0;j<d.items;j++){
-        var v2=Number(r[d.offset+j]);
-        if(T.sf36.reverse.indexOf(d.offset+j)>=0) v2=6-v2;
-        if(!isNaN(v2)) sum+=v2;
-      }
-      sf[d.key]=sum; sfTotalRaw+=sum; sfMaxRaw+=d.max;
-    });
-    var sfPct=sfMaxRaw?(sfTotalRaw/sfMaxRaw)*100:0;
-    var sfLevel=cutLevel(sfPct,T.sf36.cutoffs)||'Low';
-    scores.push({kessler:kTotal,kLevel:kLevel,sf:sf,sfPct:sfPct,sfLevel:sfLevel});
-  });
-  return scores;
-}
-
-/* ===== 4) جداول أكاديمية ===== */
-function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function acadTable(caption, headers, rows, footnote){
-  var h='<div style="margin:14px 0">';
-  if(caption) h+='<p style="font-weight:700;margin:0 0 4px">'+esc(caption)+'</p>';
-  h+='<table style="border-collapse:collapse;width:100%;font-size:.82rem;direction:ltr;text-align:left"><thead><tr>';
-  (headers||[]).forEach(function(x){h+='<th style="border-bottom:2px solid #333;padding:4px;text-align:center;background:#f4f7f8">'+x+'</th>'});
-  h+='</tr></thead><tbody>';
-  rows.forEach(function(r){
-    h+='<tr>';
-    r.forEach(function(c,i){h+='<td style="border-bottom:1px solid #ddd;padding:3px 5px;text-align:'+(i===0?'left':'center')+'">'+c+'</td>'});
-    h+='</tr>';
-  });
-  h+='</tbody></table>';
-  if(footnote) h+='<p style="font-size:.75rem;color:#666;margin:4px 0 0">'+footnote+'</p>';
-  return h+'</div>';
-}
-
-/* ===== 5) جداول البحث ===== */
-function table1Demog(rows){
-  var out=[], total=rows.length;
-  RA_TEMPLATE.demog.forEach(function(d){
-    var counts={};
-    rows.forEach(function(r){var v=r[d.n];if(v==null)return;counts[v]=(counts[v]||0)+1});
-    d.vals.forEach(function(v){var n=counts[v[0]]||0;out.push([d.l,v[1],n,total?(n/total*100).toFixed(1):'0.0'])});
-  });
-  return acadTable('Table (1): Socio-demographic characteristics (n='+total+')',
-    ['Socio-demographic','Category','N','%'], out);
-}
-function table3Items(rows){
-  var T=RA_TEMPLATE, out=[], total=rows.length;
-  for(var i=0;i<T.kessler.items;i++){
-    var row=['Item '+(i+1)];
-    T.kessler.likert.forEach(function(lk){
-      var n=0; rows.forEach(function(r){if(Number(r[T.kessler.offset+i])===lk[0])n++});
-      row.push(n); row.push(total?(n/total*100).toFixed(1):'0.0');
-    });
-    out.push(row);
-  }
-  var headers=['Items'];
-  T.kessler.likert.forEach(function(lk){headers.push(lk[1]);headers.push('%')});
-  return acadTable('Table (3): Kessler Psychological Distress items (n='+total+')',
-    headers, out, 'Items scored 1–5.');
-}
-function table4Total(scores, levelKey, title, cutoffs){
-  var counts={}, total=scores.length;
-  scores.forEach(function(s){var lv=s[levelKey];counts[lv]=(counts[lv]||0)+1});
-  var out=cutoffs.map(function(c){var lv=c[2],n=counts[lv]||0;return[lv,n,total?(n/total*100).toFixed(1):'0.0']});
-  return acadTable(title, ['Level','N','%'], out);
-}
-function table12Means(rows){
-  var T=RA_TEMPLATE, out=[];
-  for(var i=0;i<T.kessler.items;i++){
-    var vals=[];
-    rows.forEach(function(r){var v=Number(r[T.kessler.offset+i]);if(!isNaN(v))vals.push(v)});
-    if(!vals.length) continue;
-    var m=mean(vals), sd=Math.sqrt(varr(vals));
-    out.push(['Item '+(i+1), Math.min.apply(null,vals), Math.max.apply(null,vals), m.toFixed(2)+' ± '+sd.toFixed(2), quant(vals,0.5).toFixed(1)]);
-  }
-  return acadTable('Table (12): Mean score of items (n='+rows.length+')',
-    ['Item','Min','Max','Mean ± SD','Median'], out);
-}
-function table13Domains(scores){
-  var T=RA_TEMPLATE, out=[];
-  T.sf36.domains.forEach(function(d){
-    var vals=scores.map(function(s){return s.sf[d.key]});
-    var m=mean(vals), pct=d.max?(m/d.max)*100:0;
-    out.push([d.name, d.items, d.max, m.toFixed(2), pct.toFixed(2), '']);
-  });
-  /* ترتيب تنازلي حسب النسبة */
-  out.sort(function(a,b){return parseFloat(b[4])-parseFloat(a[4])});
-  out.forEach(function(r,i){r[5]=i+1});
-  return acadTable('Table (13): Ranking of QOL domains by mean percentage (n='+scores.length+')',
-    ['Domain','Items','Max','Mean','Mean %','Rank'], out);
-}
-function table15Cross(rows, scores, demogKey, levelKey, levelOrder, title){
-  var d=RA_TEMPLATE.demog.filter(function(x){return x.n===demogKey})[0];
-  var tab={}, rowTot={}, colTot={}, n=0;
-  rows.forEach(function(r,i){
-    var dv=r[d.n], lv=scores[i][levelKey];
-    if(dv==null||lv==null)return;
-    rowTot[dv]=(rowTot[dv]||0)+1; colTot[lv]=(colTot[lv]||0)+1;
-    tab[dv+'|'+lv]=(tab[dv+'|'+lv]||0)+1; n++;
-  });
-  if(!n) return '<p style="color:#666">No complete rows.</p>';
-  var rk=Object.keys(rowTot), ck=levelOrder;
-  var chi=0, small=0;
-  rk.forEach(function(x){ck.forEach(function(y){
-    var e=rowTot[x]*colTot[y]/n, o=tab[x+'|'+y]||0;
-    if(e>0) chi+=(o-e)*(o-e)/e;
-    if(e<5) small++;
-  })});
-  var df=(rk.length-1)*(ck.length-1);
-  var p=chiP(chi,df);
-  var headers=['Socio-demographic',''];
-  ck.forEach(function(y){headers.push(y+' N');headers.push('%')});
-  headers.push('X²'); headers.push('P-value');
-  var out=rk.map(function(x){
-    var lbl=(d.vals||[]).filter(function(v){return String(v[0])===String(x)})[0];
-    var row=[d.l, lbl?lbl[1]:x];
-    ck.forEach(function(y){
-      var o=tab[x+'|'+y]||0;
-      row.push(o); row.push(rowTot[x]?(o/rowTot[x]*100).toFixed(1):'0.0');
-    });
-    row.push(''); row.push('');
-    return row;
-  });
-  var f=out[0];
-  f[f.length-2]=chi.toFixed(3);
-  f[f.length-1]=p.toFixed(3)+(p<0.05?'* (S)':' (NS)');
-  return acadTable(title, headers, out,
-    'X² = Chi-Square Test. * P ≤ 0.05 Significant (S).'+(small?' ⚠ '+small+' cells with expected < 5.':''));
-}
-function table17Corr(scores){
-  var xs=scores.map(function(s){return s.kessler});
-  var ys=scores.map(function(s){return s.sfPct});
-  var n=xs.length; if(n<4) return '<p style="color:#666">Not enough data.</p>';
-  var rx=ranks(xs), ry=ranks(ys);
-  var mx=mean(rx), my=mean(ry), sxy=0,sx=0,sy=0;
-  for(var i=0;i<n;i++){sxy+=(rx[i]-mx)*(ry[i]-my);sx+=(rx[i]-mx)*(rx[i]-mx);sy+=(ry[i]-my)*(ry[i]-my)}
-  var r=sxy/Math.sqrt(sx*sy);
-  var t=Math.abs(r)>=0.9999?1e9:r*Math.sqrt((n-2)/(1-r*r));
-  var p=Math.abs(t)>1e8?0:tP(t,n-2);
-  return acadTable('Table (17): Correlation between psychological distress and quality of life (n='+n+')',
-    ['Total level','Quality of life r','P-value'],
-    [['Psychological distress', r.toFixed(3), (p<0.001?'&lt; 0.001* (S)':p.toFixed(4)+(p<0.05?'* (S)':' (NS)'))]],
-    'r = Spearman Correlation Coefficient. * P ≤ 0.05.');
-}
-
-/* ===== 6) الرسوم الأكاديمية (Figures) ===== */
-var SPCH=[];
-function svgW(w,h,inner){return'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'" font-family="Arial,Tahoma,sans-serif">'+inner+'</svg>'}
-function figBar(title, items){
-  /* items: [{label, value, pct}] */
-  var W=640, L=220, R=40, T=50, B=40, ph=Math.max(items.length*30, 200), H=T+B+ph;
-  var s='<rect width="'+W+'" height="'+H+'" fill="#fff"/>';
-  s+='<text x="'+(W/2)+'" y="28" font-size="14" font-weight="700" text-anchor="middle" fill="#12303d">'+esc(title)+'</text>';
-  var maxV=Math.max.apply(null, items.map(function(i){return i.pct}))||100;
-  items.forEach(function(it,i){
-    var y=T+i*30, barW=(it.pct/maxV)*(W-L-R);
-    s+='<text x="'+(L-8)+'" y="'+(y+18)+'" font-size="12" text-anchor="end" fill="#12303d">'+esc(it.label)+'</text>';
-    s+='<rect x="'+L+'" y="'+(y+4)+'" width="'+(W-L-R)+'" height="20" fill="#f0f0f0"/>';
-    s+='<rect x="'+L+'" y="'+(y+4)+'" width="'+barW.toFixed(1)+'" height="20" fill="#0f766e"/>';
-    s+='<text x="'+(L+barW+6).toFixed(1)+'" y="'+(y+18)+'" font-size="11" fill="#12303d">'+it.pct.toFixed(1)+'%</text>';
-  });
-  /* axis */
-  s+='<line x1="'+L+'" y1="'+(T-4)+'" x2="'+L+'" y2="'+(T+ph)+'" stroke="#999"/>';
-  for(var g=0;g<=5;g++){var gx=L+g*(W-L-R)/5;s+='<line x1="'+gx+'" y1="'+(T+ph)+'" x2="'+gx+'" y2="'+(T+ph+4)+'" stroke="#999"/><text x="'+gx+'" y="'+(T+ph+18)+'" font-size="10" text-anchor="middle" fill="#456160">'+(maxV*g/5).toFixed(0)+'</text>'}
-  return{svg:svgW(W,H,s),w:W,h:H,name:'bar'};
-}
-function figScatter(title, xs, ys, r){
-  var W=640, H=400, L=60, R=30, T=50, B=60, pw=W-L-R, ph=H-T-B;
-  var s='<rect width="'+W+'" height="'+H+'" fill="#fff"/>';
-  s+='<text x="'+(W/2)+'" y="28" font-size="14" font-weight="700" text-anchor="middle" fill="#12303d">'+esc(title)+'</text>';
-  var mnx=Math.min.apply(null,xs), mxx=Math.max.apply(null,xs);
-  var mny=Math.min.apply(null,ys), mxy=Math.max.apply(null,ys);
-  var X=function(v){return L+(v-mnx)/(mxx-mnx||1)*pw};
-  var Y=function(v){return T+ph-(v-mny)/(mxy-mny||1)*ph};
-  for(var g=0;g<=4;g++){var gy=T+ph-g*ph/4;s+='<line x1="'+L+'" y1="'+gy+'" x2="'+(W-R)+'" y2="'+gy+'" stroke="#eee"/><text x="'+(L-6)+'" y="'+(gy+4)+'" font-size="10" text-anchor="end" fill="#456160">'+(mny+(mxy-mny)*g/4).toFixed(1)+'</text>'}
-  for(var i=0;i<xs.length;i++){s+='<circle cx="'+X(xs[i]).toFixed(1)+'" cy="'+Y(ys[i]).toFixed(1)+'" r="3.5" fill="#0f766e" opacity="0.65"/>'}
-  /* regression line */
-  var mx=mean(xs), my=mean(ys), sxy=0, sx=0;
-  for(var k=0;k<xs.length;k++){sxy+=(xs[k]-mx)*(ys[k]-my);sx+=(xs[k]-mx)*(xs[k]-mx)}
-  if(sx){var b=sxy/sx, a=my-b*mx;
-    s+='<line x1="'+X(mnx).toFixed(1)+'" y1="'+Y(a+b*mnx).toFixed(1)+'" x2="'+X(mxx).toFixed(1)+'" y2="'+Y(a+b*mxx).toFixed(1)+'" stroke="#e0735a" stroke-width="2"/>'}
-  s+='<text x="'+(W/2)+'" y="'+(H-10)+'" font-size="11" text-anchor="middle" fill="#456160">r = '+r.toFixed(3)+'</text>';
-  return{svg:svgW(W,H,s),w:W,h:H,name:'scatter'};
-}
-function figPie(title, items){
-  var W=640, H=400, cx=W/2, cy=H/2+20, R=110;
-  var s='<rect width="'+W+'" height="'+H+'" fill="#fff"/>';
-  s+='<text x="'+(W/2)+'" y="28" font-size="14" font-weight="700" text-anchor="middle" fill="#12303d">'+esc(title)+'</text>';
-  var PAL=['#0f766e','#e8745a','#3b6ea5','#d9a23a','#8e5ea2','#5f8f3e','#b5485d'];
-  var tot=items.reduce(function(a,i){return a+i.value},0)||1, ang=-Math.PI/2;
-  items.forEach(function(it,i){
-    if(!it.value) return;
-    var a2=ang+it.value/tot*2*Math.PI;
-    if(it.value===tot){s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="'+PAL[i%PAL.length]+'"/>'}
-    else{
-      var x1=cx+R*Math.cos(ang), y1=cy+R*Math.sin(ang), x2=cx+R*Math.cos(a2), y2=cy+R*Math.sin(a2);
-      s+='<path d="M'+cx+' '+cy+' L'+x1.toFixed(2)+' '+y1.toFixed(2)+' A'+R+' '+R+' 0 '+(a2-ang>Math.PI?1:0)+' 1 '+x2.toFixed(2)+' '+y2.toFixed(2)+' Z" fill="'+PAL[i%PAL.length]+'" stroke="#fff" stroke-width="2"/>';
-    }
-    ang=a2;
-  });
-  /* legend */
-  var ly=cy+R+30;
-  items.forEach(function(it,i){
-    s+='<rect x="40" y="'+(ly+i*24-12)+'" width="16" height="16" fill="'+PAL[i%PAL.length]+'"/>';
-    s+='<text x="64" y="'+(ly+i*24)+'" font-size="12" fill="#12303d">'+esc(it.label)+' ('+it.value+')</text>';
-  });
-  return{svg:svgW(W,H,s),w:W,h:H,name:'pie'};
-}
-
-/* ===== 7) تصدير Word و PNG و CSV ===== */
-function exportWord(elId, filename){
-  var html=document.getElementById(elId).innerHTML;
-  var doc='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>'+filename+'</title><style>body{font-family:"Times New Roman",serif;font-size:11pt;direction:ltr}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:4px;text-align:center}th{background:#eee}h3{color:#0f766e}</style></head><body>'+html+'</body></html>';
-  var blob=new Blob(['﻿',doc],{type:'application/msword'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download=filename+'.doc'; a.click();
-}
-function exportCSV(scores){
-  var lines=['kessler_total,kessler_level,sf36_pct,sf36_level'];
-  scores.forEach(function(s){lines.push([s.kessler,s.kLevel,s.sfPct.toFixed(2),s.sfLevel].join(','))});
-  var blob=new Blob([lines.join('
-')],{type:'text/csv;charset=utf-8'});
-  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='RA_scores.csv'; a.click();
-}
-function png(svg,w,h,name){
-  var b=new Blob([svg],{type:'image/svg+xml;charset=utf-8'}),u=URL.createObjectURL(b),im=new Image();
-  im.onload=function(){var sc=2,c=document.createElement('canvas');c.width=w*sc;c.height=h*sc;var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(x){if(!x)return;var a=document.createElement('a');a.href=URL.createObjectURL(x);a.download=name+'.png';a.click()},'image/png')};
-  im.src=u;
-}
-
-/* ===== 8) جلب البيانات ===== */
-function getDS(){
-  try{ if(typeof window.__DS!=='undefined' && window.__DS) return window.__DS; }catch(e){}
-  return null;
-}
-
-/* ===== 9) واجهة التحليل الكاملة ===== */
-function raOpen(){
-  var c=document.getElementById('raCard');
-  if(!c){
-    c=document.createElement('div'); c.id='raCard';
-    c.style.cssText='background:#fff;border:1px solid #d3e0e6;border-radius:14px;padding:16px;margin:12px 0;font-family:inherit';
-    var y=document.getElementById('exY');
-    if(y&&y.parentNode) y.parentNode.appendChild(c);
-    else document.body.appendChild(c);
-  }
-  c.innerHTML='<h3 style="margin-top:0">📊 تحليل بحث RA الكامل</h3>'
-    +'<p style="color:#5a7380;font-size:.9rem">يولّد: جدول 1، 3، 4، 12، 13، 14، 15، 15b، 17 + الأشكال 1-3 + تصدير Word/CSV/PNG.</p>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button id="raRun" style="padding:8px 16px;background:#0f766e;color:#fff;border:0;border-radius:10px;cursor:pointer;font-weight:600">▶ تشغيل التحليل الكامل</button><button id="raClose" style="padding:8px 16px;background:transparent;color:#0f766e;border:1.5px solid #0f766e;border-radius:10px;cursor:pointer">إغلاق</button></div>'
-    +'<div id="raStatus" style="font-size:.85rem;color:#5a7380;margin-bottom:8px"></div>'
-    +'<div id="raOut"></div>';
-  document.getElementById('raClose').onclick=function(){c.remove()};
-  document.getElementById('raRun').onclick=function(){
-    var ds=getDS();
-    if(!ds||!ds.rows||!ds.rows.length){
-      document.getElementById('raStatus').innerHTML='<span style="color:#a32a2a">⚠ اجلبي البيانات أولاً من مختبر SPSS (زر 🔬 في لوحة الإدارة).</span>';
-      return;
-    }
-    document.getElementById('raStatus').textContent='جارٍ التحليل... عدد الإجابات: '+ds.rows.length;
-    var rows=ds.rows.map(function(r){
-      var o={};
-      RA_TEMPLATE.demog.forEach(function(d,j){o[d.n]=r[j]});
-      return o;
-    });
-    var scores=computeScores(ds.rows);
-    SPCH=[];
-    var html='';
-    /* جداول */
-    html+=table1Demog(rows);
-    html+=table3Items(ds.rows);
-    html+=table4Total(scores,'kLevel','Table (4): Total level of psychological distress (n='+ds.rows.length+')',RA_TEMPLATE.kessler.cutoffs);
-    html+=table12Means(ds.rows);
-    html+=table13Domains(scores);
-    html+=table4Total(scores,'sfLevel','Table (14): Total level of quality of life (n='+ds.rows.length+')',RA_TEMPLATE.sf36.cutoffs);
-    html+=table15Cross(ds.rows,scores,'age','kLevel',RA_TEMPLATE.kessler.cutoffs.map(function(c){return c[2]}),'Table (15): Age × psychological distress');
-    html+=table15Cross(ds.rows,scores,'marital','kLevel',RA_TEMPLATE.kessler.cutoffs.map(function(c){return c[2]}),'Table (15b): Marital status × psychological distress');
-    html+=table17Corr(scores);
-    /* الأشكال */
-    var kCounts={}, total=scores.length;
-    scores.forEach(function(s){kCounts[s.kLevel]=(kCounts[s.kLevel]||0)+1});
-    var fig1items=RA_TEMPLATE.kessler.cutoffs.map(function(c){return{label:c[2],value:kCounts[c[2]]||0,pct:(kCounts[c[2]]||0)/total*100}});
-    var fig1=figBar('Figure (1): Total level of psychological distress', fig1items);
-    SPCH.push(fig1);
-    var fig2items=table13Domains(scores).match(/data-row="([^"]+)"/g); /* fallback: use scores */
-    var domNames=RA_TEMPLATE.sf36.domains.map(function(d){return d.name});
-    var domPcts=RA_TEMPLATE.sf36.domains.map(function(d){
-      var vals=scores.map(function(s){return s.sf[d.key]});
-      return (mean(vals)/d.max)*100;
-    });
-    var fig2itemsArr=domNames.map(function(n,i){return{label:n,value:domPcts[i],pct:domPcts[i]}}).sort(function(a,b){return b.pct-a.pct});
-    var fig2=figBar('Figure (2): Ranking of QOL domains by mean percentage', fig2itemsArr);
-    SPCH.push(fig2);
-    var fig3items=RA_TEMPLATE.sf36.cutoffs.map(function(c){
-      var n=scores.filter(function(s){return s.sfLevel===c[2]}).length;
-      return{label:c[2],value:n,pct:n/total*100};
-    });
-    var fig3=figPie('Figure (3): Total level of quality of life', fig3items);
-    SPCH.push(fig3);
-    var fig4=figScatter('Figure (4): Correlation between distress and QOL',
-      scores.map(function(s){return s.kessler}),
-      scores.map(function(s){return s.sfPct}),
-      (function(){var xs=scores.map(function(s){return s.kessler}),ys=scores.map(function(s){return s.sfPct});
-        var rx=ranks(xs),ry=ranks(ys),mx=mean(rx),my=mean(ry),sxy=0,sx=0,sy=0;
-        for(var i=0;i<rx.length;i++){sxy+=(rx[i]-mx)*(ry[i]-my);sx+=(rx[i]-mx)*(rx[i]-mx);sy+=(ry[i]-my)*(ry[i]-my)}
-        return sxy/Math.sqrt(sx*sy||1)})());
-    SPCH.push(fig4);
-    /* HTML للرسوم */
-    html+='<h3 style="margin-top:20px">Figures</h3>';
-    [fig1,fig2,fig3,fig4].forEach(function(f,i){
-      html+='<div style="border:1px solid #d3e0e6;border-radius:10px;padding:10px;margin:10px 0;background:#fafcfc"><div style="overflow-x:auto;direction:ltr">'+f.svg+'</div><div style="margin-top:8px"><button data-fig="'+i+'" style="padding:4px 12px;font-size:.8rem;background:transparent;color:#0f766e;border:1px solid #0f766e;border-radius:8px;cursor:pointer">تنزيل PNG</button></div></div>';
-    });
-    /* أزرار التصدير */
-    html+='<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap"><button id="raWord" style="padding:8px 16px;background:#0f766e;color:#fff;border:0;border-radius:10px;cursor:pointer;font-weight:600">📄 تصدير كل شيء إلى Word</button><button id="raExcel" style="padding:8px 16px;background:transparent;color:#0f766e;border:1.5px solid #0f766e;border-radius:10px;cursor:pointer">📊 تصدير الدرجات CSV</button><button id="raPngAll" style="padding:8px 16px;background:transparent;color:#0f766e;border:1.5px solid #0f766e;border-radius:10px;cursor:pointer">🖼️ تنزيل كل الأشكال PNG</button></div>';
-    document.getElementById('raOut').innerHTML=html;
-    document.getElementById('raStatus').textContent='✓ اكتمل التحليل — '+ds.rows.length+' إجابة';
-    /* ربط الأزرار */
-    document.getElementById('raWord').onclick=function(){exportWord('raOut','RA_Results_Full')};
-    document.getElementById('raExcel').onclick=function(){exportCSV(scores)};
-    document.getElementById('raPngAll').onclick=function(){SPCH.forEach(function(f,i){setTimeout(function(){png(f.svg,f.w,f.h,'figure-'+(i+1)+'-'+f.name)},i*400)})};
-    document.querySelectorAll('#raOut [data-fig]').forEach(function(b){
-      b.onclick=function(){var i=+b.getAttribute('data-fig');png(SPCH[i].svg,SPCH[i].w,SPCH[i].h,'figure-'+(i+1))};
-    });
-  };
-}
-
-/* ===== 10) حقن زر الدخول ===== */
-setInterval(function(){
-  if(document.getElementById('raBtn')) return;
-  var y=document.getElementById('exY');
-  if(!y) return;
-  var b=document.createElement('button');
-  b.id='raBtn';
-  b.style.cssText='padding:6px 14px;font-size:.85rem;background:transparent;color:#0f766e;border:1.5px solid #0f766e;border-radius:10px;cursor:pointer;margin-inline-start:6px;font-weight:600';
-  b.textContent='📊 تحليل بحث RA الكامل';
-  b.onclick=raOpen;
-  y.parentNode.appendChild(b);
-}, 1200);
-
+/* ===== RS: statistics core (no DOM) ===== */
+var RS=(function(){
+var S={};
+function lgam(x){var c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5],y=x,t=x+5.5;t-=(x+.5)*Math.log(t);var s=1.000000000190015;for(var j=0;j<6;j++)s+=c[j]/++y;return-t+Math.log(2.5066282746310005*s/x)}
+function gser(a,x){var ap=a,sum=1/a,del=sum;for(var n=0;n<1000;n++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-15)break}return sum*Math.exp(-x+a*Math.log(x)-lgam(a))}
+function gcf(a,x){var b=x+1-a,c=1e300,d=1/b,h=d;for(var i=1;i<1000;i++){var an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;var del=d*c;h*=del;if(Math.abs(del-1)<1e-15)break}return Math.exp(-x+a*Math.log(x)-lgam(a))*h}
+function gammaP(a,x){if(x<=0)return 0;return x<a+1?gser(a,x):1-gcf(a,x)}
+S.chiP=function(x,df){if(x<=0||df<=0)return 1;return 1-gammaP(df/2,x/2)};
+function betacf(a,b,x){var qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<1e-300)d=1e-300;d=1/d;var h=d;for(var m=1;m<1000;m++){var m2=2*m,aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<1e-300)d=1e-300;c=1+aa/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;h*=d*c;aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<1e-300)d=1e-300;c=1+aa/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;var del=d*c;h*=del;if(Math.abs(del-1)<1e-15)break}return h}
+function betai(a,b,x){if(x<=0)return 0;if(x>=1)return 1;var bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b}
+S.tP=function(t,df){return betai(df/2,.5,df/(df+t*t))};
+S.fP=function(f,d1,d2){if(f<=0)return 1;return betai(d2/2,d1/2,d2/(d2+d1*f))};
+function erfc(x){var z=Math.abs(x),t=1/(1+.5*z),r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(.37409196+t*(.09678418+t*(-.18628806+t*(.27886807+t*(-1.13520398+t*(1.48851587+t*(-.82215223+t*.17087277)))))))));return x>=0?r:2-r}
+function lchoose(n,k){return lgam(n+1)-lgam(k+1)-lgam(n-k+1)}
+S.fisher2=function(a,b,c,d){var r1=a+b,r2=c+d,c1=a+c,n=r1+r2,lo=Math.max(0,c1-r2),hi=Math.min(r1,c1);function pr(x){return Math.exp(lchoose(r1,x)+lchoose(r2,c1-x)-lchoose(n,c1))}var p0=pr(a),s=0;for(var x=lo;x<=hi;x++){var p=pr(x);if(p<=p0*(1+1e-7))s+=p}return Math.min(1,s)};
+S.mean=function(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return a.length?s/a.length:NaN};
+S.sd=function(a){var n=a.length;if(n<2)return NaN;var m=S.mean(a),s=0;for(var i=0;i<n;i++)s+=(a[i]-m)*(a[i]-m);return Math.sqrt(s/(n-1))};
+S.median=function(a){if(!a.length)return NaN;var b=a.slice().sort(function(x,y){return x-y}),n=b.length;return n%2?b[(n-1)/2]:(b[n/2-1]+b[n/2])/2};
+S.min=function(a){return a.length?Math.min.apply(null,a):NaN};S.max=function(a){return a.length?Math.max.apply(null,a):NaN};
+function ranks(a){var idx=a.map(function(v,i){return[v,i]}).sort(function(x,y){return x[0]-y[0]}),r=new Array(a.length),i=0,ties=[];while(i<idx.length){var j=i;while(j+1<idx.length&&idx[j+1][0]===idx[i][0])j++;var avg=(i+j)/2+1;for(var k=i;k<=j;k++)r[idx[k][1]]=avg;if(j>i)ties.push(j-i+1);i=j+1}return{r:r,ties:ties}}
+S.ranks=ranks;
+S.chi=function(tab){var R=tab.length,C=tab[0].length,rs=[],cs=[],n=0,i,j;for(i=0;i<R;i++){rs[i]=0;for(j=0;j<C;j++){rs[i]+=tab[i][j];n+=tab[i][j]}}for(j=0;j<C;j++){cs[j]=0;for(i=0;i<R;i++)cs[j]+=tab[i][j]}
+ var x=0,low=0,cells=R*C,minE=Infinity;for(i=0;i<R;i++)for(j=0;j<C;j++){var e=rs[i]*cs[j]/n;if(e<minE)minE=e;if(e<5)low++;if(e>0)x+=(tab[i][j]-e)*(tab[i][j]-e)/e}
+ var df=(R-1)*(C-1);return{chi:x,df:df,p:df>0?S.chiP(x,df):1,n:n,lowPct:low/cells*100,minE:minE,fisher:(R===2&&C===2)?S.fisher2(tab[0][0],tab[0][1],tab[1][0],tab[1][1]):null}};
+S.tInd=function(a,b,welch){var n1=a.length,n2=b.length,m1=S.mean(a),m2=S.mean(b),v1=Math.pow(S.sd(a),2),v2=Math.pow(S.sd(b),2),t,df;
+ if(welch){var se=Math.sqrt(v1/n1+v2/n2);t=(m1-m2)/se;df=Math.pow(v1/n1+v2/n2,2)/(Math.pow(v1/n1,2)/(n1-1)+Math.pow(v2/n2,2)/(n2-1))}
+ else{var sp=((n1-1)*v1+(n2-1)*v2)/(n1+n2-2),se2=Math.sqrt(sp*(1/n1+1/n2));t=(m1-m2)/se2;df=n1+n2-2}
+ return{t:t,df:df,p:S.tP(t,df)}};
+S.anova=function(gs){var all=[],k=gs.length,i;gs.forEach(function(g){all=all.concat(g)});var N=all.length,gm=S.mean(all),ssb=0,ssw=0;gs.forEach(function(g){var m=S.mean(g);ssb+=g.length*(m-gm)*(m-gm);g.forEach(function(v){ssw+=(v-m)*(v-m)})});var d1=k-1,d2=N-k,f=(ssb/d1)/(ssw/d2);return{f:f,df1:d1,df2:d2,p:S.fP(f,d1,d2)}};
+S.mwu=function(a,b){var n1=a.length,n2=b.length,all=a.concat(b),rk=ranks(all),r1=0,i;for(i=0;i<n1;i++)r1+=rk.r[i];var u1=r1-n1*(n1+1)/2,u=Math.min(u1,n1*n2-u1),N=n1+n2,tc=0;rk.ties.forEach(function(t){tc+=t*t*t-t});var sd=Math.sqrt(n1*n2/12*((N+1)-tc/(N*(N-1)))),mu=n1*n2/2,z=sd>0?(Math.abs(u-mu)-.5)/sd:0;if(z<0)z=0;return{u:u,z:z,p:sd>0?erfc(z/Math.SQRT2):1}};
+S.kw=function(gs){var all=[],lab=[];gs.forEach(function(g,i){g.forEach(function(v){all.push(v);lab.push(i)})});var N=all.length,rk=ranks(all),sum=gs.map(function(){return 0});for(var i=0;i<N;i++)sum[lab[i]]+=rk.r[i];var h=0;gs.forEach(function(g,i){h+=sum[i]*sum[i]/g.length});h=12/(N*(N+1))*h-3*(N+1);var tc=0;rk.ties.forEach(function(t){tc+=t*t*t-t});h/=(1-tc/(N*N*N-N));var df=gs.length-1;return{h:h,df:df,p:S.chiP(h,df)}};
+S.pearson=function(x,y){var n=x.length,mx=S.mean(x),my=S.mean(y),sxy=0,sxx=0,syy=0;for(var i=0;i<n;i++){sxy+=(x[i]-mx)*(y[i]-my);sxx+=(x[i]-mx)*(x[i]-mx);syy+=(y[i]-my)*(y[i]-my)}var r=sxy/Math.sqrt(sxx*syy);var t=r*Math.sqrt((n-2)/(1-r*r));return{r:r,n:n,p:Math.abs(r)>=1?0:S.tP(t,n-2)}};
+S.spearman=function(x,y){return S.pearson(ranks(x).r,ranks(y).r)};
+S.alpha=function(M){var k=M.length;if(k<2)return NaN;var n=M[0].length,sv=0,tot=[],i,j;for(j=0;j<n;j++)tot[j]=0;for(i=0;i<k;i++){sv+=Math.pow(S.sd(M[i]),2);for(j=0;j<n;j++)tot[j]+=M[i][j]}var vt=Math.pow(S.sd(tot),2);return k/(k-1)*(1-sv/vt)};
+S.fmt=function(v,d){if(v==null||isNaN(v))return'-';return(+v).toFixed(d==null?2:d)};
+S.fp=function(p){if(p==null||isNaN(p))return'-';return p<.001?'<0.001':S.fmt(p,3)};
+return S})();
+/* ===== RES: SPSS-style results generator (flexible) — part A: data ===== */
+var RES=(function(){
+var S=RS,st=null,R=null,FIG=[];
+function $(i){return document.getElementById(i)}
+function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function ui(){return st&&st.ui==='ar'}
+function U(a,e){return ui()?a:e}
+function T(e,a){return st&&st.lang==='ar'?a:e}
+function nn(v){return v!==null&&v!==undefined&&v!==''}
+function isNum(v){return nn(v)&&v!==true&&!isNaN(+v)}
+function ad(s){return String(s).replace(/[٠-٩]/g,function(d){return d.charCodeAt(0)-1632}).replace(/[۰-۹]/g,function(d){return d.charCodeAt(0)-1776})}
+function f1(x){return S.fmt(x,1)}function f2(x){return S.fmt(x,2)}
+var ROM=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX'];
+var ORD=function(n){var s=['th','st','nd','rd'],v=n%100;return n+'<sup>'+(s[(v-20)%10]||s[v]||s[0])+'</sup>'};
+function ordAr(n){return n}
+/* ---------- parsing ---------- */
+function parseCSV(txt){
+ if(txt.charCodeAt(0)===0xFEFF)txt=txt.slice(1);
+ var first=txt.split(/\r?\n/)[0],best=',',bc=0;[',',';','\t'].forEach(function(c){var k=first.split(c).length;if(k>bc){bc=k;best=c}});
+ var rows=[],row=[],cell='',q=false,i,ch;
+ for(i=0;i<txt.length;i++){ch=txt[i];
+  if(q){if(ch==='"'){if(txt[i+1]==='"'){cell+='"';i++}else q=false}else cell+=ch}
+  else if(ch==='"')q=true;
+  else if(ch===best){row.push(cell);cell=''}
+  else if(ch==='\n'){row.push(cell);rows.push(row);row=[];cell=''}
+  else if(ch!=='\r')cell+=ch}
+ if(cell!==''||row.length){row.push(cell);rows.push(row)}
+ return rows}
+function fromRows(rows,name){
+ rows=rows.filter(function(r){return r.some(function(c){return nn(c)&&String(c).trim()!==''})});
+ if(rows.length<3)return null;
+ var head=rows[0].map(function(h,i){h=String(h==null?'':h).trim();return h||('V'+(i+1))}),seen={};
+ head=head.map(function(h){var b=h,k=1;while(seen[h]){k++;h=b+'_'+k}seen[h]=1;return h});
+ var cols=head.map(function(h){return{name:h,label:h,raw:[]}});
+ for(var r=1;r<rows.length;r++)cols.forEach(function(c,i){var v=rows[r][i];if(v==null)v='';if(typeof v==='string'){v=ad(v).trim()}if(v==='')v=null;c.raw.push(v)});
+ return{name:name||'data',cols:cols,n:rows.length-1}}
+function loadXlsx(){return new Promise(function(ok,no){if(window.XLSX)return ok();var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+function readFile(f,cb,err){
+ var nm=f.name||'file',ext=(nm.split('.').pop()||'').toLowerCase(),fr=new FileReader();
+ if(ext==='csv'||ext==='txt'||ext==='tsv'){fr.onload=function(){try{var d=fromRows(parseCSV(String(fr.result)),nm);d?cb(d):err('empty')}catch(e){err('bad')}};fr.readAsText(f,'utf-8')}
+ else{fr.onload=function(){loadXlsx().then(function(){try{var wb=XLSX.read(fr.result,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''}),d=fromRows(rows,nm);d?cb(d):err('empty')}catch(e){err('bad')}}).catch(function(){err('lib')})};fr.readAsArrayBuffer(f)}}
+/* ---------- column configuration ---------- */
+function distinct(c){var m={},o=[];c.raw.forEach(function(v){if(!nn(v))return;var k=String(v);if(!m[k]){m[k]=1;o.push(k)}});return o}
+function detect(c){
+ if(c.hint&&c.hint.kind)return c.hint.kind;
+ var vals=c.raw.filter(nn),n=vals.length;if(!n)return'skip';
+ var d=distinct(c),allNum=vals.every(isNum);
+ if(allNum){var nums=vals.map(Number),ints=nums.every(function(x){return x===Math.floor(x)}),mn=Math.min.apply(null,nums),mx=Math.max.apply(null,nums);
+  if(ints&&mn>=0&&mx<=7&&d.length>=5)return'lik';
+  if(d.length<=8)return'cat';return'num'}
+ if(d.length>30||d.length/n>.6)return'skip';return'cat'}
+function defaultVmap(c,i){
+ if(c.map){var ks=Object.keys(c.map).sort(function(a,b){return a-b});return ks.map(function(k){return k+'='+c.map[k]}).join(', ')}
+ var d=distinct(c),allNum=d.every(isNum);if(allNum)d.sort(function(a,b){return a-b});
+ return d.map(function(v){return v+'='+v}).join(', ')}
+function parseVmap(s){var o=[],m={};String(s||'').split(/[,،;\n]+/).forEach(function(p){p=p.trim();if(!p)return;var k=p.indexOf('=');var a=k<0?p:p.slice(0,k).trim(),b=k<0?p:p.slice(k+1).trim();if(!(a in m)){m[a]=b;o.push(a)}});return{map:m,order:o}}
+function initCfg(ds){
+ st.cfg=ds.cols.map(function(c,i){var kind=detect(c),h=c.hint||{};
+  return{kind:kind,label:c.label||c.name,scale:h.scale||'',inst:h.inst||'',rev:false,cuts:h.cuts||'',vmap:kind==='cat'?defaultVmap(c,i):'',tc:h.tc||''}});
+ st.scales={};st.instc={};
+ syncScales(ds)}
+var LV=[['never','rarely','sometimes','often','always'],['strongly disagree','disagree','neutral','agree','strongly agree'],['none of the time','a little of the time','some of the time','most of the time','all of the time'],['not at all','a little','moderately','quite a bit','extremely'],['poor','fair','good','very good','excellent'],['أبدا','أبداً','نادرا','نادراً','أحيانا','أحياناً','غالبا','غالباً','دائما','دائماً'],['لا أوافق بشدة','لا أوافق','محايد','محايدة','أوافق','أوافق بشدة'],['لا','قليلا','قليلاً','متوسط','كثيرا','كثيراً','جدا','جداً']];
+function orderLik(d){if(d.every(isNum))return d.sort(function(a,b){return a-b});var low=d.map(function(x){return x.toLowerCase().trim()});
+ for(var i=0;i<LV.length;i++){var L=LV[i];if(low.every(function(x){return L.indexOf(x)>=0}))return d.slice().sort(function(a,b){return L.indexOf(a.toLowerCase().trim())-L.indexOf(b.toLowerCase().trim())})}return d}
+function syncScales(ds){
+ ds=ds||st.ds;var seen={};
+ st.cfg.forEach(function(g,i){if(g.kind!=='lik')return;var sc=g.scale||'Scale 1';g.scale=sc;if(!g.inst)g.inst=st.lastInst||'Total';seen[sc]=1;
+  if(!st.scales[sc]){var c=ds.cols[i],h=c.hint||{},lab,start=h.start!=null?h.start:1;
+   if(h.labels)lab=h.labels.join(', ');else{var d=orderLik(distinct(c));lab=d.join(', ')}
+   st.scales[sc]={labels:lab,start:start}}});
+ Object.keys(st.scales).forEach(function(k){if(!seen[k])delete st.scales[k]});
+ var ins={};st.cfg.forEach(function(g){if(g.kind==='lik')ins[g.inst||'Questionnaire']=1});
+ Object.keys(ins).forEach(function(k){if(!st.instc[k])st.instc[k]={cuts:'50,75',labels:'Low, Average, High'}});
+ Object.keys(st.instc).forEach(function(k){if(!ins[k])delete st.instc[k]})}
+/* ---------- derived data ---------- */
+function slist(s){return String(s||'').split(/[,،;]+/).map(function(x){return x.trim()}).filter(function(x){return x!==''})}
+function catData(i){ // → {vals:[label|null], order:[labels]}
+ var c=st.ds.cols[i],g=st.cfg[i];
+ if(g.kind==='num'){var cuts=slist(g.cuts).map(Number).filter(function(x){return!isNaN(x)}).sort(function(a,b){return a-b});if(!cuts.length)return null;
+  var labs=[];cuts.forEach(function(x,k){labs.push(k===0?'< '+x:cuts[k-1]+' - <'+x)});labs.push('≥ '+cuts[cuts.length-1]);
+  return{vals:c.raw.map(function(v){if(!isNum(v))return null;v=+v;for(var k=0;k<cuts.length;k++)if(v<cuts[k])return labs[k];return labs[cuts.length]}),order:labs}}
+ var vm=parseVmap(g.vmap),order=vm.order.map(function(k){return vm.map[k]});
+ var vals=c.raw.map(function(v){if(!nn(v))return null;var k=String(v);return k in vm.map?vm.map[k]:k});
+ vals.forEach(function(v){if(v!==null&&order.indexOf(v)<0)order.push(v)});
+ return{vals:vals,order:order}}
+function scaleItems(sc){var o=[];st.cfg.forEach(function(g,i){if(g.kind==='lik'&&g.scale===sc)o.push(i)});return o}
+function scaleInfo(sc){var s=st.scales[sc],lab=slist(s.labels),k=lab.length,start=+s.start||0;if(isNaN(start))start=1;return{labels:lab,k:k,start:start,top:start+k-1}}
+function itemCodes(i,keep){
+ var c=st.ds.cols[i],g=st.cfg[i],si=scaleInfo(g.scale),low=si.labels.map(function(x){return x.toLowerCase()});
+ return c.raw.map(function(v){if(!nn(v))return NaN;var s=String(v).trim().toLowerCase(),ix=low.indexOf(s),code;
+  if(ix>=0)code=si.start+ix;else if(isNum(v)){var x=+v;code=(x>=si.start&&x<=si.top)?x:NaN}else code=NaN;
+  if(!keep&&!isNaN(code)&&g.rev)code=si.start+si.top-code;return code})}
+function scaleScore(sc){var its=scaleItems(sc).map(itemCodes),n=st.ds.n,out=[];
+ for(var r=0;r<n;r++){var s=0,ok=true;for(var j=0;j<its.length;j++){var v=its[j][r];if(isNaN(v)){ok=false;break}s+=v}out.push(ok&&its.length?s:NaN)}return out}
+function scaleRange(sc){var si=scaleInfo(sc),m=scaleItems(sc).length;return{min:m*si.start,max:m*si.top,m:m}}
+function insts(){var o={};Object.keys(st.scales).forEach(function(sc){var its=scaleItems(sc);if(!its.length)return;var ins=st.cfg[its[0]].inst||'Questionnaire';(o[ins]=o[ins]||[]).push(sc)});return o}
+function totalScore(scs){var arrs=scs.map(scaleScore),n=st.ds.n,out=[];for(var r=0;r<n;r++){var s=0,ok=true;for(var j=0;j<arrs.length;j++){if(isNaN(arrs[j][r])){ok=false;break}s+=arrs[j][r]}out.push(ok?s:NaN)}return out}
+function totalRange(scs){var mn=0,mx=0,m=0;scs.forEach(function(sc){var r=scaleRange(sc);mn+=r.min;mx+=r.max;m+=r.m});return{min:mn,max:mx,m:m}}
+function pctOf(v,rg){if(isNaN(v))return NaN;return st.pctMode==='max'?v/rg.max*100:(rg.max>rg.min?(v-rg.min)/(rg.max-rg.min)*100:NaN)}
+function levelOf(ins,scores,rg){var ic=st.instc[ins],cuts=slist(ic.cuts).map(Number).filter(function(x){return!isNaN(x)}).sort(function(a,b){return a-b}),labs=slist(ic.labels);
+ while(labs.length<cuts.length+1)labs.push('L'+(labs.length+1));labs=labs.slice(0,cuts.length+1);
+ return{vals:scores.map(function(v){var p=pctOf(v,rg);if(isNaN(p))return null;for(var k=0;k<cuts.length;k++)if(p<cuts[k])return labs[k];return labs[cuts.length]}),order:labs,cuts:cuts}}
+/* variable registry for relations */
+function registry(){
+ var V=[];
+ st.cfg.forEach(function(g,i){
+  if(g.kind==='cat'){V.push({id:'c'+i,label:g.label,type:'cat',get:function(){return catData(i)}})}
+  if(g.kind==='num'){V.push({id:'n'+i,label:g.label,type:'num',get:function(){return{vals:st.ds.cols[i].raw.map(function(v){return isNum(v)?+v:NaN})}}});
+   if(slist(g.cuts).length)V.push({id:'g'+i,label:g.label+' ('+T('groups','فئات')+')',type:'cat',get:function(){return catData(i)}})}});
+ var I=insts();
+ Object.keys(I).forEach(function(ins){
+  if(I[ins].length>1)I[ins].forEach(function(sc){V.push({id:'s:'+sc,label:sc+' ('+T('score','الدرجة')+')',type:'num',get:function(){return{vals:scaleScore(sc)}}})});
+  V.push({id:'i:'+ins,label:ins+(I[ins].length>1?' ('+T('total score','الدرجة الكلية')+')':' ('+T('score','الدرجة')+')'),type:'num',get:function(){return{vals:totalScore(I[ins])}}});
+  V.push({id:'L:'+ins,label:ins+' ('+T('level','المستوى')+')',type:'cat',get:function(){return levelOf(ins,totalScore(I[ins]),totalRange(I[ins]))}})});
+ return V}
+function vget(id){var V=registry();for(var i=0;i<V.length;i++)if(V[i].id===id)return V[i];return null}
+/* ---------- part B: report builder ---------- */
+function cnt(vals,order){var c={},n=0;order.forEach(function(o){c[o]=0});vals.forEach(function(v){if(v===null||v===undefined)return;c[v]=(c[v]||0)+1;n++});return{c:c,n:n}}
+function sigCell(p){var a=st.alpha||.05;return p<=a?'<b>'+S.fp(p)+'* (S)</b>':S.fp(p)+' (NS)'}
+function tdc(x,a){return'<td'+(a?' '+a:'')+'>'+x+'</td>'}
+function thc(x,a){return'<th'+(a?' '+a:'')+'>'+x+'</th>'}
+function sj(){return st.subj||T('participants','المشاركات')}
+function build(){
+ var N=st.ds.n,tn=0,fn=0,parts=[],blocks=[],cur=null;FIG=[];
+ function part(title){cur={title:title,tabs:[]};parts.push(cur);blocks.push({t:'part',i:parts.length,title:title})}
+ function tab(cap,html,text,foot){tn++;cur.tabs.push(tn);blocks.push({t:'tab',n:tn,cap:cap,html:html,foot:foot||''});if(text)blocks.push({t:'p',html:'<b>'+T('Table ('+tn+') shows that,','يوضح الجدول ('+tn+') أن')+'</b> '+text})}
+ function fig(cap,url,text){fn++;var nm='figure'+fn+'.png';FIG.push({name:nm,url:url});cur.tabs.push('F'+fn);blocks.push({t:'fig',n:fn,cap:cap,url:url,name:nm});if(text)blocks.push({t:'p',html:'<b>'+T('Figure ('+fn+') shows that,','يوضح الشكل ('+fn+') أن')+'</b> '+text})}
+ var nTxt='(n='+N+')',I=insts(),Ik=Object.keys(I),sel=st.sel;
+ /* ---- Part: frequency ---- */
+ if(sel.freq){
+  var groups={},order=[];
+  st.cfg.forEach(function(g,i){if((g.kind!=='cat'&&g.kind!=='num')||g.skipFreq)return;var k=g.tc||'';if(!groups[k]){groups[k]=[];order.push(k)}groups[k].push(i)});
+  if(order.length){part(T('Socio-demographic and background characteristics of the studied '+sj(),'الخصائص الديموغرافية والخلفية للمشاركات'));
+   order.forEach(function(k){
+    var rows='',sents=[],title=k||T('Characteristics','الخصائص');
+    groups[k].forEach(function(i){var g=st.cfg[i],cd=catData(i),col=st.ds.cols[i];
+     rows+='<tr class="sec"><td colspan="3"><b>'+E(g.label)+'</b></td></tr>';
+     if(cd){var cc=cnt(cd.vals,cd.order),mx=-1;cd.order.forEach(function(o){if(cc.c[o]>mx)mx=cc.c[o]});
+      cd.order.forEach(function(o){var p=cc.n?cc.c[o]/cc.n*100:0;rows+='<tr><td>'+E(o)+'</td>'+tdc(cc.c[o])+tdc(cc.c[o]===mx&&mx>0?'<b>'+f1(p)+'</b>':f1(p))+'</tr>'});
+      if(sents.length<4){var top=cd.order.slice().sort(function(a,b){return cc.c[b]-cc.c[a]})[0];if(top!==undefined&&cc.n)sents.push(T('the most frequent category of "'+E(g.label)+'" was "'+E(top)+'" ('+f1(cc.c[top]/cc.n*100)+'%)','أكثر فئة تكراراً في «'+E(g.label)+'» هي «'+E(top)+'» ('+f1(cc.c[top]/cc.n*100)+'%)'))}}
+     if(g.kind==='num'){var xs=col.raw.filter(isNum).map(Number);rows+='<tr><td class="ct"><b>Mean±SD</b></td><td colspan="2" class="ct">'+f2(S.mean(xs))+'±'+f2(S.sd(xs))+'</td></tr>';
+      if(!cd&&sents.length<4)sents.push(T('mean '+E(g.label)+' was '+f2(S.mean(xs))+'±'+f2(S.sd(xs)),'متوسط «'+E(g.label)+'» '+f2(S.mean(xs))+'±'+f2(S.sd(xs))))}});
+    tab(T('Frequency and percentage distribution of the studied '+sj()+' according to their '+title.toLowerCase()+' '+nTxt+'.','التوزيع العددي والنسبي للمشاركات حسب '+title+' '+nTxt+'.'),
+     '<table class="rt"><tr class="hd"><th>'+E(title)+'</th><th>N</th><th>%</th></tr>'+rows+'</table>',sents.join(T('. Also, ','. كما أن '))+'.')})}}
+ /* ---- Part: scales ---- */
+ var scAll=Object.keys(st.scales).filter(function(sc){return scaleItems(sc).length});
+ if(scAll.length&&(sel.items||sel.desc)){
+  part(T('Responses to the study scales','إجابات المشاركات على المقاييس'));
+  scAll.forEach(function(sc){
+   var its=scaleItems(sc),si=scaleInfo(sc);
+   if(sel.items){
+    var h1='<tr class="hd"><th rowspan="2">'+E(sc)+'</th>',h2='<tr class="hd">';
+    si.labels.forEach(function(l){h1+='<th colspan="2">'+E(l)+'</th>';h2+='<th>N</th><th>%</th>'});
+    var body='',cells=[];
+    its.forEach(function(i){var codes=itemCodes(i,true),n=codes.filter(function(x){return!isNaN(x)}).length,cs=[],mx=-1;
+     for(var k=0;k<si.k;k++){var c=codes.filter(function(x){return x===si.start+k}).length;cs.push(c);if(c>mx)mx=c}
+     body+='<tr><td>'+E(st.cfg[i].label)+'</td>';
+     cs.forEach(function(c,k){var p=n?c/n*100:0;body+=tdc(c)+tdc(c===mx&&mx>0?'<b>'+f1(p)+'</b>':f1(p));cells.push({p:p,item:st.cfg[i].label,lab:si.labels[k]})});body+='</tr>'});
+    cells.sort(function(a,b){return b.p-a.p});
+    var tx=cells.slice(0,3).map(function(c){return T(f1(c.p)+'% of the studied '+sj()+' answered "'+E(c.lab)+'" regarding "'+E(c.item)+'"',f1(c.p)+'% أجبن «'+E(c.lab)+'» على «'+E(c.item)+'»')}).join(T('. Also, ','. كما أن '))+'.';
+    tab(T('Frequency and percentage distribution of the studied '+sj()+' according to '+sc+' '+nTxt+'.','التوزيع العددي والنسبي للمشاركات حسب '+sc+' '+nTxt+'.'),'<table class="rt">'+h1+'</tr>'+h2+'</tr>'+body+'</table>',tx)}
+   if(sel.desc){
+    var rows2='',best=null,worst=null;
+    its.forEach(function(i){var xs=itemCodes(i).filter(function(x){return!isNaN(x)}),m=S.mean(xs),sd=S.sd(xs);
+     rows2+='<tr><td>'+E(st.cfg[i].label)+'</td>'+tdc(S.min(xs))+tdc(S.max(xs))+tdc(f2(m)+'±'+f2(sd))+tdc(S.median(xs))+'</tr>';
+     if(!best||m>best.m)best={m:m,sd:sd,l:st.cfg[i].label};if(!worst||m<worst.m)worst={m:m,sd:sd,l:st.cfg[i].label}});
+    tab(T('Mean score of '+sc+' items among the studied '+sj()+' '+nTxt+'.','متوسط درجات بنود '+sc+' '+nTxt+'.'),'<table class="rt"><tr class="hd"><th>'+E(sc)+'</th><th>Min</th><th>Max</th><th>Mean ± SD</th><th>Median</th></tr>'+rows2+'</table>',
+     best?T('the higher mean score '+f2(best.m)+'±'+f2(best.sd)+' was regarding "'+E(best.l)+'". While the lower mean score '+f2(worst.m)+'±'+f2(worst.sd)+' was regarding "'+E(worst.l)+'".','أعلى متوسط '+f2(best.m)+'±'+f2(best.sd)+' كان للبند «'+E(best.l)+'»، وأقل متوسط '+f2(worst.m)+'±'+f2(worst.sd)+' كان للبند «'+E(worst.l)+'».'):'')}})}
+ /* ---- Part: domains & levels ---- */
+ if(Ik.length&&(sel.domains||sel.levels)){
+  part(T('Domain scores and total levels','درجات المجالات والمستويات الكلية'));
+  Ik.forEach(function(ins){
+   var scs=I[ins];
+   if(sel.domains){
+    var dm=scs.map(function(sc){var sco=scaleScore(sc).filter(function(x){return!isNaN(x)}),rg=scaleRange(sc),m=S.mean(sco);return{sc:sc,m:m,rg:rg,pct:pctOf(m,rg)}});
+    var rk=dm.slice().sort(function(a,b){return b.pct-a.pct});dm.forEach(function(d){d.rank=rk.indexOf(d)+1});
+    var tot=totalScore(scs).filter(function(x){return!isNaN(x)}),rows3='';
+    dm.forEach(function(d){rows3+='<tr><td>'+E(d.sc)+'</td>'+tdc(d.rg.m)+tdc(d.rg.max)+tdc(f2(d.m))+tdc(f2(d.pct))+tdc(ROM[d.rank-1]||d.rank)+'</tr>'});
+    rows3+='<tr class="sec"><td><b>'+T('Total score of '+E(ins)+' (Mean ± SD)','المجموع الكلي لـ '+E(ins)+' (المتوسط ± الانحراف)')+'</b></td><td colspan="5" class="ct">'+f2(S.mean(tot))+' ± '+f2(S.sd(tot))+'</td></tr>';
+    var s2=rk.length>1?T('"'+E(rk[0].sc)+'" had the '+ORD(1)+' rank'+(rk[1]?' followed by "'+E(rk[1].sc)+'" in the '+ORD(2)+' rank':'')+(rk[2]?' then "'+E(rk[2].sc)+'" in the '+ORD(3)+' rank':'')+(rk.length>2?'. On the other hand, "'+E(rk[rk.length-1].sc)+'" had the '+ORD(rk.length)+' rank.':'.'),
+      'احتل «'+E(rk[0].sc)+'» المرتبة الأولى'+(rk[1]?' يليه «'+E(rk[1].sc)+'»':'')+(rk.length>2?'، وجاء «'+E(rk[rk.length-1].sc)+'» في المرتبة الأخيرة.':'.')):T('mean percent of "'+E(rk[0].sc)+'" was '+f2(rk[0].pct)+'%.','النسبة المئوية للمتوسط '+f2(rk[0].pct)+'%.');
+    tab(T('Ranking of '+ins+' domains according to their percentage of mean among the studied '+sj()+' '+nTxt+'.','ترتيب مجالات '+ins+' حسب النسبة المئوية للمتوسط '+nTxt+'.'),
+     '<table class="rt"><tr class="hd"><th>'+T('Domains','المجالات')+'</th><th>'+T('No of items','عدد البنود')+'</th><th>'+T('Maximum score','أقصى درجة')+'</th><th>'+T('Mean','المتوسط')+'</th><th>'+T('Mean %','المتوسط %')+'</th><th>'+T('Rank','الترتيب')+'</th></tr>'+rows3+'</table>',s2);
+    if(dm.length>1)fig(T('Ranking of '+ins+' domains according to their mean percentage among the studied '+sj()+' '+nTxt+'.','ترتيب مجالات '+ins+' حسب النسبة المئوية للمتوسط '+nTxt+'.'),
+     chartBarH(T('Mean percentage of '+ins+' domains','النسبة المئوية لمتوسط مجالات '+ins),dm.map(function(d){return d.sc}),dm.map(function(d){return d.pct})),s2)}
+   if(sel.levels){
+    var lv=levelOf(ins,totalScore(scs),totalRange(scs)),cc=cnt(lv.vals,lv.order),rows4='';
+    lv.order.forEach(function(o){rows4+='<tr><td><b>'+E(o)+'</b></td>'+tdc(cc.c[o])+tdc(f1(cc.n?cc.c[o]/cc.n*100:0))+'</tr>'});
+    var ord=lv.order.slice().sort(function(a,b){return cc.c[b]-cc.c[a]}),ptxt=ord.map(function(o,k){return(k===0?'':(k===1?T(' and ',' و'):', '))+f1(cc.n?cc.c[o]/cc.n*100:0)+'% '+T('of them had ','منهن ')+E(o)}).join('');
+    var stx=T(f1(cc.n?cc.c[ord[0]]/cc.n*100:0)+'% of the studied '+sj()+' had a total level of "'+E(ord[0])+'" for '+E(ins)+(ord[1]?', '+f1(cc.n?cc.c[ord[1]]/cc.n*100:0)+'% "'+E(ord[1])+'"':'')+(ord[2]?' while '+f1(cc.n?cc.c[ord[2]]/cc.n*100:0)+'% "'+E(ord[2])+'"':'')+'.',
+      f1(cc.n?cc.c[ord[0]]/cc.n*100:0)+'% من المشاركات كان '+E(ins)+' لديهن «'+E(ord[0])+'»'+(ord[1]?'، و'+f1(cc.n?cc.c[ord[1]]/cc.n*100:0)+'% «'+E(ord[1])+'»':'')+'.');
+    tab(T('Frequency and percentage distribution of the studied '+sj()+' according to their total level of '+ins+' '+nTxt+'.','التوزيع العددي والنسبي للمشاركات حسب المستوى الكلي لـ '+ins+' '+nTxt+'.'),
+     '<table class="rt"><tr class="hd"><th>'+E(ins)+'</th><th>N</th><th>%</th></tr>'+rows4+'</table>',stx,T('Level cut-offs (% of the '+(st.pctMode==='max'?'maximum score':'score range')+'): '+E(st.instc[ins].cuts)+'.','حدود المستويات (% من '+(st.pctMode==='max'?'الدرجة العظمى':'مدى الدرجة')+'): '+E(st.instc[ins].cuts)+'.'));
+    var pv=lv.order.map(function(o){return cc.n?cc.c[o]/cc.n*100:0});
+    fig(T('Distribution of the studied '+sj()+' regarding their total level of '+ins+' '+nTxt+'.','توزيع المشاركات حسب المستوى الكلي لـ '+ins+' '+nTxt+'.'),
+     st.levelChart==='pie'?chartPie(T('Total level of '+ins,'المستوى الكلي لـ '+ins),lv.order,pv):chartBarV(T('Total level of '+ins,'المستوى الكلي لـ '+ins),lv.order,pv),stx)}})}
+ /* ---- Part: relations ---- */
+ var relOn=(sel.chi&&st.pred.length&&st.outc.length)||(sel.grp&&st.pred.length&&st.scoreVars.length)||(sel.cor&&st.corVars.length>1);
+ if(relOn){
+  part(T('Statistical relations and correlations between the studied variables','العلاقات والارتباطات الإحصائية بين المتغيرات'));
+  if(sel.chi&&st.pred.length&&st.outc.length)st.outc.forEach(function(oid){
+   var ov=vget(oid);if(!ov)return;var od=ov.get(),olabs=od.order.slice(),K=olabs.length;if(K<2)return;
+   var h1='<tr class="hd"><th rowspan="3" colspan="2">'+T('Characteristics','الخصائص')+'</th><th colspan="'+K*2+'">'+E(ov.label)+'</th><th rowspan="3">X<sup>2</sup></th><th rowspan="3">P-value</th></tr><tr class="hd">',h3='<tr class="hd">';
+   olabs.forEach(function(l){h1+='<th colspan="2">'+E(l)+'</th>';h3+='<th>N</th><th>%</th>'});
+   var body='',sg=[],ns=[],foot=[],used=0;
+   st.pred.forEach(function(pid){if(pid===oid)return;var pv=vget(pid);if(!pv)return;var pd=pv.get(),plabs=pd.order,tabx=plabs.map(function(){return olabs.map(function(){return 0})}),tot=0;
+    for(var r=0;r<N;r++){var a=pd.vals[r],b=od.vals[r];if(a==null||b==null)continue;var ia=plabs.indexOf(a),ib=olabs.indexOf(b);if(ia<0||ib<0)continue;tabx[ia][ib]++;tot++}
+    if(!tot)return;
+    var keep=plabs.map(function(l,i){return i}).filter(function(i){return tabx[i].some(function(x){return x>0})}),cols=olabs.map(function(l,j){return j}).filter(function(j){return tabx.some(function(r){return r[j]>0})});
+    var sub=keep.map(function(i){return cols.map(function(j){return tabx[i][j]})}),ch=sub.length>1&&cols.length>1?S.chi(sub):null;
+    var rt=plabs.map(function(l,i){return tabx[i].reduce(function(a,b){return a+b},0)}),ct=olabs.map(function(l,j){return tabx.reduce(function(a,r){return a+r[j]},0)}),pp;
+    used++;
+    plabs.forEach(function(l,i){body+='<tr>'+(i===0?'<td rowspan="'+plabs.length+'"><b>'+E(pv.label)+'</b></td>':'')+'<td>'+E(l)+'</td>';
+     olabs.forEach(function(o,j){var c=tabx[i][j],base=st.pctBasis==='row'?rt[i]:(st.pctBasis==='col'?ct[j]:tot);body+=tdc(c)+tdc(base?f1(c/base*100):'0.0')});
+     if(i===0){var pval=ch?(ch.fisher!=null&&ch.minE<5?ch.fisher:ch.p):1,mk=ch?(ch.fisher!=null&&ch.minE<5?'<sup>‡</sup>':(ch.lowPct>20?'<sup>†</sup>':'')):'';
+      if(ch&&ch.fisher!=null&&ch.minE<5&&foot.indexOf('f')<0)foot.push('f');if(ch&&!(ch.fisher!=null&&ch.minE<5)&&ch.lowPct>20&&foot.indexOf('l')<0)foot.push('l');
+      body+='<td rowspan="'+plabs.length+'">'+(ch?f2(ch.chi)+mk:'-')+'</td><td rowspan="'+plabs.length+'">'+(ch?sigCell(pval)+'':'-')+'</td>';
+      if(ch){(pval<=st.alpha?sg:ns).push({l:pv.label,p:pval})}}
+     body+='</tr>'});
+   });
+   if(!used)return;
+   var tx=sg.length?T('there was a significant statistical relation between '+E(ov.label)+' of the studied '+sj()+' and their '+sg.map(function(x){return E(x.l)}).join(', ')+' at P-value= '+sg.map(function(x){return S.fp(x.p)}).join(' and ')+' respectively.','توجد علاقة إحصائية ذات دلالة بين '+E(ov.label)+' و'+sg.map(function(x){return E(x.l)}).join('، ')+' (P= '+sg.map(function(x){return S.fp(x.p)}).join('، ')+').'):T('there was no statistically significant relation between '+E(ov.label)+' and the studied variables (all P-values > '+st.alpha+').','لا توجد علاقة إحصائية ذات دلالة بين '+E(ov.label)+' والمتغيرات المدروسة (كل قيم P > '+st.alpha+').');
+   var fn2='<span>X<sup>2</sup>=Chi-Square Test &nbsp; * P-value ≤ '+st.alpha+' Significant (S) &nbsp; P-value > '+st.alpha+' Non-significant (NS).</span>'+(foot.indexOf('f')>=0?'<br><span><sup>‡</sup> '+T('Fisher\'s exact test (2×2 table with an expected count < 5).','اختبار فيشر الدقيق (جدول 2×2 وتوقع أقل من 5).')+'</span>':'')+(foot.indexOf('l')>=0?'<br><span><sup>†</sup> '+T('More than 20% of cells have an expected count < 5; interpret with caution.','أكثر من 20% من الخلايا توقعها أقل من 5؛ تُفسَّر بحذر.')+'</span>':'');
+   tab(T('Relationship between the characteristics of the studied '+sj()+' and their '+E(ov.label)+' '+nTxt+'.','العلاقة بين خصائص المشاركات و'+E(ov.label)+' '+nTxt+'.'),'<table class="rt">'+h1+h3+'</tr>'+body+'</table>',tx,fn2)});
+  if(sel.grp&&st.pred.length&&st.scoreVars.length)st.pred.forEach(function(pid){
+   var pv=vget(pid);if(!pv)return;var pd=pv.get(),labs=pd.order;if(labs.length<2)return;
+   var rows='',sg=[],modes={};
+   st.scoreVars.forEach(function(sid){var sv=vget(sid);if(!sv||sid===pid)return;var xs=sv.get().vals,gs=labs.map(function(l){var a=[];for(var r=0;r<N;r++)if(pd.vals[r]===l&&!isNaN(xs[r]))a.push(xs[r]);return a}),ok=gs.map(function(g,i){return i}).filter(function(i){return gs[i].length>=2}),g2=ok.map(function(i){return gs[i]});
+    rows+='<tr><td><b>'+E(sv.label)+'</b></td>'+labs.map(function(l,i){return tdc(gs[i].length?f2(S.mean(gs[i]))+'±'+f2(S.sd(gs[i]))+' <small>(n='+gs[i].length+')</small>':'-')}).join('');
+    if(g2.length<2){rows+='<td colspan="3">-</td></tr>';return}
+    var mode=st.mode==='auto'?(g2.some(function(g){return g.length<30})?'non':'param'):st.mode,tn2,stat,p;
+    if(mode==='param'){if(g2.length===2){var t=S.tInd(g2[0],g2[1],true);tn2='t-test';stat=f2(t.t);p=t.p}else{var a=S.anova(g2);tn2='F';stat=f2(a.f);p=a.p}}
+    else{if(g2.length===2){var m=S.mwu(g2[0],g2[1]);tn2='Z (Mann-Whitney)';stat=f2(m.z);p=m.p}else{var k=S.kw(g2);tn2='H (Kruskal-Wallis)';stat=f2(k.h);p=k.p}}
+    modes[tn2]=1;rows+=tdc(tn2)+tdc(stat)+tdc(sigCell(p))+'</tr>';if(p<=st.alpha)sg.push(sv.label+' ('+S.fp(p)+')')});
+   if(!rows)return;
+   var tx=sg.length?T('there was a significant statistical difference in '+sg.map(E).join(', ')+' according to '+E(pv.label)+'.','توجد فروق ذات دلالة إحصائية في '+sg.map(E).join('، ')+' حسب '+E(pv.label)+'.'):T('there was no statistically significant difference in the studied scores according to '+E(pv.label)+'.','لا توجد فروق ذات دلالة إحصائية حسب '+E(pv.label)+'.');
+   tab(T('Comparison of the mean scores of the studied '+sj()+' according to their '+E(pv.label)+' '+nTxt+'.','مقارنة متوسطات الدرجات حسب '+E(pv.label)+' '+nTxt+'.'),
+    '<table class="rt"><tr class="hd"><th>'+T('Score','الدرجة')+'</th>'+labs.map(function(l){return'<th>'+E(l)+'<br><small>Mean±SD</small></th>'}).join('')+'<th>'+T('Test','الاختبار')+'</th><th>'+T('Statistic','القيمة')+'</th><th>P-value</th></tr>'+rows+'</table>',tx,'<span>* P-value ≤ '+st.alpha+' Significant (S); P-value > '+st.alpha+' Non-significant (NS).</span>')});
+  if(sel.cor&&st.corVars.length>1){
+   var cv=st.corVars.map(vget).filter(Boolean),pairs=[],i,j,rows5='',sg2=[];
+   for(i=0;i<cv.length;i++)for(j=i+1;j<cv.length;j++)pairs.push([cv[i],cv[j]]);
+   var sp=st.corMethod==='spearman';
+   pairs.forEach(function(pr,pi){var x=pr[0].get().vals,y=pr[1].get().vals,xa=[],ya=[];for(var r=0;r<N;r++)if(!isNaN(x[r])&&!isNaN(y[r])){xa.push(x[r]);ya.push(y[r])}
+    if(xa.length<3)return;var c=sp?S.spearman(xa,ya):S.pearson(xa,ya);pr.push(xa,ya,c);
+    rows5+='<tr><td><b>'+E(pr[0].label)+'</b></td><td><b>'+E(pr[1].label)+'</b></td>'+tdc(xa.length)+tdc(f2(c.r).replace('-','−'))+tdc(sigCell(c.p))+'</tr>';
+    if(c.p<=st.alpha)sg2.push(T('there was a significant statistical '+(c.r<0?'negative':'positive')+' correlation between '+E(pr[0].label)+' and '+E(pr[1].label)+' (r= '+f2(c.r)+' & P= '+S.fp(c.p)+')','يوجد ارتباط '+(c.r<0?'عكسي':'طردي')+' ذو دلالة بين '+E(pr[0].label)+' و'+E(pr[1].label)+' (r= '+f2(c.r)+'، P= '+S.fp(c.p)+')'))});
+   if(rows5){var tx2=sg2.length?sg2.map(function(x,k){return k?T('Also, ','كما ')+x:x}).join('. ')+'.':T('there was no statistically significant correlation between the studied variables.','لا يوجد ارتباط ذو دلالة بين المتغيرات المدروسة.');
+    tab(T('Correlation between the studied variables among the studied '+sj()+' '+nTxt+'.','الارتباط بين المتغيرات المدروسة '+nTxt+'.'),'<table class="rt"><tr class="hd"><th>'+T('Variable 1','المتغير 1')+'</th><th>'+T('Variable 2','المتغير 2')+'</th><th>n</th><th>r</th><th>P-value</th></tr>'+rows5+'</table>',tx2,'<span>r= '+(sp?'Spearman':'Pearson')+' Correlation Coefficient &nbsp; * P-value ≤ '+st.alpha+' Significant (S).</span>');
+    pairs.filter(function(p){return p[4]}).slice(0,3).forEach(function(pr){var c=pr[4];fig(T('Correlation between '+pr[0].label+' and '+pr[1].label+' among the studied '+sj()+' (n='+pr[2].length+').','الارتباط بين '+pr[0].label+' و'+pr[1].label+' (n='+pr[2].length+').'),
+     chartScatter(pr[0].label,pr[1].label,pr[2],pr[3],'r='+f2(c.r)+' & P='+S.fp(c.p),c.r>0),c.p<=st.alpha?sg2[pairs.indexOf(pr)]?T('there was a significant statistical '+(c.r<0?'negative':'positive')+' correlation (r= '+f2(c.r)+' & P= '+S.fp(c.p)+').','يوجد ارتباط ذو دلالة (r= '+f2(c.r)+'، P= '+S.fp(c.p)+').'):'':T('there was no significant correlation (r= '+f2(c.r)+' & P= '+S.fp(c.p)+').','لا يوجد ارتباط ذو دلالة (r= '+f2(c.r)+'، P= '+S.fp(c.p)+').'))})}}}
+ /* ---- reliability ---- */
+ var relRows='',relN=0;
+ if(sel.rel&&scAll.length){
+  function al(its){var M=its.map(function(i){return itemCodes(i)}),keep=[],r;for(r=0;r<N;r++){var ok=true;for(var j=0;j<M.length;j++)if(isNaN(M[j][r])){ok=false;break}if(ok)keep.push(r)}if(keep.length<3||M.length<2)return null;return{a:S.alpha(M.map(function(m){return keep.map(function(r){return m[r]})})),n:keep.length}}
+  function lev(a){return a>=.9?T('Excellent','ممتاز'):a>=.8?T('Good','جيد'):a>=.7?T('Acceptable','مقبول'):a>=.6?T('Questionable','مشكوك فيه'):a>=.5?T('Poor','ضعيف'):T('Unacceptable','غير مقبول')}
+  var arr=[];scAll.forEach(function(sc){arr.push([sc,scaleItems(sc)])});Ik.forEach(function(ins){if(I[ins].length>1){var all=[];I[ins].forEach(function(sc){all=all.concat(scaleItems(sc))});arr.push([ins+' ('+T('total','الكلي')+')',all])}});
+  arr.forEach(function(x){var r=al(x[1]);if(r){relN=Math.max(relN,r.n);relRows+='<tr><td>'+E(x[0])+'</td>'+tdc(x[1].length)+tdc(f2(r.a))+tdc(lev(r.a))+'</tr>'}else relRows+='<tr><td>'+E(x[0])+'</td>'+tdc(x[1].length)+tdc('-')+tdc('-')+'</tr>'})}
+ var relBlock=null;if(relRows)relBlock={cap:T('Testing reliability of the data collection tools through Cronbach\'s alpha reliability analysis (n='+relN+')','اختبار ثبات أدوات جمع البيانات بمعامل ألفا كرونباخ (n='+relN+')'),html:'<table class="rt"><tr class="hd"><th>'+T('Scale','المقياس')+'</th><th>'+T('No. of variables','عدد البنود')+'</th><th>Cronbach\'s Alpha</th><th>'+T('Internal consistency','الاتساق الداخلي')+'</th></tr>'+relRows+'</table>'};
+ /* ---- design paragraph ---- */
+ var tests=[],an=[];
+ if(sel.chi&&st.pred.length&&st.outc.length)tests.push(T('<b>Chi-Square (X<sup>2</sup>) independence test</b> was used to evaluate the relationship between categorical variables (Fisher\'s exact test for 2×2 tables with small expected counts).','<b>اختبار مربع كاي (X<sup>2</sup>)</b> لتقييم العلاقة بين المتغيرات الفئوية (واختبار فيشر الدقيق للجداول 2×2 عند صغر التكرارات المتوقعة).'));
+ if(sel.grp&&st.pred.length&&st.scoreVars.length)tests.push(st.mode==='non'?T('<b>Mann-Whitney U and Kruskal-Wallis tests</b> were used to compare scores between two and more than two groups respectively.','<b>اختبارا مان ويتني وكروسكال واليس</b> لمقارنة الدرجات بين مجموعتين وأكثر.'):st.mode==='auto'?T('<b>Independent t-test (Welch) and one-way ANOVA</b> were used to compare mean scores between two and more than two groups; <b>Mann-Whitney U and Kruskal-Wallis tests</b> were used instead when a group had fewer than 30 participants.','<b>اختبار t المستقل (Welch) وتحليل التباين الأحادي</b> لمقارنة المتوسطات، وبدلاً منهما <b>مان ويتني وكروسكال واليس</b> عند وجود مجموعة أقل من 30 مشاركة.'):T('<b>Independent t-test (Welch) and one-way ANOVA</b> were used to compare mean scores between two and more than two groups respectively.','<b>اختبار t المستقل (Welch) وتحليل التباين الأحادي</b> لمقارنة المتوسطات بين مجموعتين وأكثر.'));
+ if(sel.cor&&st.corVars.length>1)tests.push(sp0()?T('<b>Spearman correlation coefficient (r)</b> was used to evaluate the strength and direction of correlation between two ranked variables.','<b>معامل ارتباط سبيرمان (r)</b> لتقييم قوة واتجاه الارتباط بين متغيرين.'):T('<b>Pearson correlation coefficient (r)</b> was used to evaluate the strength and direction of the linear correlation between two quantitative variables.','<b>معامل ارتباط بيرسون (r)</b> لتقييم قوة واتجاه الارتباط الخطي بين متغيرين كميين.'));
+ if(sel.rel&&relRows)tests.push(T('<b>Cronbach\'s alpha</b> was used to test the internal consistency (reliability) of the scales.','<b>معامل ألفا كرونباخ</b> لاختبار الاتساق الداخلي (ثبات) المقاييس.'));
+ function sp0(){return st.corMethod==='spearman'}
+ var design='<h3>'+T('Statistical design:','التصميم الإحصائي:')+'</h3><p>'+T('Results were collected, statistically analyzed and tabulated using the statistical package of social science (SPSS) and Microsoft Excel. Quantitative data were presented as mean and standard deviation (SD) while qualitative data were expressed as frequency and percentage.'+(tests.length?' The following tests were used:':''),'جُمعت النتائج وحُللت إحصائياً وجُدولت باستخدام الحزمة الإحصائية للعلوم الاجتماعية (SPSS) وبرنامج Microsoft Excel. عُرضت البيانات الكمية بالمتوسط والانحراف المعياري، والبيانات الوصفية بالتكرار والنسبة.'+(tests.length?' واستُخدمت الاختبارات التالية:':''))+'</p>'+(tests.length?'<ul>'+tests.map(function(x){return'<li>'+x+'</li>'}).join('')+'</ul>':'')+'<p><b>'+T('The observed statistical differences or relationships were considered as follows:','اعتُبرت الفروق أو العلاقات الإحصائية كما يلي:')+'</b></p><ul><li><b>'+T('Non-significant (NS)','غير دالة (NS)')+'</b> '+T('when P-value > '+st.alpha,'عندما P > '+st.alpha)+'</li><li><b>'+T('Significant (S)','دالة (S)')+'</b> '+T('when P-value ≤ '+st.alpha+'.','عندما P ≤ '+st.alpha+'.')+'</li></ul>';
+ /* ---- intro ---- */
+ var rn=st.lang==='ar'?['الأول','الثاني','الثالث','الرابع','الخامس']:['I','II','III','IV','V'];
+ var intro=(st.aim?'<p>'+E(st.aim)+'</p>':'')+'<p><b>'+T('The results of this study and analysis of the collected data were presented in the following parts:','عُرضت نتائج الدراسة وتحليل البيانات في الأجزاء التالية:')+'</b></p>'+parts.map(function(p,k){var ts=p.tabs.filter(function(x){return typeof x==='number'}),fs=p.tabs.filter(function(x){return typeof x==='string'}).map(function(x){return x.slice(1)});
+   return'<p><b>'+T('Part ','الجزء ')+rn[k]+':</b> '+E(p.title)+(ts.length?' ('+T('Table','جدول')+' '+ts[0]+(ts.length>1?'-'+ts[ts.length-1]:'')+')':'')+(fs.length?' &amp; ('+T('Figure','شكل')+' '+fs[0]+(fs.length>1?'-'+fs[fs.length-1]:'')+')':'')+'.</p>'}).join('');
+ var h='<div class="rr" dir="'+(st.lang==='ar'?'rtl':'ltr')+'">'+(st.demo?'<p class="demo"><b>'+T('DEMO DATA — generated randomly for practice. Do NOT use these numbers in a thesis.','بيانات تجريبية عشوائية للتدريب فقط — لا تستخدم هذه الأرقام في الرسالة.')+'</b></p>':'')+'<h1>'+T('RESULTS','النتائج')+'</h1>'+intro;
+ blocks.forEach(function(b){
+  if(b.t==='part')h+='<h2>'+T('Part ','الجزء ')+rn[b.i-1]+': '+E(b.title)+'</h2>';
+  else if(b.t==='tab')h+='<p class="cap"><b>'+T('Table ('+b.n+'):','جدول ('+b.n+'):')+'</b> '+b.cap+'</p><div class="tw">'+b.html+'</div>'+(b.foot?'<p class="foot">'+b.foot+'</p>':'');
+  else if(b.t==='fig')h+='<div class="fg"><img src="'+b.url+'" alt="figure '+b.n+'"><br><a class="noprint" download="'+b.name+'" href="'+b.url+'">'+T('Download image','تنزيل الصورة')+'</a></div><p class="cap"><b>'+T('Figure ('+b.n+'):','شكل ('+b.n+'):')+'</b> '+b.cap+'</p>';
+  else if(b.t==='p')h+='<p class="tx">'+b.html+'</p>'});
+ h+=design;
+ if(relBlock)h+='<h3>'+T('Tools Reliability','ثبات الأدوات')+'</h3><p class="cap"><b>'+relBlock.cap+'</b></p><div class="tw">'+relBlock.html+'</div>';
+ h+='</div>';
+ return{html:h,tables:tn,figs:fn}}
+/* ---------- part C: charts ---------- */
+var PAL=['#1f4e79','#2a9d8f','#e07a5f','#8ab17d','#f2cc8f','#6d597a','#b56576'];
+function cvs(w,h){var c=document.createElement('canvas');c.width=w;c.height=h;var x=c.getContext('2d');x.fillStyle='#ffffff';x.fillRect(0,0,w,h);x.strokeStyle='#999';x.lineWidth=2;x.strokeRect(1,1,w-2,h-2);return{c:c,x:x}}
+function ttl(x,w,t){x.fillStyle='#111';x.font='bold 30px Times New Roman,serif';x.textAlign='center';x.fillText(t,w/2,46)}
+function fit(x,s,mw){while(x.measureText(s).width>mw&&s.length>4)s=s.slice(0,-2);return s}
+function chartBarH(t,labels,vals){var W=1000,H=Math.max(380,120+labels.length*62),o=cvs(W,H),x=o.x,L=300,R=60,T0=80,B=60,pw=W-L-R,ph=H-T0-B;ttl(x,W,t);
+ x.font='20px Arial';x.textAlign='center';x.strokeStyle='#ddd';x.lineWidth=1;
+ for(var g=0;g<=100;g+=20){var gx=L+pw*g/100;x.beginPath();x.moveTo(gx,T0);x.lineTo(gx,T0+ph);x.stroke();x.fillStyle='#444';x.fillText(g,gx,T0+ph+28)}
+ var bh=ph/labels.length;labels.forEach(function(l,i){var y=T0+i*bh+bh*.18,h=bh*.64,v=Math.max(0,Math.min(100,vals[i]||0)),w=pw*v/100;
+  x.fillStyle=PAL[i%PAL.length];x.fillRect(L,y,w,h);x.fillStyle='#111';x.font='bold 20px Arial';x.textAlign='right';x.fillText(fit(x,l,L-20),L-12,y+h/2+7);
+  x.textAlign=w>110?'right':'left';x.fillStyle=w>110?'#fff':'#111';x.fillText(S.fmt(vals[i],1)+'%',w>110?L+w-10:L+w+10,y+h/2+7)});
+ return o.c.toDataURL('image/png')}
+function chartBarV(t,labels,vals){var W=900,H=560,o=cvs(W,H),x=o.x,L=80,R=40,T0=90,B=90,pw=W-L-R,ph=H-T0-B,mx=Math.max(10,Math.ceil(Math.max.apply(null,vals)/10)*10);ttl(x,W,t);
+ x.font='20px Arial';x.textAlign='right';x.strokeStyle='#ddd';x.lineWidth=1;
+ for(var g=0;g<=mx;g+=mx/5){var gy=T0+ph-ph*g/mx;x.beginPath();x.moveTo(L,gy);x.lineTo(W-R,gy);x.stroke();x.fillStyle='#444';x.fillText(Math.round(g),L-10,gy+7)}
+ var bw=pw/labels.length;labels.forEach(function(l,i){var h=ph*(vals[i]||0)/mx,bx=L+i*bw+bw*.22,w=bw*.56;x.fillStyle=PAL[i%PAL.length];x.fillRect(bx,T0+ph-h,w,h);
+  x.fillStyle='#111';x.font='bold 22px Arial';x.textAlign='center';x.fillText(S.fmt(vals[i],1)+'%',bx+w/2,T0+ph-h-10);x.font='bold 20px Times New Roman,serif';x.fillText(fit(x,l,bw-10),L+i*bw+bw/2,T0+ph+34)});
+ return o.c.toDataURL('image/png')}
+function chartPie(t,labels,vals){var W=900,H=520,o=cvs(W,H),x=o.x,cx=300,cy=290,r=170,tot=vals.reduce(function(a,b){return a+b},0)||1,a0=-Math.PI/2;ttl(x,W,t);
+ vals.forEach(function(v,i){var a1=a0+v/tot*Math.PI*2;if(v>0){x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,r,a0,a1);x.closePath();x.fillStyle=PAL[i%PAL.length];x.fill();x.strokeStyle='#fff';x.lineWidth=3;x.stroke();
+  var m=(a0+a1)/2;x.fillStyle=v/tot>.08?'#fff':'#111';x.font='bold 22px Arial';x.textAlign='center';var px=cx+Math.cos(m)*r*(v/tot>.08?.62:1.18),py=cy+Math.sin(m)*r*(v/tot>.08?.62:1.18);x.fillText(S.fmt(v,1)+'%',px,py+7)}a0=a1});
+ labels.forEach(function(l,i){var y=170+i*46;x.fillStyle=PAL[i%PAL.length];x.fillRect(580,y-18,26,26);x.fillStyle='#111';x.font='bold 22px Arial';x.textAlign='left';x.fillText(fit(x,l,280),620,y+3)});
+ return o.c.toDataURL('image/png')}
+function chartScatter(xl,yl,xs,ys,ann,pos){var W=900,H=560,o=cvs(W,H),x=o.x,L=100,R=40,T0=60,B=90,pw=W-L-R,ph=H-T0-B,n=xs.length,i;
+ function rng(a){var mn=Math.min.apply(null,a),mx=Math.max.apply(null,a);if(mn===mx){mn-=1;mx+=1}var p=(mx-mn)*.06;return[mn-p,mx+p]}
+ var rx=rng(xs),ry=rng(ys);function X(v){return L+pw*(v-rx[0])/(rx[1]-rx[0])}function Y(v){return T0+ph-ph*(v-ry[0])/(ry[1]-ry[0])}
+ x.strokeStyle='#e3e3e3';x.lineWidth=1;x.font='18px Arial';x.fillStyle='#444';
+ for(i=0;i<=5;i++){var gx=L+pw*i/5,gy=T0+ph*i/5;x.beginPath();x.moveTo(gx,T0);x.lineTo(gx,T0+ph);x.stroke();x.beginPath();x.moveTo(L,gy);x.lineTo(L+pw,gy);x.stroke();
+  x.textAlign='center';x.fillText(S.fmt(rx[0]+(rx[1]-rx[0])*i/5,rx[1]-rx[0]>20?0:1),gx,T0+ph+26);x.textAlign='right';x.fillText(S.fmt(ry[1]-(ry[1]-ry[0])*i/5,ry[1]-ry[0]>20?0:1),L-10,gy+6)}
+ x.strokeStyle='#222';x.lineWidth=2;x.strokeRect(L,T0,pw,ph);
+ x.fillStyle='#0b5394';xs.forEach(function(v,k){x.beginPath();x.arc(X(v),Y(ys[k]),6,0,Math.PI*2);x.fill()});
+ var mx=S.mean(xs),my=S.mean(ys),sxy=0,sxx=0;for(i=0;i<n;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sxx+=(xs[i]-mx)*(xs[i]-mx)}
+ if(sxx>0){var b=sxy/sxx,a=my-b*mx;x.save();x.beginPath();x.rect(L,T0,pw,ph);x.clip();x.strokeStyle='#9c1c1c';x.lineWidth=3;x.beginPath();x.moveTo(X(rx[0]),Y(a+b*rx[0]));x.lineTo(X(rx[1]),Y(a+b*rx[1]));x.stroke();x.restore()}
+ x.fillStyle='#111';x.font='bold 22px Arial';x.textAlign='center';x.fillText(fit(x,xl,pw),L+pw/2,H-24);x.save();x.translate(28,T0+ph/2);x.rotate(-Math.PI/2);x.fillText(fit(x,yl,ph),0,0);x.restore();
+ x.font='bold 22px Times New Roman,serif';var tw=x.measureText(ann).width+30;x.fillStyle='#fff';x.strokeStyle='#1f4e79';x.lineWidth=3;var by=pos?T0+ph-54:T0+12;x.fillRect(L+pw-tw-12,by,tw,42);x.strokeRect(L+pw-tw-12,by,tw,42);x.fillStyle='#111';x.textAlign='left';x.fillText(ann,L+pw-tw+3,by+30);
+ return o.c.toDataURL('image/png')}
+/* ---------- export ---------- */
+var REPCSS='.rr{font-family:"Times New Roman",Times,serif;font-size:12pt;line-height:1.7;color:#000}.rr h1{text-align:center;font-size:20pt}.rr h2{font-size:14pt;text-decoration:underline}.rr h3{font-size:13pt}.rr p{margin:6pt 0;text-align:justify}.rr .tw{overflow-x:auto}.rr table.rt{border-collapse:collapse;margin:8pt auto;border:3px double #000;font-size:11pt;min-width:50%}.rr table.rt td,.rr table.rt th{border:1px solid #000;padding:2px 8px;text-align:center}.rr table.rt td:first-child{text-align:start}.rr table.rt .hd th{background:#f2f2f2}.rr table.rt .sec td{background:#fde9d9;text-align:start}.rr td.ct{text-align:center!important}.rr .foot{font-size:9pt;text-align:center}.rr .fg{text-align:center;margin:10pt 0}.rr .fg img{max-width:100%;border:1px solid #bbb}.rr .demo{color:#a32a2a;border:2px solid #a32a2a;padding:6px;text-align:center}.rr sup{font-size:70%}';
+function stripUi(h){return h.replace(/<br><a class="noprint"[^>]*>.*?<\/a>/g,'')}
+function b64(s){return btoa(unescape(encodeURIComponent(s)))}
+function wrap76(s){return s.replace(/(.{76})/g,'$1\r\n')}
+function exportWord(){
+ if(!R)return;var html=stripUi(R.html);FIG.forEach(function(f){html=html.split(f.url).join(f.name)});
+ var doc='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Results</title><style>@page{size:21cm 29.7cm;margin:2cm}'+REPCSS+'</style></head><body>'+html+'</body></html>';
+ var bd='----=_BaseeraPart_'+Date.now(),m='MIME-Version: 1.0\r\nContent-Type: multipart/related; boundary="'+bd+'"; type="text/html"\r\n\r\n--'+bd+'\r\nContent-Type: text/html; charset="utf-8"\r\nContent-Transfer-Encoding: base64\r\nContent-Location: file:///C:/results/index.htm\r\n\r\n'+wrap76(b64(doc))+'\r\n';
+ FIG.forEach(function(f){m+='--'+bd+'\r\nContent-Type: image/png\r\nContent-Transfer-Encoding: base64\r\nContent-Location: file:///C:/results/'+f.name+'\r\n\r\n'+wrap76(f.url.split(',')[1])+'\r\n'});
+ m+='--'+bd+'--';dlBlob('results.doc',new Blob([m],{type:'application/msword'}))}
+function dlBlob(n,b){var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},800)}
+/* ---------- demo data ---------- */
+function demo(){
+ var seed=12345;function rn(){seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296}
+ var n=120,cols=[];function col(name,hint){var c={name:name,label:name,raw:[],hint:hint};cols.push(c);return c}
+ var age=col('Age (years)',{kind:'num',cuts:'25,35'}),mar=col('Marital status'),edu=col('Education'),res=col('Residence');
+ var lab=['Strongly disagree','Disagree','Neutral','Agree','Strongly agree'];
+ var qs=['The website was easy to use','The questions were clear','The result was clear','The information was useful','I would recommend the website','I trust the recommendations','The design was attractive','The website saved my time'],qc=[];
+ qs.forEach(function(q,i){qc.push(col(q,{kind:'lik',scale:i<5?'Usability':'Acceptability',inst:'Website evaluation',labels:lab,start:1}))});
+ for(var r=0;r<n;r++){var z=(rn()+rn()+rn())/3;age.raw.push(Math.round(18+rn()*27));var m=rn();mar.raw.push(m<.15?'Single':m<.85?'Married':'Divorced');var e=rn();edu.raw.push(e<.2?'Basic':e<.6?'Secondary':'University');res.raw.push(rn()<.5?'Rural':'Urban');
+  qc.forEach(function(c){var v=Math.round(1+(z*.65+rn()*.35)*4.6);c.raw.push(Math.max(1,Math.min(5,v)))})}
+ return{name:'demo',cols:cols,n:n}}
+/* ---------- part D: wizard UI ---------- */
+var UCSS='<style>#resx{position:fixed;inset:0;z-index:100001;overflow:auto;background:var(--bg,#f1f5f7);color:var(--ink,#12303d);padding:14px;line-height:1.6}#resx .bx{background:var(--surface,#fff);border:1px solid var(--line,#d3e0e6);border-radius:12px;padding:14px;margin:10px auto;max-width:1040px}#resx input[type=text],#resx input[type=number],#resx select,#resx textarea{font:inherit;padding:6px 8px;border:1.5px solid var(--line,#d3e0e6);border-radius:8px;background:var(--bg,#fff);color:inherit;max-width:100%;box-sizing:border-box}#resx .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}#resx .stp{display:flex;gap:6px;flex-wrap:wrap;max-width:1040px;margin:8px auto}#resx .stp span{padding:3px 12px;border-radius:20px;border:1px solid var(--line,#d3e0e6);font-size:.85rem;background:var(--surface,#fff)}#resx .stp span.on{background:var(--accent,#0f766e);color:var(--accent-ink,#fff);border-color:transparent}#resx .vc{border:1px solid var(--line,#d3e0e6);border-radius:10px;padding:8px 10px;margin:8px 0}#resx .vc input[type=text],#resx .vc label{width:100%;box-sizing:border-box}#resx .vc .row>label{flex:1 1 220px}#resx .vc b{font-size:.92rem}#resx .hint{color:var(--muted,#5a7380);font-size:.86rem}#resx .ck{display:inline-flex;gap:5px;align-items:center;margin:2px 10px 2px 0;font-size:.92rem}#resx .lst{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 10px}#resx .rwrap{background:#fff;color:#000;border-radius:8px;padding:14px;overflow-x:auto}'+REPCSS+'@media print{body>*{display:none!important}body>#resx{display:block!important;position:static!important;background:#fff!important}#resx .noprint{display:none!important}#resx .rwrap{padding:0}}</style>';
+var STEPS=[['البيانات','Data'],['المتغيرات','Variables'],['الإعدادات','Settings'],['الجداول','Tables'],['التقرير','Report']];
+var KINDS=[['cat','فئوي (جدول تكرار)','Categorical (frequency)'],['num','رقمي (Mean±SD)','Numeric (Mean±SD)'],['lik','بند ليكرت','Likert item'],['skip','تجاهل','Ignore']];
+function opt(v,l,cur){return'<option value="'+E(v)+'"'+(String(v)===String(cur)?' selected':'')+'>'+E(l)+'</option>'}
+function ck(k,label,on,extra){return'<label class="ck"><input type="checkbox" data-k="'+k+'"'+(extra||'')+(on?' checked':'')+'> '+label+'</label>'}
+function render(){
+ var r=$('resx');if(!r)return;r.setAttribute('dir',ui()?'rtl':'ltr');
+ r.innerHTML=UCSS+'<div class="row noprint" style="max-width:1040px;margin:0 auto;justify-content:space-between"><h2 style="margin:0">'+U('نتائج بنمط SPSS','SPSS-style results')+'</h2><div class="row"><button class="ghost" data-act="ui">'+(ui()?'EN':'عربي')+'</button><button class="ghost" data-act="close">'+U('إغلاق','Close')+'</button></div></div><div class="stp noprint">'+STEPS.map(function(s,i){return'<span class="'+(st.step===i+1?'on':'')+'">'+(i+1)+'. '+U(s[0],s[1])+'</span>'}).join('')+'</div><div id="resb"></div>';
+ body()}
+function nav(back,next,nextLbl){return'<div class="row noprint" style="max-width:1040px;margin:12px auto">'+(back?'<button class="ghost" data-act="back">'+U('رجوع','Back')+'</button>':'')+(next?'<button data-act="next">'+(nextLbl||U('التالي','Next'))+'</button>':'')+'</div>'}
+function body(){var b=$('resb');if(!b)return;var f=[s1,s2,s3,s4,s5][st.step-1];f(b)}
+function s1(b){
+ var h='<div class="bx"><p>'+U('اختاري مصدر البيانات. الأداة لا ترسل أي بيانات إلى أي مكان: التحليل يتم داخل المتصفح فقط.','Choose the data source. Nothing is uploaded anywhere: analysis runs inside your browser only.')+'</p><div class="row">';
+ st.sources.forEach(function(s,i){h+='<button data-act="src" data-i="'+i+'">'+E(s.name)+'</button>'});
+ h+='<label class="noprint"><span class="hint">'+U('أو ارفعي ملف CSV / Excel (الصف الأول = أسماء الأعمدة، كل صف = مشاركة):','Or upload a CSV / Excel file (first row = column names, one row per participant):')+'</span><br><input type="file" id="resf" accept=".csv,.txt,.tsv,.xlsx,.xls"></label></div><div class="row"><button class="ghost" data-act="demo">'+U('بيانات تجريبية للتدريب','Practice with demo data')+'</button><span class="hint">'+U('عشوائية، للتجربة فقط','random, for practice only')+'</span></div><p id="resm" class="hint"></p>';
+ if(st.ds)h+='<p><b>'+U('البيانات المحمّلة: ','Loaded: ')+E(st.ds.name)+'</b> — '+st.ds.n+' '+U('صف','rows')+' × '+st.ds.cols.length+' '+U('عمود','columns')+'</p>';
+ h+='</div>'+nav(false,!!st.ds);b.innerHTML=h;
+ var f=$('resf');if(f)f.onchange=function(){var fl=f.files[0];if(!fl)return;$('resm').textContent=U('جارٍ القراءة...','Reading...');readFile(fl,function(d){setDs(d,false)},function(e){$('resm').textContent=e==='lib'?U('تعذر تحميل مكتبة Excel. احفظي الملف CSV وأعيدي المحاولة.','Could not load the Excel library. Save as CSV and try again.'):U('تعذر قراءة الملف أو لا يحتوي صفين على الأقل.','Could not read the file, or it has fewer than 2 rows.')})}}
+function setDs(d,isDemo){st.ds=d;st.demo=!!isDemo;st.pred=[];st.outc=[];st.scoreVars=[];st.corVars=[];st.s4=false;st.lastScale='';st.lastInst='';initCfg(d);body()}
+function s2(b){
+ var d=st.ds,h='<div class="bx"><p>'+U('راجعي كل عمود: نوعه، وتسميته كما ستظهر في الجداول. أنواع البنود: <b>فئوي</b> (جدول تكرار ونسب)، <b>رقمي</b> (متوسط±انحراف، مع حدود فئات اختيارية)، <b>بند ليكرت</b> (يُجمع في مقياس/مجال)، أو <b>تجاهل</b>.','Review each column: its type and the label shown in tables. Types: <b>Categorical</b> (frequency table), <b>Numeric</b> (Mean±SD, optional cut-points), <b>Likert item</b> (grouped into a scale/domain), or <b>Ignore</b>.')+'</p></div>';
+ d.cols.forEach(function(c,i){var g=st.cfg[i],sm=distinct(c).slice(0,4).join(' | ');
+  h+='<div class="bx vc"><div class="row"><b>'+E(c.name)+'</b><span class="hint">('+E(sm)+')</span></div><div class="row"><input type="text" size="34" data-k="label" data-i="'+i+'" value="'+E(g.label)+'"><select data-k="kind" data-i="'+i+'">'+KINDS.map(function(k){return opt(k[0],U(k[1],k[2]),g.kind)}).join('')+'</select></div>';
+  if(g.kind==='cat')h+='<div class="row"><label>'+U('القيم=التسميات (بالترتيب):','Values=labels (in order):')+'<br><input type="text" size="46" data-k="vmap" data-i="'+i+'" value="'+E(g.vmap)+'"></label><label>'+U('مجموعة الجدول:','Table group:')+'<br><input type="text" size="20" data-k="tc" data-i="'+i+'" value="'+E(g.tc)+'" placeholder="'+U('مثال: التاريخ الصحي','e.g. Health history')+'"></label>'+ck('skipFreq',U('استبعاد من جداول التكرار','Exclude from frequency tables'),g.skipFreq,' data-i="'+i+'"')+'</div>';
+  if(g.kind==='num')h+='<div class="row"><label>'+U('حدود الفئات (اختياري، مثال 30,40,50):','Cut-points (optional, e.g. 30,40,50):')+'<br><input type="text" size="22" data-k="cuts" data-i="'+i+'" value="'+E(g.cuts)+'"></label><label>'+U('مجموعة الجدول:','Table group:')+'<br><input type="text" size="20" data-k="tc" data-i="'+i+'" value="'+E(g.tc)+'"></label>'+ck('skipFreq',U('استبعاد من جداول التكرار','Exclude from frequency tables'),g.skipFreq,' data-i="'+i+'"')+'</div>';
+  if(g.kind==='lik')h+='<div class="row"><label>'+U('المقياس / المجال:','Scale / domain:')+'<br><input type="text" size="22" data-k="scale" data-i="'+i+'" value="'+E(g.scale)+'"></label><label>'+U('الأداة (لتجميع المجالات):','Instrument (groups domains):')+'<br><input type="text" size="22" data-k="inst" data-i="'+i+'" value="'+E(g.inst)+'"></label>'+ck('rev',U('بند معكوس الترميز','Reverse-scored item'),g.rev,' data-i="'+i+'"')+'</div>';
+  h+='</div>'});
+ var sc=Object.keys(st.scales);
+ if(sc.length){h+='<div class="bx"><h3 style="margin-top:0">'+U('تسميات إجابات المقاييس','Scale answer labels')+'</h3><p class="hint">'+U('اكتبي التسميات من الأقل إلى الأعلى مفصولة بفواصل (تُطابَق مع النص أو الأرقام في بياناتك).','Write the labels from lowest to highest, comma-separated (matched against the text or numbers in your data).')+'</p>';
+  sc.forEach(function(k){var s=st.scales[k];h+='<div class="vc"><b>'+E(k)+'</b> <span class="hint">('+scaleItems(k).length+' '+U('بنود','items')+')</span><div class="row"><input type="text" size="60" data-k="sclab" data-sc="'+E(k)+'" value="'+E(s.labels)+'"><label>'+U('أول درجة:','First code:')+' <select data-k="scstart" data-sc="'+E(k)+'">'+opt(0,'0',s.start)+opt(1,'1',s.start)+'</select></label></div></div>'});h+='</div>'}
+ b.innerHTML=h+nav(true,true)}
+function s3(b){
+ var h='<div class="bx"><h3 style="margin-top:0">'+U('معلومات التقرير','Report info')+'</h3><div class="row"><label>'+U('لغة التقرير:','Report language:')+' <select data-k="lang">'+opt('en','English',st.lang)+opt('ar','العربية',st.lang)+'</select></label><label>'+U('وصف العينة (مثال: women / patients):','Participants noun (e.g. women / patients):')+' <input type="text" size="18" data-k="subj" value="'+E(st.subj)+'"></label></div><label>'+U('جملة الهدف في مقدمة الفصل (اختياري):','Aim sentence for the intro (optional):')+'<br><textarea rows="2" style="width:100%" data-k="aim">'+E(st.aim)+'</textarea></label></div>';
+ h+='<div class="bx"><h3 style="margin-top:0">'+U('الدرجات والمستويات','Scores and levels')+'</h3><div class="row"><label>'+U('طريقة النسبة المئوية للمتوسط:','Mean-percentage method:')+' <select data-k="pctMode">'+opt('scaled',U('(المتوسط − الأدنى) ÷ المدى','(mean − min) ÷ range'),st.pctMode)+opt('max',U('المتوسط ÷ الدرجة العظمى (كما في الملف النموذجي)','mean ÷ max score (as in the sample file)'),st.pctMode)+'</select></label></div>';
+ var I=insts();Object.keys(st.instc).forEach(function(k){var c=st.instc[k];h+='<div class="vc"><b>'+E(k)+'</b> <span class="hint">('+(I[k]||[]).join(' + ')+')</span><div class="row"><label>'+U('حدود المستويات (% من الدرجة):','Level cut-offs (% of score):')+'<br><input type="text" size="14" data-k="icuts" data-in="'+E(k)+'" value="'+E(c.cuts)+'"></label><label>'+U('أسماء المستويات (واحد أكثر من الحدود):','Level names (one more than cut-offs):')+'<br><input type="text" size="34" data-k="ilabs" data-in="'+E(k)+'" value="'+E(c.labels)+'"></label></div></div>'});
+ if(!Object.keys(st.instc).length)h+='<p class="hint">'+U('لا توجد بنود ليكرت (اختياري).','No Likert items (optional).')+'</p>';
+ h+='<div class="row"><label>'+U('رسم المستويات:','Levels chart:')+' <select data-k="levelChart">'+opt('bar',U('أعمدة','Bars'),st.levelChart)+opt('pie',U('دائري','Pie'),st.levelChart)+'</select></label></div></div>';
+ h+='<div class="bx"><h3 style="margin-top:0">'+U('الاختبارات','Tests')+'</h3><div class="row"><label>'+U('مستوى الدلالة α:','Significance α:')+' <select data-k="alpha">'+opt(.05,'0.05',st.alpha)+opt(.01,'0.01',st.alpha)+'</select></label><label>'+U('مقارنة المتوسطات:','Comparing means:')+' <select data-k="mode">'+opt('auto',U('تلقائي (لا معلمي إذا مجموعة < 30)','Auto (non-parametric if any group < 30)'),st.mode)+opt('param','t-test / ANOVA',st.mode)+opt('non','Mann-Whitney / Kruskal-Wallis',st.mode)+'</select></label><label>'+U('الارتباط:','Correlation:')+' <select data-k="corMethod">'+opt('spearman','Spearman',st.corMethod)+opt('pearson','Pearson',st.corMethod)+'</select></label><label>'+U('نسب جدول العلاقات:','Relation-table %:')+' <select data-k="pctBasis">'+opt('total',U('من الإجمالي (كالملف النموذجي)','of grand total (as sample)'),st.pctBasis)+opt('row',U('من الصف','of row'),st.pctBasis)+opt('col',U('من العمود','of column'),st.pctBasis)+'</select></label></div></div>';
+ b.innerHTML=h+nav(true,true)}
+function plist(key,V,filter){var h='<div class="lst">';V.filter(filter).forEach(function(v){h+='<label class="ck"><input type="checkbox" data-k="pick" data-l="'+key+'" data-v="'+E(v.id)+'"'+(st[key].indexOf(v.id)>=0?' checked':'')+'> '+E(v.label)+'</label>'});return h+'</div>'}
+function s4(b){
+ var V=registry();
+ if(!st.s4){st.s4=true;st.pred=V.filter(function(v){return v.type==='cat'&&v.id.charAt(0)!=='L'}).map(function(v){return v.id});st.outc=V.filter(function(v){return v.id.slice(0,2)==='L:'}).map(function(v){return v.id});
+  var sc=V.filter(function(v){return v.id.slice(0,2)==='s:'||v.id.slice(0,2)==='i:'});st.scoreVars=sc.map(function(v){return v.id});st.corVars=sc.length<=4?sc.map(function(v){return v.id}):V.filter(function(v){return v.id.slice(0,2)==='i:'}).map(function(v){return v.id});
+  if(st.corVars.length<2)st.corVars=V.filter(function(v){return v.type==='num'}).slice(0,3).map(function(v){return v.id})}
+ var s=st.sel,h='<div class="bx"><h3 style="margin-top:0">'+U('اختاري ما تريدين في الفصل','Choose what goes in the chapter')+'</h3>'+
+ [['freq','جداول التكرار والنسب (+Mean±SD)','Frequency tables (+ Mean±SD)'],['items','جداول بنود ليكرت (N و %)','Likert item tables (N and %)'],['desc','جدول Min / Max / Mean±SD / Median للبنود','Item descriptives (Min / Max / Mean±SD / Median)'],['domains','ترتيب المجالات + الرسم','Domain ranking + chart'],['levels','المستويات الكلية + الرسم','Total levels + chart'],['chi','علاقات مربع كاي (مع فيشر)','Chi-square relations (with Fisher)'],['grp','مقارنة المتوسطات (t / ANOVA / لا معلمي)','Mean comparisons (t / ANOVA / non-parametric)'],['cor','الارتباط + رسم الانتشار','Correlation + scatter plot'],['rel','ثبات ألفا كرونباخ','Cronbach\'s alpha reliability']].map(function(x){return ck('sel:'+x[0],U(x[1],x[2]),s[x[0]])}).join('<br>')+'</div>';
+ h+='<div class="bx"><h3 style="margin-top:0">'+U('المتغيرات المستقلة (صفوف جداول العلاقات والمقارنات)','Predictors (rows of relation / comparison tables)')+'</h3>'+plist('pred',V,function(v){return v.type==='cat'&&v.id.slice(0,2)!=='L:'})+'<h3>'+U('المتغيرات التابعة لمربع كاي (أعمدة الجدول)','Chi-square outcomes (table columns)')+'</h3>'+plist('outc',V,function(v){return v.type==='cat'})+'<h3>'+U('درجات للمقارنة بين المجموعات','Scores to compare between groups')+'</h3>'+plist('scoreVars',V,function(v){return v.type==='num'})+'<h3>'+U('متغيرات الارتباط (كل زوج)','Correlation variables (every pair)')+'</h3>'+plist('corVars',V,function(v){return v.type==='num'})+'</div>';
+ b.innerHTML=h+nav(true,true,U('إنشاء التقرير','Generate report'))}
+function s5(b){
+ b.innerHTML='<div class="bx">'+U('جارٍ إنشاء التقرير...','Generating the report...')+'</div>';
+ setTimeout(function(){
+  try{R=build()}catch(e){b.innerHTML='<div class="bx"><p style="color:#a32a2a">'+U('حدث خطأ أثناء الحساب: ','Error while computing: ')+E(e&&e.message)+'</p></div>'+nav(true,false);return}
+  b.innerHTML='<div class="bx noprint"><div class="row"><button data-act="word">'+U('تصدير Word','Export Word')+'</button><button class="ghost" data-act="print">'+U('طباعة / PDF','Print / PDF')+'</button><span class="hint">'+R.tables+' '+U('جدول','tables')+' · '+R.figs+' '+U('شكل','figures')+'</span></div><p class="hint">'+U('راجعي الجمل التفسيرية قبل النسخ. للأرقام النهائية في الرسالة يُنصح بالتأكد منها في SPSS الأصلي.','Review the generated sentences before copying. For final thesis numbers, double-check in the original SPSS.')+'</p></div><div class="bx rwrap">'+R.html+'</div>'+nav(true,false);
+  var rw=b.querySelector('.rr');if(rw)rw.style.fontSize='12pt'},30)}
+function onClick(e){
+ var t=e.target.closest?e.target.closest('[data-act]'):null;if(!t)return;var a=t.getAttribute('data-act');
+ if(a==='close')closeR();
+ else if(a==='ui'){st.ui=ui()?'en':'ar';render()}
+ else if(a==='back'){st.step--;render()}
+ else if(a==='next'){if(st.step===1&&!st.ds)return;st.step++;render();$('resx').scrollTop=0}
+ else if(a==='src'){var s=st.sources[+t.getAttribute('data-i')],d=null;try{d=s.get()}catch(x){}if(!d||d.n<2){$('resm').textContent=U('لا توجد بيانات كافية في هذا المصدر بعد (يلزم صفان على الأقل).','Not enough data in this source yet (at least 2 rows needed).');return}setDs(d,false)}
+ else if(a==='demo')setDs(demo(),true)
+ else if(a==='word')exportWord()
+ else if(a==='print')window.print()}
+function onChange(e){
+ var t=e.target,k=t.getAttribute&&t.getAttribute('data-k');if(!k)return;
+ var v=t.type==='checkbox'?t.checked:t.value,i=t.getAttribute('data-i'),g=i!=null?st.cfg[+i]:null,ds=st.ds;
+ if(k==='kind'){g.kind=v;if(v==='cat'&&!g.vmap)g.vmap=defaultVmap(ds.cols[+i],+i);if(v==='lik'){g.scale=g.scale||st.lastScale||'Scale 1';g.inst=g.inst||st.lastInst||'Questionnaire'}syncScales();body()}
+ else if(k==='scale'){g.scale=String(v).trim()||'Scale 1';st.lastScale=g.scale;syncScales();body()}
+ else if(k==='inst'){g.inst=String(v).trim()||'Questionnaire';st.lastInst=g.inst;syncScales();body()}
+ else if(k==='label'||k==='vmap'||k==='cuts'||k==='tc')g[k]=v;
+ else if(k==='rev'||k==='skipFreq')g[k]=v;
+ else if(k==='sclab')st.scales[t.getAttribute('data-sc')].labels=v;
+ else if(k==='scstart')st.scales[t.getAttribute('data-sc')].start=+v;
+ else if(k==='icuts')st.instc[t.getAttribute('data-in')].cuts=v;
+ else if(k==='ilabs')st.instc[t.getAttribute('data-in')].labels=v;
+ else if(k==='alpha')st.alpha=+v;
+ else if(k.indexOf('sel:')===0)st.sel[k.slice(4)]=v;
+ else if(k==='pick'){var l=t.getAttribute('data-l'),id=t.getAttribute('data-v'),ix=st[l].indexOf(id);if(v&&ix<0)st[l].push(id);if(!v&&ix>=0)st[l].splice(ix,1)}
+ else st[k]=v}
+function closeR(){var r=$('resx');if(r)r.remove();st=null;R=null;FIG=[];if(location.hash==='#spss'){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){location.hash=''}}}
+function open(opts){
+ if($('resx'))return;opts=opts||{};
+ st={ui:(typeof LANG!=='undefined'&&LANG==='en')?'en':'ar',step:1,ds:null,cfg:[],scales:{},instc:{},sources:opts.sources||[],lang:'en',subj:'',aim:'',pctMode:'scaled',alpha:.05,levelChart:'bar',mode:'auto',corMethod:'spearman',pctBasis:'total',pred:[],outc:[],scoreVars:[],corVars:[],s4:false,demo:false,
+  sel:{freq:true,items:true,desc:true,domains:true,levels:true,chi:true,grp:true,cor:true,rel:true}};
+ var d=document.createElement('div');d.id='resx';document.body.appendChild(d);
+ d.addEventListener('click',onClick);d.addEventListener('change',onChange);render()}
+window.addEventListener('hashchange',function(){if(location.hash==='#spss')open({sources:[]})});
+window.addEventListener('load',function(){if(location.hash==='#spss')open({sources:[]})});
+return{open:open,_S:S,_dbg:function(){return{st:st,R:R}}};
 })();
+
 </script>
 </body></html>

@@ -468,7 +468,12 @@ function usageDS(m){
  var d=spssBuild(m),cols=d.cols.map(function(c,i){var raw=d.rows.map(function(r){var v=r[i];return v===''||v==null?null:v}),o={name:c.n,label:c.l,raw:raw};
   if(c.n==='id'||c.n==='date')o.hint={kind:'skip'};
   else if(c.v){o.map={};c.v.forEach(function(p){o.map[p[0]]=p[1]});o.hint={kind:'cat'}}
-  else o.hint={kind:'num'};return o});
+  else o.hint={kind:'num'};
+  var A=function(a,e){return isAr()?a:e},mq=/^q(\d+)/.exec(c.n);
+  if(mq){var qq=(typeof Q!=='undefined')?Q[+mq[1]-1]:null,qn=(qq&&qq.n)||+mq[1];o.hint.tc=qn<=5?A('معلومات أساسية','Basic information'):qn<=12?A('الحالة الصحية','Health conditions'):A('التفضيلات والتاريخ الإنجابي','Preferences and history')}
+  else if(/^top/.test(c.n))o.hint.tc=A('الوسائل المرشحة','Recommended methods');
+  else if(/^(nexcl|stoprec|nrefer|nopen)$/.test(c.n)){o.hint.tc=A('مخرجات الموقع','Site outputs');if(c.n!=='nopen')o.hint.out=true}
+  return o});
  return ds0('baseera-usage',cols,d.rows.length)}
 function evalDS(){
  if(!DATA||!DATA.eval||!DATA.eval.length)return null;
@@ -844,9 +849,14 @@ function betacf(a,b,x){var qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs
 function betai(a,b,x){if(x<=0)return 0;if(x>=1)return 1;var bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b}
 S.tP=function(t,df){return betai(df/2,.5,df/(df+t*t))};
 S.fP=function(f,d1,d2){if(f<=0)return 1;return betai(d2/2,d1/2,d2/(d2+d1*f))};
-function erfc(x){var z=Math.abs(x),t=1/(1+.5*z),r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(.37409196+t*(.09678418+t*(-.18628806+t*(.27886807+t*(-1.13520398+t*(1.48851587+t*(-.82215223+t*.17087277)))))))));return x>=0?r:2-r}
+function erfcOld(x){var z=Math.abs(x),t=1/(1+.5*z),r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(.37409196+t*(.09678418+t*(-.18628806+t*(.27886807+t*(-1.13520398+t*(1.48851587+t*(-.82215223+t*.17087277)))))))));return x>=0?r:2-r}
 function lchoose(n,k){return lgam(n+1)-lgam(k+1)-lgam(n-k+1)}
 S.fisher2=function(a,b,c,d){var r1=a+b,r2=c+d,c1=a+c,n=r1+r2,lo=Math.max(0,c1-r2),hi=Math.min(r1,c1);function pr(x){return Math.exp(lchoose(r1,x)+lchoose(r2,c1-x)-lchoose(n,c1))}var p0=pr(a),s=0;for(var x=lo;x<=hi;x++){var p=pr(x);if(p<=p0*(1+1e-7))s+=p}return Math.min(1,s)};
+function erfc(x){if(x<0)return 2-erfc(-x);var z=x*x,a=.5;if(z===0)return 1;return z<a+1?1-gser(a,z):gcf(a,z)}
+S.erfc=erfc;
+S.pnorm=function(z){return .5*erfc(-z/Math.SQRT2)};
+S.qnorm=function(p){if(p<=0)return-Infinity;if(p>=1)return Infinity;var lo=-40,hi=40,m;for(var i=0;i<100;i++){m=(lo+hi)/2;if(S.pnorm(m)<p)lo=m;else hi=m}return(lo+hi)/2};
+S.tinv=function(p2,df){var lo=0,hi=1e3,m;for(var i=0;i<200;i++){m=(lo+hi)/2;if(S.tP(m,df)>p2)lo=m;else hi=m}return(lo+hi)/2};
 S.mean=function(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return a.length?s/a.length:NaN};
 S.sd=function(a){var n=a.length;if(n<2)return NaN;var m=S.mean(a),s=0;for(var i=0;i<n;i++)s+=(a[i]-m)*(a[i]-m);return Math.sqrt(s/(n-1))};
 S.median=function(a){if(!a.length)return NaN;var b=a.slice().sort(function(x,y){return x-y}),n=b.length;return n%2?b[(n-1)/2]:(b[n/2-1]+b[n/2])/2};
@@ -868,6 +878,39 @@ S.spearman=function(x,y){return S.pearson(ranks(x).r,ranks(y).r)};
 S.alpha=function(M){var k=M.length;if(k<2)return NaN;var n=M[0].length,sv=0,tot=[],i,j;for(j=0;j<n;j++)tot[j]=0;for(i=0;i<k;i++){sv+=Math.pow(S.sd(M[i]),2);for(j=0;j<n;j++)tot[j]+=M[i][j]}var vt=Math.pow(S.sd(tot),2);return k/(k-1)*(1-sv/vt)};
 S.fmt=function(v,d){if(v==null||isNaN(v))return'-';return(+v).toFixed(d==null?2:d)};
 S.fp=function(p){if(p==null||isNaN(p))return'-';return p<.001?'<0.001':S.fmt(p,3)};
+
+function poly(c,n,x){var r=c[0];if(n>1){var p=x*c[n-1];for(var j=n-2;j>=1;j--)p=(p+c[j])*x;r+=p}return r}
+S.shapiro=function(a){var x=a.slice().sort(function(u,v){return u-v}),n=x.length;if(n<3||n>5000)return null;
+ var range=x[n-1]-x[0];if(range<1e-19)return null;var nn2=Math.floor(n/2),A=[],i;
+ if(n===3)A[1]=Math.SQRT1_2;else{var an25=n+.25,m=[],s2=0;for(i=1;i<=nn2;i++){m[i]=S.qnorm((i-.375)/an25);s2+=m[i]*m[i]}s2*=2;var ss=Math.sqrt(s2),rsn=1/Math.sqrt(n),
+  c1=[0,.221157,-.147981,-2.07119,4.434685,-2.706056],c2=[0,.042981,-.293762,-1.752461,5.682633,-3.582633],a1=poly(c1,6,rsn)-m[1]/ss,i1,fac;
+  if(n>5){i1=3;var a2=-m[2]/ss+poly(c2,6,rsn);fac=Math.sqrt((s2-2*m[1]*m[1]-2*m[2]*m[2])/(1-2*a1*a1-2*a2*a2));A[2]=a2}else{i1=2;fac=Math.sqrt((s2-2*m[1]*m[1])/(1-2*a1*a1))}
+  A[1]=a1;for(i=i1;i<=nn2;i++)A[i]=-m[i]/fac}
+ var mean=S.mean(x),ssq=0,b=0;for(i=0;i<n;i++)ssq+=(x[i]-mean)*(x[i]-mean);for(i=1;i<=nn2;i++)b+=A[i]*(x[n-i]-x[i-1]);
+ var w=b*b/ssq;if(w>1)w=1;var pw;
+ if(n===3){pw=1.90985931710274*(Math.asin(Math.sqrt(w))-1.04719755119660);if(pw<0)pw=0}
+ else{var y=Math.log(1-w),xx=Math.log(n),mu,sg;
+  if(n<=11){var gm=poly([-2.273,.459],2,n);if(y>=gm)return{w:w,p:1e-99,n:n};y=-Math.log(gm-y);mu=poly([.544,-.39978,.025054,-6.714e-4],4,n);sg=Math.exp(poly([1.3822,-.77857,.062767,-.0020322],4,n))}
+  else{mu=poly([-1.5861,-.31082,-.083751,.0038915],4,xx);sg=Math.exp(poly([-.4803,-.082676,.0030302],3,xx))}
+  pw=1-S.pnorm((y-mu)/sg)}
+ return{w:w,p:pw,n:n}};
+S.skew=function(a){var n=a.length;if(n<3)return NaN;var m=S.mean(a),m2=0,m3=0;a.forEach(function(v){var d=v-m;m2+=d*d;m3+=d*d*d});m2/=n;m3/=n;if(m2===0)return NaN;return Math.sqrt(n*(n-1))/(n-2)*m3/Math.pow(m2,1.5)};
+S.kurt=function(a){var n=a.length;if(n<4)return NaN;var m=S.mean(a),m2=0,m4=0;a.forEach(function(v){var d=v-m;m2+=d*d;m4+=d*d*d*d});m2/=n;m4/=n;if(m2===0)return NaN;var g2=m4/(m2*m2)-3;return(n-1)/((n-2)*(n-3))*((n+1)*g2+6)};
+S.levene=function(gs){var z=gs.map(function(g){var m=S.mean(g);return g.map(function(v){return Math.abs(v-m)})});return S.anova(z)};
+S.cohend=function(a,b){var n1=a.length,n2=b.length,sp=Math.sqrt(((n1-1)*Math.pow(S.sd(a),2)+(n2-1)*Math.pow(S.sd(b),2))/(n1+n2-2));return(S.mean(a)-S.mean(b))/sp};
+S.ci=function(a,conf){var n=a.length,m=S.mean(a),se=S.sd(a)/Math.sqrt(n),t=S.tinv(1-(conf||.95),n-1);return[m-t*se,m+t*se]};
+S.diffCI=function(a,b,welch,conf){var n1=a.length,n2=b.length,v1=Math.pow(S.sd(a),2),v2=Math.pow(S.sd(b),2),d=S.mean(a)-S.mean(b),se,df;
+ if(welch){se=Math.sqrt(v1/n1+v2/n2);df=Math.pow(v1/n1+v2/n2,2)/(Math.pow(v1/n1,2)/(n1-1)+Math.pow(v2/n2,2)/(n2-1))}else{var sp=((n1-1)*v1+(n2-1)*v2)/(n1+n2-2);se=Math.sqrt(sp*(1/n1+1/n2));df=n1+n2-2}
+ var t=S.tinv(1-(conf||.95),df);return[d-t*se,d+t*se]};
+S.corCI=function(r,n,conf){if(n<4||Math.abs(r)>=1)return[r,r];var z=.5*Math.log((1+r)/(1-r)),se=1/Math.sqrt(n-3),q=S.qnorm(1-(1-(conf||.95))/2);return[Math.tanh(z-q*se),Math.tanh(z+q*se)]};
+S.cramer=function(ch,r,c){var k=Math.min(r,c)-1;return k>0&&ch.n>0?Math.sqrt(ch.chi/(ch.n*k)):NaN};
+S.etaSq=function(an,gs){var all=[];gs.forEach(function(g){all=all.concat(g)});var gm=S.mean(all),sst=0,ssb=0;all.forEach(function(v){sst+=(v-gm)*(v-gm)});gs.forEach(function(g){var m=S.mean(g);ssb+=g.length*(m-gm)*(m-gm)});return ssb/sst};
+S.bonfAnova=function(gs){var N=0,sse=0,k=gs.length;gs.forEach(function(g){N+=g.length;var m=S.mean(g);g.forEach(function(v){sse+=(v-m)*(v-m)})});var mse=sse/(N-k),df=N-k,out=[],m=k*(k-1)/2;
+ for(var i=0;i<k;i++)for(var j=i+1;j<k;j++){var d=S.mean(gs[i])-S.mean(gs[j]),se=Math.sqrt(mse*(1/gs[i].length+1/gs[j].length)),t=d/se,p=S.tP(t,df);out.push({i:i,j:j,diff:d,p:Math.min(1,p*m)})}return out};
+S.dunn=function(gs){var all=[],lab=[];gs.forEach(function(g,i){g.forEach(function(v){all.push(v);lab.push(i)})});var N=all.length,rk=S.ranks(all),sum=gs.map(function(){return 0});for(var i=0;i<N;i++)sum[lab[i]]+=rk.r[i];var tc=0;rk.ties.forEach(function(t){tc+=t*t*t-t});
+ var sig=N*(N+1)/12-tc/(12*(N-1)),k=gs.length,m=k*(k-1)/2,out=[];for(i=0;i<k;i++)for(var j=i+1;j<k;j++){var d=sum[i]/gs[i].length-sum[j]/gs[j].length,z=d/Math.sqrt(sig*(1/gs[i].length+1/gs[j].length)),p=2*(1-S.pnorm(Math.abs(z)));out.push({i:i,j:j,z:z,p:Math.min(1,p*m)})}return out};
+S.holm=function(ps){var o=ps.map(function(p,i){return[p,i]}).sort(function(a,b){return a[0]-b[0]}),m=ps.length,adj=new Array(m),prev=0;o.forEach(function(x,k){var v=Math.min(1,(m-k)*x[0]);v=Math.max(v,prev);prev=v;adj[x[1]]=v});return adj};
+S.itemAnalysis=function(M){var k=M.length,n=M[0].length,out=[];for(var i=0;i<k;i++){var rest=[],j,r;for(r=0;r<n;r++){var s=0;for(j=0;j<k;j++)if(j!==i)s+=M[j][r];rest.push(s)}var others=M.filter(function(_,j){return j!==i});out.push({r:S.pearson(M[i],rest).r,alphaDel:k>2?S.alpha(others):NaN})}return out};
 return S})();
 /* ===== RES: SPSS-style results generator (flexible) — part A: data ===== */
 var RES=(function(){
@@ -998,7 +1041,7 @@ function build(){
  function part(title){cur={title:title,tabs:[]};parts.push(cur);blocks.push({t:'part',i:parts.length,title:title})}
  function tab(cap,html,text,foot){tn++;cur.tabs.push(tn);blocks.push({t:'tab',n:tn,cap:cap,html:html,foot:foot||''});if(text)blocks.push({t:'p',html:'<b>'+T('Table ('+tn+') shows that,','يوضح الجدول ('+tn+') أن')+'</b> '+text})}
  function fig(cap,url,text){fn++;var nm='figure'+fn+'.png';FIG.push({name:nm,url:url});cur.tabs.push('F'+fn);blocks.push({t:'fig',n:fn,cap:cap,url:url,name:nm});if(text)blocks.push({t:'p',html:'<b>'+T('Figure ('+fn+') shows that,','يوضح الشكل ('+fn+') أن')+'</b> '+text})}
- var nTxt='(n='+N+')',I=insts(),Ik=Object.keys(I),sel=st.sel;
+ var catFigs=0,nTxt='(n='+N+')',I=insts(),Ik=Object.keys(I),sel=st.sel;
  /* ---- Part: frequency ---- */
  if(sel.freq){
   var groups={},order=[];
@@ -1014,7 +1057,9 @@ function build(){
      if(g.kind==='num'){var xs=col.raw.filter(isNum).map(Number);rows+='<tr><td class="ct"><b>Mean±SD</b></td><td colspan="2" class="ct">'+f2(S.mean(xs))+'±'+f2(S.sd(xs))+'</td></tr>';
       if(!cd&&sents.length<4)sents.push(T('mean '+E(g.label)+' was '+f2(S.mean(xs))+'±'+f2(S.sd(xs)),'متوسط «'+E(g.label)+'» '+f2(S.mean(xs))+'±'+f2(S.sd(xs))))}});
     tab(T('Frequency and percentage distribution of the studied '+sj()+' according to their '+title.toLowerCase()+' '+nTxt+'.','التوزيع العددي والنسبي للمشاركات حسب '+title+' '+nTxt+'.'),
-     '<table class="rt"><tr class="hd"><th>'+E(title)+'</th><th>N</th><th>%</th></tr>'+rows+'</table>',sents.join(T('. Also, ','. كما أن '))+'.')})}}
+     '<table class="rt"><tr class="hd"><th>'+E(title)+'</th><th>N</th><th>%</th></tr>'+rows+'</table>',sents.join(T('. Also, ','. كما أن '))+'.');
+    if(sel.catfig)groups[k].forEach(function(i){var g=st.cfg[i],cd=catData(i);if(!cd||cd.order.length<2||cd.order.length>8||catFigs>=12)return;var cc=cnt(cd.vals,cd.order);if(!cc.n)return;catFigs++;
+     fig(T('Distribution of the studied '+sj()+' according to '+E(g.label)+' '+nTxt+'.','توزيع المشاركات حسب '+E(g.label)+' '+nTxt+'.'),chartBarV(g.label,cd.order,cd.order.map(function(o){return cc.c[o]/cc.n*100})),'')})})}}
  /* ---- Part: scales ---- */
  var scAll=Object.keys(st.scales).filter(function(sc){return scaleItems(sc).length});
  if(scAll.length&&(sel.items||sel.desc)){
@@ -1048,12 +1093,12 @@ function build(){
     var dm=scs.map(function(sc){var sco=scaleScore(sc).filter(function(x){return!isNaN(x)}),rg=scaleRange(sc),m=S.mean(sco);return{sc:sc,m:m,rg:rg,pct:pctOf(m,rg)}});
     var rk=dm.slice().sort(function(a,b){return b.pct-a.pct});dm.forEach(function(d){d.rank=rk.indexOf(d)+1});
     var tot=totalScore(scs).filter(function(x){return!isNaN(x)}),rows3='';
-    dm.forEach(function(d){rows3+='<tr><td>'+E(d.sc)+'</td>'+tdc(d.rg.m)+tdc(d.rg.max)+tdc(f2(d.m))+tdc(f2(d.pct))+tdc(ROM[d.rank-1]||d.rank)+'</tr>'});
+    dm.forEach(function(d){var ci=S.ci(scaleScore(d.sc).filter(function(q){return!isNaN(q)}),.95);rows3+='<tr><td>'+E(d.sc)+'</td>'+tdc(d.rg.m)+tdc(d.rg.max)+tdc(f2(d.m)+' <small>['+f2(ci[0])+', '+f2(ci[1])+']</small>')+tdc(f2(d.pct))+tdc(ROM[d.rank-1]||d.rank)+'</tr>'});
     rows3+='<tr class="sec"><td><b>'+T('Total score of '+E(ins)+' (Mean ± SD)','المجموع الكلي لـ '+E(ins)+' (المتوسط ± الانحراف)')+'</b></td><td colspan="5" class="ct">'+f2(S.mean(tot))+' ± '+f2(S.sd(tot))+'</td></tr>';
     var s2=rk.length>1?T('"'+E(rk[0].sc)+'" had the '+ORD(1)+' rank'+(rk[1]?' followed by "'+E(rk[1].sc)+'" in the '+ORD(2)+' rank':'')+(rk[2]?' then "'+E(rk[2].sc)+'" in the '+ORD(3)+' rank':'')+(rk.length>2?'. On the other hand, "'+E(rk[rk.length-1].sc)+'" had the '+ORD(rk.length)+' rank.':'.'),
       'احتل «'+E(rk[0].sc)+'» المرتبة الأولى'+(rk[1]?' يليه «'+E(rk[1].sc)+'»':'')+(rk.length>2?'، وجاء «'+E(rk[rk.length-1].sc)+'» في المرتبة الأخيرة.':'.')):T('mean percent of "'+E(rk[0].sc)+'" was '+f2(rk[0].pct)+'%.','النسبة المئوية للمتوسط '+f2(rk[0].pct)+'%.');
     tab(T('Ranking of '+ins+' domains according to their percentage of mean among the studied '+sj()+' '+nTxt+'.','ترتيب مجالات '+ins+' حسب النسبة المئوية للمتوسط '+nTxt+'.'),
-     '<table class="rt"><tr class="hd"><th>'+T('Domains','المجالات')+'</th><th>'+T('No of items','عدد البنود')+'</th><th>'+T('Maximum score','أقصى درجة')+'</th><th>'+T('Mean','المتوسط')+'</th><th>'+T('Mean %','المتوسط %')+'</th><th>'+T('Rank','الترتيب')+'</th></tr>'+rows3+'</table>',s2);
+     '<table class="rt"><tr class="hd"><th>'+T('Domains','المجالات')+'</th><th>'+T('No of items','عدد البنود')+'</th><th>'+T('Maximum score','أقصى درجة')+'</th><th>'+T('Mean [95% CI]','المتوسط [95% CI]')+'</th><th>'+T('Mean %','المتوسط %')+'</th><th>'+T('Rank','الترتيب')+'</th></tr>'+rows3+'</table>',s2);
     if(dm.length>1)fig(T('Ranking of '+ins+' domains according to their mean percentage among the studied '+sj()+' '+nTxt+'.','ترتيب مجالات '+ins+' حسب النسبة المئوية للمتوسط '+nTxt+'.'),
      chartBarH(T('Mean percentage of '+ins+' domains','النسبة المئوية لمتوسط مجالات '+ins),dm.map(function(d){return d.sc}),dm.map(function(d){return d.pct})),s2)}
    if(sel.levels){
@@ -1068,59 +1113,83 @@ function build(){
     fig(T('Distribution of the studied '+sj()+' regarding their total level of '+ins+' '+nTxt+'.','توزيع المشاركات حسب المستوى الكلي لـ '+ins+' '+nTxt+'.'),
      st.levelChart==='pie'?chartPie(T('Total level of '+ins,'المستوى الكلي لـ '+ins),lv.order,pv):chartBarV(T('Total level of '+ins,'المستوى الكلي لـ '+ins),lv.order,pv),stx)}})}
  /* ---- Part: relations ---- */
- var relOn=(sel.chi&&st.pred.length&&st.outc.length)||(sel.grp&&st.pred.length&&st.scoreVars.length)||(sel.cor&&st.corVars.length>1);
+ var useChi=sel.chi&&st.pred.length&&st.outc.length,useGrp=sel.grp&&st.pred.length&&st.scoreVars.length,useCor=sel.cor&&st.corVars.length>1,relOn=useChi||useGrp||useCor,usedPH=false,usedHolm=false,usedEff=false;
+ function normalGroup(g){if(g.length<3)return false;var sk=S.skew(g),ku=S.kurt(g);if(g.length>=30&&Math.abs(sk)<2&&Math.abs(ku)<7)return true;var sw=S.shapiro(g);return!!sw&&sw.p>st.alpha}
+ function stat2(l,v,df){return l+(df!=null?'('+(Array.isArray(df)?df.map(function(d){return S.fmt(d,d===Math.floor(d)?0:1)}).join(', '):S.fmt(df,df===Math.floor(df)?0:1))+')':'')+'= '+f2(v)}
  if(relOn){
   part(T('Statistical relations and correlations between the studied variables','العلاقات والارتباطات الإحصائية بين المتغيرات'));
-  if(sel.chi&&st.pred.length&&st.outc.length)st.outc.forEach(function(oid){
-   var ov=vget(oid);if(!ov)return;var od=ov.get(),olabs=od.order.slice(),K=olabs.length;if(K<2)return;
-   var h1='<tr class="hd"><th rowspan="3" colspan="2">'+T('Characteristics','الخصائص')+'</th><th colspan="'+K*2+'">'+E(ov.label)+'</th><th rowspan="3">X<sup>2</sup></th><th rowspan="3">P-value</th></tr><tr class="hd">',h3='<tr class="hd">';
-   olabs.forEach(function(l){h1+='<th colspan="2">'+E(l)+'</th>';h3+='<th>N</th><th>%</th>'});
-   var body='',sg=[],ns=[],foot=[],used=0;
+  /* normality */
+  var nids=[];(useGrp?st.scoreVars:[]).concat(useCor?st.corVars:[]).forEach(function(id){if(nids.indexOf(id)<0)nids.push(id)});
+  var rowsN='',nonN=[];
+  nids.forEach(function(id){var v=vget(id);if(!v||v.type!=='num')return;var xs=v.get().vals.filter(function(q){return!isNaN(q)}),sw=S.shapiro(xs);if(!sw)return;
+   var ok=sw.p>st.alpha;if(!ok)nonN.push(v.label);rowsN+='<tr><td>'+E(v.label)+'</td>'+tdc(xs.length)+tdc(f2(S.skew(xs)))+tdc(f2(S.kurt(xs)))+tdc(f2(sw.w))+tdc(S.fp(sw.p))+tdc(ok?T('Normal','طبيعي'):T('Non-normal','غير طبيعي'))+'</tr>'});
+  if(rowsN)tab(T('Assessment of the normality of the studied scores among the studied '+sj()+' '+nTxt+'.','تقييم التوزيع الطبيعي للدرجات المدروسة '+nTxt+'.'),
+   '<table class="rt"><tr class="hd"><th>'+T('Variable','المتغير')+'</th><th>n</th><th>Skewness</th><th>Kurtosis</th><th>Shapiro-Wilk W</th><th>P-value</th><th>'+T('Distribution','التوزيع')+'</th></tr>'+rowsN+'</table>',
+   nonN.length?T('the distribution of '+nonN.map(E).join(', ')+' deviated significantly from normality (Shapiro-Wilk P ≤ '+st.alpha+'); tests were therefore chosen group by group (groups with n ≥ 30, |skewness| < 2 and |kurtosis| < 7 were treated as sufficiently normal, otherwise non-parametric tests were used).','انحرف توزيع '+nonN.map(E).join('، ')+' عن التوزيع الطبيعي (Shapiro-Wilk، P ≤ '+st.alpha+')؛ لذلك اختير الاختبار لكل مجموعة (المجموعات n ≥ 30 مع التواء أقل من 2 وتفرطح أقل من 7 اعتُبرت كافية الطبيعية، وإلا استُخدمت اختبارات لامعلمية).'):T('all the studied scores were approximately normally distributed (Shapiro-Wilk P > '+st.alpha+').','كل الدرجات المدروسة قريبة من التوزيع الطبيعي (Shapiro-Wilk، P > '+st.alpha+').'),
+   '<span>'+T('P-value > '+st.alpha+' indicates an approximately normal distribution. Skewness and kurtosis are the sample-adjusted values.','P > '+st.alpha+' تعني توزيعًا قريبًا من الطبيعي. الالتواء والتفرطح بالقيم المعدّلة للعينة.')+'</span>');
+  /* chi-square */
+  if(useChi)st.outc.forEach(function(oid){
+   var ov=vget(oid);if(!ov)return;var od=ov.get(),olabs=od.order.slice(),K=olabs.length;if(K<2)return;var items=[];
    st.pred.forEach(function(pid){if(pid===oid)return;var pv=vget(pid);if(!pv)return;var pd=pv.get(),plabs=pd.order,tabx=plabs.map(function(){return olabs.map(function(){return 0})}),tot=0;
-    for(var r=0;r<N;r++){var a=pd.vals[r],b=od.vals[r];if(a==null||b==null)continue;var ia=plabs.indexOf(a),ib=olabs.indexOf(b);if(ia<0||ib<0)continue;tabx[ia][ib]++;tot++}
+    for(var r=0;r<N;r++){var a=pd.vals[r],b2=od.vals[r];if(a==null||b2==null)continue;var ia=plabs.indexOf(a),ib=olabs.indexOf(b2);if(ia<0||ib<0)continue;tabx[ia][ib]++;tot++}
     if(!tot)return;
     var keep=plabs.map(function(l,i){return i}).filter(function(i){return tabx[i].some(function(x){return x>0})}),cols=olabs.map(function(l,j){return j}).filter(function(j){return tabx.some(function(r){return r[j]>0})});
-    var sub=keep.map(function(i){return cols.map(function(j){return tabx[i][j]})}),ch=sub.length>1&&cols.length>1?S.chi(sub):null;
-    var rt=plabs.map(function(l,i){return tabx[i].reduce(function(a,b){return a+b},0)}),ct=olabs.map(function(l,j){return tabx.reduce(function(a,r){return a+r[j]},0)}),pp;
-    used++;
+    var sub=keep.map(function(i){return cols.map(function(j){return tabx[i][j]})}),ch=sub.length>1&&cols.length>1?S.chi(sub):null,fx=ch&&ch.fisher!=null&&ch.minE<5;
+    items.push({pv:pv,plabs:plabs,tabx:tabx,tot:tot,ch:ch,fx:fx,p:ch?(fx?ch.fisher:ch.p):NaN,V:ch?S.cramer(ch,sub.length,cols.length):NaN,
+     rt:plabs.map(function(l,i){return tabx[i].reduce(function(a,b3){return a+b3},0)}),ct:olabs.map(function(l,j){return tabx.reduce(function(a,r){return a+r[j]},0)})})});
+   if(!items.length)return;
+   var holmOn=items.filter(function(it){return it.ch}).length>=3,pl=items.filter(function(it){return it.ch}),hp2=S.holm(pl.map(function(it){return it.p}));pl.forEach(function(it,k){it.adj=hp2[k]});if(holmOn)usedHolm=true;usedEff=true;
+   var h1='<tr class="hd"><th rowspan="3" colspan="2">'+T('Characteristics','الخصائص')+'</th><th colspan="'+K*2+'">'+E(ov.label)+'</th><th rowspan="3">X<sup>2</sup></th><th rowspan="3">P-value</th><th rowspan="3">Cramér\'s V</th>'+(holmOn?'<th rowspan="3">'+T('Adj. P (Holm)','P المصححة (Holm)')+'</th>':'')+'</tr><tr class="hd">',h3='<tr class="hd">';
+   olabs.forEach(function(l){h1+='<th colspan="2">'+E(l)+'</th>';h3+='<th>N</th><th>%</th>'});
+   var body='',sg=[],foot=[];
+   items.forEach(function(it){var pv=it.pv,plabs=it.plabs,ch=it.ch;
     plabs.forEach(function(l,i){body+='<tr>'+(i===0?'<td rowspan="'+plabs.length+'"><b>'+E(pv.label)+'</b></td>':'')+'<td>'+E(l)+'</td>';
-     olabs.forEach(function(o,j){var c=tabx[i][j],base=st.pctBasis==='row'?rt[i]:(st.pctBasis==='col'?ct[j]:tot);body+=tdc(c)+tdc(base?f1(c/base*100):'0.0')});
-     if(i===0){var pval=ch?(ch.fisher!=null&&ch.minE<5?ch.fisher:ch.p):1,mk=ch?(ch.fisher!=null&&ch.minE<5?'<sup>‡</sup>':(ch.lowPct>20?'<sup>†</sup>':'')):'';
-      if(ch&&ch.fisher!=null&&ch.minE<5&&foot.indexOf('f')<0)foot.push('f');if(ch&&!(ch.fisher!=null&&ch.minE<5)&&ch.lowPct>20&&foot.indexOf('l')<0)foot.push('l');
-      body+='<td rowspan="'+plabs.length+'">'+(ch?f2(ch.chi)+mk:'-')+'</td><td rowspan="'+plabs.length+'">'+(ch?sigCell(pval)+'':'-')+'</td>';
-      if(ch){(pval<=st.alpha?sg:ns).push({l:pv.label,p:pval})}}
-     body+='</tr>'});
-   });
-   if(!used)return;
-   var tx=sg.length?T('there was a significant statistical relation between '+E(ov.label)+' of the studied '+sj()+' and their '+sg.map(function(x){return E(x.l)}).join(', ')+' at P-value= '+sg.map(function(x){return S.fp(x.p)}).join(' and ')+' respectively.','توجد علاقة إحصائية ذات دلالة بين '+E(ov.label)+' و'+sg.map(function(x){return E(x.l)}).join('، ')+' (P= '+sg.map(function(x){return S.fp(x.p)}).join('، ')+').'):T('there was no statistically significant relation between '+E(ov.label)+' and the studied variables (all P-values > '+st.alpha+').','لا توجد علاقة إحصائية ذات دلالة بين '+E(ov.label)+' والمتغيرات المدروسة (كل قيم P > '+st.alpha+').');
-   var fn2='<span>X<sup>2</sup>=Chi-Square Test &nbsp; * P-value ≤ '+st.alpha+' Significant (S) &nbsp; P-value > '+st.alpha+' Non-significant (NS).</span>'+(foot.indexOf('f')>=0?'<br><span><sup>‡</sup> '+T('Fisher\'s exact test (2×2 table with an expected count < 5).','اختبار فيشر الدقيق (جدول 2×2 وتوقع أقل من 5).')+'</span>':'')+(foot.indexOf('l')>=0?'<br><span><sup>†</sup> '+T('More than 20% of cells have an expected count < 5; interpret with caution.','أكثر من 20% من الخلايا توقعها أقل من 5؛ تُفسَّر بحذر.')+'</span>':'');
+     olabs.forEach(function(o,j){var c=it.tabx[i][j],base=st.pctBasis==='row'?it.rt[i]:(st.pctBasis==='col'?it.ct[j]:it.tot);body+=tdc(c)+tdc(base?f1(c/base*100):'0.0')});
+     if(i===0){var mk=ch?(it.fx?'<sup>‡</sup>':(ch.lowPct>20?'<sup>†</sup>':'')):'';if(ch&&it.fx&&foot.indexOf('f')<0)foot.push('f');if(ch&&!it.fx&&ch.lowPct>20&&foot.indexOf('l')<0)foot.push('l');
+      var rs='rowspan="'+plabs.length+'"';
+      body+='<td '+rs+'>'+(ch?f2(ch.chi)+mk:'-')+'</td><td '+rs+'>'+(ch?sigCell(it.p):'-')+'</td><td '+rs+'>'+(ch&&!isNaN(it.V)?f2(it.V):'-')+'</td>'+(holmOn?'<td '+rs+'>'+(ch?sigCell(it.adj):'-')+'</td>':'');
+      if(ch&&(holmOn?it.adj:it.p)<=st.alpha)sg.push({l:pv.label,p:it.p,adj:it.adj,V:it.V})}
+     body+='</tr>'})});
+   var tx=sg.length?T('there was a significant statistical relation between '+E(ov.label)+' of the studied '+sj()+' and their '+sg.map(function(x){return E(x.l)+' (P= '+S.fp(x.p)+', Cramér\'s V= '+f2(x.V)+')'}).join(', ')+(holmOn?' after Holm adjustment for multiple comparisons':'')+'.','توجد علاقة إحصائية ذات دلالة بين '+E(ov.label)+' و'+sg.map(function(x){return E(x.l)+' (P= '+S.fp(x.p)+'، V= '+f2(x.V)+')'}).join('، ')+(holmOn?' بعد تصحيح Holm لتعدد الاختبارات':'')+'.'):T('there was no statistically significant relation between '+E(ov.label)+' and the studied variables'+(holmOn?' (after Holm adjustment)':'')+'.','لا توجد علاقة إحصائية ذات دلالة بين '+E(ov.label)+' والمتغيرات المدروسة'+(holmOn?' (بعد تصحيح Holm)':'')+'.');
+   var fn2='<span>X<sup>2</sup>=Chi-Square Test &nbsp; * P-value ≤ '+st.alpha+' Significant (S) &nbsp; P-value > '+st.alpha+' Non-significant (NS) &nbsp; V= Cramér\'s V (effect size: ~0.1 small, ~0.3 medium, ~0.5 large).</span>'+(holmOn?'<br><span>'+T('Adj. P: Holm correction applied across the relations in this table.','Adj. P: تصحيح Holm مطبّق على علاقات هذا الجدول.')+'</span>':'')+(foot.indexOf('f')>=0?'<br><span><sup>‡</sup> '+T('Fisher\'s exact test (2×2 table with an expected count < 5).','اختبار فيشر الدقيق (جدول 2×2 وتوقع أقل من 5).')+'</span>':'')+(foot.indexOf('l')>=0?'<br><span><sup>†</sup> '+T('More than 20% of cells have an expected count < 5; interpret with caution.','أكثر من 20% من الخلايا توقعها أقل من 5؛ تُفسَّر بحذر.')+'</span>':'');
    tab(T('Relationship between the characteristics of the studied '+sj()+' and their '+E(ov.label)+' '+nTxt+'.','العلاقة بين خصائص المشاركات و'+E(ov.label)+' '+nTxt+'.'),'<table class="rt">'+h1+h3+'</tr>'+body+'</table>',tx,fn2)});
-  if(sel.grp&&st.pred.length&&st.scoreVars.length)st.pred.forEach(function(pid){
+  /* group comparisons */
+  if(useGrp)st.pred.forEach(function(pid){
    var pv=vget(pid);if(!pv)return;var pd=pv.get(),labs=pd.order;if(labs.length<2)return;
-   var rows='',sg=[],modes={};
+   var rows='',sg=[],ph=[];
    st.scoreVars.forEach(function(sid){var sv=vget(sid);if(!sv||sid===pid)return;var xs=sv.get().vals,gs=labs.map(function(l){var a=[];for(var r=0;r<N;r++)if(pd.vals[r]===l&&!isNaN(xs[r]))a.push(xs[r]);return a}),ok=gs.map(function(g,i){return i}).filter(function(i){return gs[i].length>=2}),g2=ok.map(function(i){return gs[i]});
     rows+='<tr><td><b>'+E(sv.label)+'</b></td>'+labs.map(function(l,i){return tdc(gs[i].length?f2(S.mean(gs[i]))+'±'+f2(S.sd(gs[i]))+' <small>(n='+gs[i].length+')</small>':'-')}).join('');
-    if(g2.length<2){rows+='<td colspan="3">-</td></tr>';return}
-    var mode=st.mode==='auto'?(g2.some(function(g){return g.length<30})?'non':'param'):st.mode,tn2,stat,p;
-    if(mode==='param'){if(g2.length===2){var t=S.tInd(g2[0],g2[1],true);tn2='t-test';stat=f2(t.t);p=t.p}else{var a=S.anova(g2);tn2='F';stat=f2(a.f);p=a.p}}
-    else{if(g2.length===2){var m=S.mwu(g2[0],g2[1]);tn2='Z (Mann-Whitney)';stat=f2(m.z);p=m.p}else{var k=S.kw(g2);tn2='H (Kruskal-Wallis)';stat=f2(k.h);p=k.p}}
-    modes[tn2]=1;rows+=tdc(tn2)+tdc(stat)+tdc(sigCell(p))+'</tr>';if(p<=st.alpha)sg.push(sv.label+' ('+S.fp(p)+')')});
+    if(g2.length<2){rows+='<td colspan="4">-</td></tr>';return}
+    var mode=st.mode==='auto'?(g2.every(normalGroup)?'param':'non'):st.mode,tn2,stt,p,eff,Nn=g2.reduce(function(a,g){return a+g.length},0),lab2=ok.map(function(i){return labs[i]});
+    if(mode==='param'){
+     if(g2.length===2){var lv=S.levene(g2),welch=lv.p<=st.alpha,t=S.tInd(g2[0],g2[1],welch);tn2=welch?'t-test (Welch)':'t-test (Student)';stt=stat2('t',t.t,t.df);p=t.p;eff='d= '+f2(S.cohend(g2[0],g2[1]));usedEff=true;
+      var dc=S.diffCI(g2[0],g2[1],welch,.95);eff+=' <small>(95% CI of diff.: '+f2(dc[0])+' to '+f2(dc[1])+')</small>'}
+     else{var a=S.anova(g2);tn2='ANOVA';stt=stat2('F',a.f,[a.df1,a.df2]);p=a.p;eff='η²= '+f2(S.etaSq(0,g2));usedEff=true;
+      if(p<=st.alpha){var bf=S.bonfAnova(g2).filter(function(x){return x.p<=st.alpha});usedPH=true;ph.push(sv.label+': '+(bf.length?bf.map(function(x){return lab2[x.i]+' vs '+lab2[x.j]+' (P= '+S.fp(x.p)+')'}).join('; '):T('no pair reached significance','لا يوجد زوج دال')))}}}
+    else{
+     if(g2.length===2){var m=S.mwu(g2[0],g2[1]);tn2='Mann-Whitney U';stt=stat2('U',m.u)+', Z= '+f2(m.z);p=m.p;eff='r= '+f2(m.z/Math.sqrt(Nn));usedEff=true}
+     else{var k=S.kw(g2);tn2='Kruskal-Wallis H';stt=stat2('H',k.h,k.df);p=k.p;eff='ε²= '+f2(k.h/(Nn-1));usedEff=true;
+      if(p<=st.alpha){var dn=S.dunn(g2).filter(function(x){return x.p<=st.alpha});usedPH=true;ph.push(sv.label+': '+(dn.length?dn.map(function(x){return lab2[x.i]+' vs '+lab2[x.j]+' (P= '+S.fp(x.p)+')'}).join('; '):T('no pair reached significance','لا يوجد زوج دال')))}}}
+    rows+=tdc(tn2)+tdc(stt)+tdc(sigCell(p))+tdc(eff)+'</tr>';if(p<=st.alpha)sg.push(sv.label+' ('+S.fp(p)+')')});
    if(!rows)return;
    var tx=sg.length?T('there was a significant statistical difference in '+sg.map(E).join(', ')+' according to '+E(pv.label)+'.','توجد فروق ذات دلالة إحصائية في '+sg.map(E).join('، ')+' حسب '+E(pv.label)+'.'):T('there was no statistically significant difference in the studied scores according to '+E(pv.label)+'.','لا توجد فروق ذات دلالة إحصائية حسب '+E(pv.label)+'.');
    tab(T('Comparison of the mean scores of the studied '+sj()+' according to their '+E(pv.label)+' '+nTxt+'.','مقارنة متوسطات الدرجات حسب '+E(pv.label)+' '+nTxt+'.'),
-    '<table class="rt"><tr class="hd"><th>'+T('Score','الدرجة')+'</th>'+labs.map(function(l){return'<th>'+E(l)+'<br><small>Mean±SD</small></th>'}).join('')+'<th>'+T('Test','الاختبار')+'</th><th>'+T('Statistic','القيمة')+'</th><th>P-value</th></tr>'+rows+'</table>',tx,'<span>* P-value ≤ '+st.alpha+' Significant (S); P-value > '+st.alpha+' Non-significant (NS).</span>')});
-  if(sel.cor&&st.corVars.length>1){
+    '<table class="rt"><tr class="hd"><th>'+T('Score','الدرجة')+'</th>'+labs.map(function(l){return'<th>'+E(l)+'<br><small>Mean±SD</small></th>'}).join('')+'<th>'+T('Test','الاختبار')+'</th><th>'+T('Statistic','القيمة')+'</th><th>P-value</th><th>'+T('Effect size','حجم الأثر')+'</th></tr>'+rows+'</table>',tx,
+    '<span>* P-value ≤ '+st.alpha+' Significant (S); P-value > '+st.alpha+' Non-significant (NS). '+T('The test was chosen automatically from the normality of each group and, for two groups, Levene\'s test.','اختير الاختبار تلقائيًا حسب طبيعية توزيع كل مجموعة، ولمجموعتين حسب اختبار Levene.')+'</span>'+(ph.length?'<br><span><b>'+T('Post-hoc (adjusted P):','المقارنات البعدية (P المصححة):')+'</b> '+ph.map(E).join(' | ')+'</span>':''))});
+  /* correlation */
+  if(useCor){
    var cv=st.corVars.map(vget).filter(Boolean),pairs=[],i,j,rows5='',sg2=[];
    for(i=0;i<cv.length;i++)for(j=i+1;j<cv.length;j++)pairs.push([cv[i],cv[j]]);
    var sp=st.corMethod==='spearman';
-   pairs.forEach(function(pr,pi){var x=pr[0].get().vals,y=pr[1].get().vals,xa=[],ya=[];for(var r=0;r<N;r++)if(!isNaN(x[r])&&!isNaN(y[r])){xa.push(x[r]);ya.push(y[r])}
-    if(xa.length<3)return;var c=sp?S.spearman(xa,ya):S.pearson(xa,ya);pr.push(xa,ya,c);
-    rows5+='<tr><td><b>'+E(pr[0].label)+'</b></td><td><b>'+E(pr[1].label)+'</b></td>'+tdc(xa.length)+tdc(f2(c.r).replace('-','−'))+tdc(sigCell(c.p))+'</tr>';
-    if(c.p<=st.alpha)sg2.push(T('there was a significant statistical '+(c.r<0?'negative':'positive')+' correlation between '+E(pr[0].label)+' and '+E(pr[1].label)+' (r= '+f2(c.r)+' & P= '+S.fp(c.p)+')','يوجد ارتباط '+(c.r<0?'عكسي':'طردي')+' ذو دلالة بين '+E(pr[0].label)+' و'+E(pr[1].label)+' (r= '+f2(c.r)+'، P= '+S.fp(c.p)+')'))});
+   function strength(r){var a=Math.abs(r);return a<.3?T('weak','ضعيف'):a<.7?T('moderate','متوسط'):T('strong','قوي')}
+   pairs.forEach(function(pr){var x=pr[0].get().vals,y=pr[1].get().vals,xa=[],ya=[];for(var r=0;r<N;r++)if(!isNaN(x[r])&&!isNaN(y[r])){xa.push(x[r]);ya.push(y[r])}
+    if(xa.length<3)return;var c=sp?S.spearman(xa,ya):S.pearson(xa,ya),ci=S.corCI(c.r,xa.length,.95);pr.push(xa,ya,c);
+    rows5+='<tr><td><b>'+E(pr[0].label)+'</b></td><td><b>'+E(pr[1].label)+'</b></td>'+tdc(xa.length)+tdc(f2(c.r)+' <small>['+f2(ci[0])+', '+f2(ci[1])+']</small>')+tdc(strength(c.r)+(c.r<0?T(' (negative)',' (عكسي)'):''))+tdc(sigCell(c.p))+'</tr>';
+    if(c.p<=st.alpha)sg2.push(T('there was a significant statistical '+(c.r<0?'negative':'positive')+' correlation between '+E(pr[0].label)+' and '+E(pr[1].label)+' ('+strength(c.r)+'; r= '+f2(c.r)+', 95% CI '+f2(ci[0])+' to '+f2(ci[1])+' & P= '+S.fp(c.p)+')','يوجد ارتباط '+(c.r<0?'عكسي':'طردي')+' '+strength(c.r)+' ذو دلالة بين '+E(pr[0].label)+' و'+E(pr[1].label)+' (r= '+f2(c.r)+'، P= '+S.fp(c.p)+')'))});
    if(rows5){var tx2=sg2.length?sg2.map(function(x,k){return k?T('Also, ','كما ')+x:x}).join('. ')+'.':T('there was no statistically significant correlation between the studied variables.','لا يوجد ارتباط ذو دلالة بين المتغيرات المدروسة.');
-    tab(T('Correlation between the studied variables among the studied '+sj()+' '+nTxt+'.','الارتباط بين المتغيرات المدروسة '+nTxt+'.'),'<table class="rt"><tr class="hd"><th>'+T('Variable 1','المتغير 1')+'</th><th>'+T('Variable 2','المتغير 2')+'</th><th>n</th><th>r</th><th>P-value</th></tr>'+rows5+'</table>',tx2,'<span>r= '+(sp?'Spearman':'Pearson')+' Correlation Coefficient &nbsp; * P-value ≤ '+st.alpha+' Significant (S).</span>');
+    tab(T('Correlation between the studied variables among the studied '+sj()+' '+nTxt+'.','الارتباط بين المتغيرات المدروسة '+nTxt+'.'),'<table class="rt"><tr class="hd"><th>'+T('Variable 1','المتغير 1')+'</th><th>'+T('Variable 2','المتغير 2')+'</th><th>n</th><th>r [95% CI]</th><th>'+T('Strength','القوة')+'</th><th>P-value</th></tr>'+rows5+'</table>',tx2,'<span>r= '+(sp?'Spearman':'Pearson')+' Correlation Coefficient &nbsp; * P-value ≤ '+st.alpha+' Significant (S). '+T('Strength: <0.3 weak, 0.3–0.7 moderate, ≥0.7 strong.','القوة: أقل من 0.3 ضعيف، 0.3–0.7 متوسط، 0.7 فأكثر قوي.')+'</span>');
     pairs.filter(function(p){return p[4]}).slice(0,3).forEach(function(pr){var c=pr[4];fig(T('Correlation between '+pr[0].label+' and '+pr[1].label+' among the studied '+sj()+' (n='+pr[2].length+').','الارتباط بين '+pr[0].label+' و'+pr[1].label+' (n='+pr[2].length+').'),
-     chartScatter(pr[0].label,pr[1].label,pr[2],pr[3],'r='+f2(c.r)+' & P='+S.fp(c.p),c.r>0),c.p<=st.alpha?sg2[pairs.indexOf(pr)]?T('there was a significant statistical '+(c.r<0?'negative':'positive')+' correlation (r= '+f2(c.r)+' & P= '+S.fp(c.p)+').','يوجد ارتباط ذو دلالة (r= '+f2(c.r)+'، P= '+S.fp(c.p)+').'):'':T('there was no significant correlation (r= '+f2(c.r)+' & P= '+S.fp(c.p)+').','لا يوجد ارتباط ذو دلالة (r= '+f2(c.r)+'، P= '+S.fp(c.p)+').'))})}}}
+     chartScatter(pr[0].label,pr[1].label,pr[2],pr[3],'r='+f2(c.r)+' & P='+S.fp(c.p),c.r>0),c.p<=st.alpha?T('there was a significant statistical '+(c.r<0?'negative':'positive')+' correlation (r= '+f2(c.r)+' & P= '+S.fp(c.p)+').','يوجد ارتباط ذو دلالة (r= '+f2(c.r)+'، P= '+S.fp(c.p)+').'):T('there was no significant correlation (r= '+f2(c.r)+' & P= '+S.fp(c.p)+').','لا يوجد ارتباط ذو دلالة (r= '+f2(c.r)+'، P= '+S.fp(c.p)+').'))})}}}
  /* ---- reliability ---- */
  var relRows='',relN=0;
  if(sel.rel&&scAll.length){
@@ -1128,13 +1197,19 @@ function build(){
   function lev(a){return a>=.9?T('Excellent','ممتاز'):a>=.8?T('Good','جيد'):a>=.7?T('Acceptable','مقبول'):a>=.6?T('Questionable','مشكوك فيه'):a>=.5?T('Poor','ضعيف'):T('Unacceptable','غير مقبول')}
   var arr=[];scAll.forEach(function(sc){arr.push([sc,scaleItems(sc)])});Ik.forEach(function(ins){if(I[ins].length>1){var all=[];I[ins].forEach(function(sc){all=all.concat(scaleItems(sc))});arr.push([ins+' ('+T('total','الكلي')+')',all])}});
   arr.forEach(function(x){var r=al(x[1]);if(r){relN=Math.max(relN,r.n);relRows+='<tr><td>'+E(x[0])+'</td>'+tdc(x[1].length)+tdc(f2(r.a))+tdc(lev(r.a))+'</tr>'}else relRows+='<tr><td>'+E(x[0])+'</td>'+tdc(x[1].length)+tdc('-')+tdc('-')+'</tr>'})}
+ var itemBlocks=[];
+ if(sel.rel&&scAll.length)scAll.forEach(function(sc){var its=scaleItems(sc);if(its.length<3)return;var M=its.map(function(i){return itemCodes(i)}),keep=[],r;for(r=0;r<N;r++){var ok=true;for(var j=0;j<M.length;j++)if(isNaN(M[j][r])){ok=false;break}if(ok)keep.push(r)}if(keep.length<4)return;var MM=M.map(function(m){return keep.map(function(r){return m[r]})}),ia=S.itemAnalysis(MM),a0=S.alpha(MM),rw='',low=[];
+  its.forEach(function(i,k){var flag=ia[k].r<.3||ia[k].alphaDel>a0+.0005;if(flag)low.push(st.cfg[i].label);rw+='<tr><td>'+E(st.cfg[i].label)+'</td>'+tdc(f2(ia[k].r))+tdc(f2(ia[k].alphaDel))+tdc(flag?'<b>'+T('Review','راجعي')+'</b>':'')+'</tr>'});
+  itemBlocks.push({cap:T('Item analysis of '+sc+' (n='+keep.length+', Cronbach\'s alpha= '+f2(a0)+')','تحليل بنود '+sc+' (n='+keep.length+'، ألفا= '+f2(a0)+')'),html:'<table class="rt"><tr class="hd"><th>'+T('Item','البند')+'</th><th>'+T('Corrected item-total r','معامل ارتباط البند بالمجموع')+'</th><th>'+T('Alpha if item deleted','ألفا عند حذف البند')+'</th><th>'+T('Note','ملاحظة')+'</th></tr>'+rw+'</table>',note:low.length?T('Items to review (corrected item-total r < 0.30 or alpha increases when deleted): ','بنود تستحق المراجعة (الارتباط بالمجموع أقل من 0.30 أو ترتفع ألفا عند حذفها): ')+low.map(E).join(', '):T('All items contributed acceptably to the scale.','كل البنود تسهم بصورة مقبولة في المقياس.')})});
  var relBlock=null;if(relRows)relBlock={cap:T('Testing reliability of the data collection tools through Cronbach\'s alpha reliability analysis (n='+relN+')','اختبار ثبات أدوات جمع البيانات بمعامل ألفا كرونباخ (n='+relN+')'),html:'<table class="rt"><tr class="hd"><th>'+T('Scale','المقياس')+'</th><th>'+T('No. of variables','عدد البنود')+'</th><th>Cronbach\'s Alpha</th><th>'+T('Internal consistency','الاتساق الداخلي')+'</th></tr>'+relRows+'</table>'};
  /* ---- design paragraph ---- */
- var tests=[],an=[];
- if(sel.chi&&st.pred.length&&st.outc.length)tests.push(T('<b>Chi-Square (X<sup>2</sup>) independence test</b> was used to evaluate the relationship between categorical variables (Fisher\'s exact test for 2×2 tables with small expected counts).','<b>اختبار مربع كاي (X<sup>2</sup>)</b> لتقييم العلاقة بين المتغيرات الفئوية (واختبار فيشر الدقيق للجداول 2×2 عند صغر التكرارات المتوقعة).'));
- if(sel.grp&&st.pred.length&&st.scoreVars.length)tests.push(st.mode==='non'?T('<b>Mann-Whitney U and Kruskal-Wallis tests</b> were used to compare scores between two and more than two groups respectively.','<b>اختبارا مان ويتني وكروسكال واليس</b> لمقارنة الدرجات بين مجموعتين وأكثر.'):st.mode==='auto'?T('<b>Independent t-test (Welch) and one-way ANOVA</b> were used to compare mean scores between two and more than two groups; <b>Mann-Whitney U and Kruskal-Wallis tests</b> were used instead when a group had fewer than 30 participants.','<b>اختبار t المستقل (Welch) وتحليل التباين الأحادي</b> لمقارنة المتوسطات، وبدلاً منهما <b>مان ويتني وكروسكال واليس</b> عند وجود مجموعة أقل من 30 مشاركة.'):T('<b>Independent t-test (Welch) and one-way ANOVA</b> were used to compare mean scores between two and more than two groups respectively.','<b>اختبار t المستقل (Welch) وتحليل التباين الأحادي</b> لمقارنة المتوسطات بين مجموعتين وأكثر.'));
- if(sel.cor&&st.corVars.length>1)tests.push(sp0()?T('<b>Spearman correlation coefficient (r)</b> was used to evaluate the strength and direction of correlation between two ranked variables.','<b>معامل ارتباط سبيرمان (r)</b> لتقييم قوة واتجاه الارتباط بين متغيرين.'):T('<b>Pearson correlation coefficient (r)</b> was used to evaluate the strength and direction of the linear correlation between two quantitative variables.','<b>معامل ارتباط بيرسون (r)</b> لتقييم قوة واتجاه الارتباط الخطي بين متغيرين كميين.'));
- if(sel.rel&&relRows)tests.push(T('<b>Cronbach\'s alpha</b> was used to test the internal consistency (reliability) of the scales.','<b>معامل ألفا كرونباخ</b> لاختبار الاتساق الداخلي (ثبات) المقاييس.'));
+ var tests=[];
+ if(sel.chi&&st.pred.length&&st.outc.length)tests.push(T('<b>Chi-Square (X<sup>2</sup>) independence test</b> was used to evaluate the relationship between categorical variables, with <b>Fisher\'s exact test</b> for 2×2 tables with an expected count < 5, <b>Cramér\'s V</b> as the effect size, and <b>Holm correction</b> when three or more relations were tested in one table.','<b>اختبار مربع كاي (X<sup>2</sup>)</b> لتقييم العلاقة بين المتغيرات الفئوية، و<b>اختبار فيشر الدقيق</b> للجداول 2×2 عند توقع أقل من 5، و<b>Cramér\'s V</b> كحجم أثر، و<b>تصحيح Holm</b> عند اختبار ثلاث علاقات فأكثر في جدول واحد.'));
+ if((sel.grp&&st.pred.length&&st.scoreVars.length)||(sel.cor&&st.corVars.length>1))tests.push(T('<b>Shapiro-Wilk test</b> (with skewness and kurtosis) was used to assess the normality of quantitative variables.','<b>اختبار Shapiro-Wilk</b> (مع الالتواء والتفرطح) لتقييم التوزيع الطبيعي للمتغيرات الكمية.'));
+ if(sel.grp&&st.pred.length&&st.scoreVars.length)tests.push(st.mode==='non'?T('<b>Mann-Whitney U and Kruskal-Wallis tests</b> (with Dunn-Bonferroni post-hoc comparisons) were used to compare scores between two and more than two groups respectively; effect sizes were r and ε².','<b>اختبارا مان ويتني وكروسكال واليس</b> (مع مقارنات Dunn-Bonferroni البعدية) لمقارنة الدرجات بين مجموعتين وأكثر، وحجم الأثر r وε².'):st.mode==='auto'?T('<b>Independent t-test</b> (Student, or Welch when Levene\'s test was significant) and <b>one-way ANOVA</b> (with Bonferroni post-hoc comparisons) were used when all groups were normally distributed; otherwise the <b>Mann-Whitney U</b> and <b>Kruskal-Wallis</b> tests (with Dunn-Bonferroni post-hoc comparisons) were used. Effect sizes were Cohen\'s d, η², r and ε² respectively.','<b>اختبار t المستقل</b> (Student، أو Welch عند دلالة Levene) و<b>تحليل التباين الأحادي</b> (مع مقارنات Bonferroni البعدية) عند طبيعية توزيع كل المجموعات، وإلا استُخدم <b>مان ويتني</b> و<b>كروسكال واليس</b> (مع Dunn-Bonferroni). وأحجام الأثر: Cohen\'s d وη² وr وε² على الترتيب.'):T('<b>Independent t-test</b> (Student, or Welch when Levene\'s test was significant) and <b>one-way ANOVA</b> (with Bonferroni post-hoc comparisons) were used to compare mean scores between two and more than two groups; effect sizes were Cohen\'s d and η².','<b>اختبار t المستقل</b> (Student أو Welch) و<b>تحليل التباين الأحادي</b> (مع Bonferroni) لمقارنة المتوسطات، وحجم الأثر Cohen\'s d وη².'));
+ if(sel.cor&&st.corVars.length>1)tests.push(sp0()?T('<b>Spearman correlation coefficient (r)</b> with its 95% confidence interval was used to evaluate the strength and direction of correlation between two ranked variables.','<b>معامل ارتباط سبيرمان (r)</b> مع فترة الثقة 95% لتقييم قوة واتجاه الارتباط بين متغيرين.'):T('<b>Pearson correlation coefficient (r)</b> with its 95% confidence interval was used to evaluate the strength and direction of the linear correlation between two quantitative variables.','<b>معامل ارتباط بيرسون (r)</b> مع فترة الثقة 95% لتقييم قوة واتجاه الارتباط الخطي.'));
+ if(sel.rel&&relRows)tests.push(T('<b>Cronbach\'s alpha</b> (with corrected item-total correlations and alpha-if-item-deleted) was used to test the internal consistency (reliability) of the scales.','<b>معامل ألفا كرونباخ</b> (مع ارتباط البند بالمجموع وألفا عند حذف البند) لاختبار الاتساق الداخلي (ثبات) المقاييس.'));
+ tests.push(T('Missing values were excluded pairwise (each test used the participants with valid answers to the variables involved).','استُبعدت القيم المفقودة لكل تحليل على حدة (يستخدم كل اختبار المشاركات اللواتي أجبن عن المتغيرات المعنية).'));
  function sp0(){return st.corMethod==='spearman'}
  var design='<h3>'+T('Statistical design:','التصميم الإحصائي:')+'</h3><p>'+T('Results were collected, statistically analyzed and tabulated using the statistical package of social science (SPSS) and Microsoft Excel. Quantitative data were presented as mean and standard deviation (SD) while qualitative data were expressed as frequency and percentage.'+(tests.length?' The following tests were used:':''),'جُمعت النتائج وحُللت إحصائياً وجُدولت باستخدام الحزمة الإحصائية للعلوم الاجتماعية (SPSS) وبرنامج Microsoft Excel. عُرضت البيانات الكمية بالمتوسط والانحراف المعياري، والبيانات الوصفية بالتكرار والنسبة.'+(tests.length?' واستُخدمت الاختبارات التالية:':''))+'</p>'+(tests.length?'<ul>'+tests.map(function(x){return'<li>'+x+'</li>'}).join('')+'</ul>':'')+'<p><b>'+T('The observed statistical differences or relationships were considered as follows:','اعتُبرت الفروق أو العلاقات الإحصائية كما يلي:')+'</b></p><ul><li><b>'+T('Non-significant (NS)','غير دالة (NS)')+'</b> '+T('when P-value > '+st.alpha,'عندما P > '+st.alpha)+'</li><li><b>'+T('Significant (S)','دالة (S)')+'</b> '+T('when P-value ≤ '+st.alpha+'.','عندما P ≤ '+st.alpha+'.')+'</li></ul>';
  /* ---- intro ---- */
@@ -1149,6 +1224,7 @@ function build(){
   else if(b.t==='p')h+='<p class="tx">'+b.html+'</p>'});
  h+=design;
  if(relBlock)h+='<h3>'+T('Tools Reliability','ثبات الأدوات')+'</h3><p class="cap"><b>'+relBlock.cap+'</b></p><div class="tw">'+relBlock.html+'</div>';
+ itemBlocks.forEach(function(ib){h+='<p class="cap"><b>'+ib.cap+'</b></p><div class="tw">'+ib.html+'</div><p class="foot">'+ib.note+'</p>'});
  h+='</div>';
  return{html:h,tables:tn,figs:fn}}
 /* ---------- part C: charts ---------- */
@@ -1330,22 +1406,26 @@ function s3(b){
  h+='<label>'+U('شكل رسم المستويات','Levels chart')+'<br><select data-k="levelChart">'+opt('bar',U('أعمدة','Bars')+(st.levelChart==='bar'?rec():''),st.levelChart)+opt('pie',U('دائري','Pie'),st.levelChart)+'</select></label>'+hp('الأعمدة أسهل في المقارنة، والدائري مناسب لثلاثة مستويات.','Bars compare more easily; pie suits three levels.')+'</div>';
  h+='<div class="bx"><h3 style="margin-top:0">'+U('الاختبارات الإحصائية','Statistical tests')+'</h3>'+
  '<label>'+U('مستوى الدلالة α','Significance level α')+'<br><select data-k="alpha">'+opt(.05,'0.05'+(st.alpha===.05?rec():''),st.alpha)+opt(.01,'0.01',st.alpha)+'</select></label>'+hp('0.05 هو المعتاد. اجعليه 0.01 فقط بتوجيه من المشرفة.','0.05 is the usual choice. Use 0.01 only if your supervisor asks.')+
- '<label>'+U('مقارنة المتوسطات بين المجموعات','Comparing means between groups')+'<br><select data-k="mode">'+opt('auto',U('تلقائي','Automatic')+(st.mode==='auto'?rec():''),st.mode)+opt('param','t-test / ANOVA',st.mode)+opt('non','Mann-Whitney / Kruskal-Wallis',st.mode)+'</select></label>'+hp('«تلقائي» يختار الاختبار حسب حجم كل مجموعة: إن كانت مجموعة أقل من 30 يستخدم الاختبار اللامعلمي الأسلم للعينات الصغيرة.','“Automatic” picks the test by group size: any group under 30 uses the safer non-parametric test.')+
+ '<label>'+U('مقارنة المتوسطات بين المجموعات','Comparing means between groups')+'<br><select data-k="mode">'+opt('auto',U('تلقائي','Automatic')+(st.mode==='auto'?rec():''),st.mode)+opt('param','t-test / ANOVA',st.mode)+opt('non','Mann-Whitney / Kruskal-Wallis',st.mode)+'</select></label>'+hp('«تلقائي» هو ما يفعله الإحصائيون: يفحص طبيعية توزيع كل مجموعة (Shapiro-Wilk) فيستخدم t أو ANOVA إن كانت طبيعية، وإلا مان ويتني أو كروسكال واليس، ويختار Student أو Welch بحسب Levene.','“Automatic” does what statisticians do: checks each group’s normality (Shapiro-Wilk), then uses t-test/ANOVA if normal, otherwise Mann-Whitney/Kruskal-Wallis, and picks Student or Welch from Levene.')+
  '<label>'+U('نوع الارتباط','Correlation type')+'<br><select data-k="corMethod">'+opt('spearman','Spearman'+(st.corMethod==='spearman'?rec():''),st.corMethod)+opt('pearson','Pearson',st.corMethod)+'</select></label>'+hp('سبيرمان مناسب لإجابات ليكرت. بيرسون للأرقام المتصلة الموزعة طبيعيًا.','Spearman suits Likert answers. Pearson is for continuous, normally distributed numbers.')+
  '<label>'+U('نسب جدول مربع كاي','Chi-square table percentages')+'<br><select data-k="pctBasis">'+opt('total',U('من الإجمالي','of grand total')+(st.pctBasis==='total'?rec():''),st.pctBasis)+opt('row',U('من الصف','of row'),st.pctBasis)+opt('col',U('من العمود','of column'),st.pctBasis)+'</select></label>'+hp('«من الإجمالي» يطابق الملف النموذجي.','“Of grand total” matches the sample file.')+'</div>';
  b.innerHTML=h+nav(true,true)+resetBtn()}
 function resetBtn(){return'<div class="row noprint" style="max-width:1040px;margin:0 auto 14px"><button class="ghost" data-act="reset">'+U('إعادة الضبط إلى الإعدادات الموصى بها','Reset to recommended settings')+'</button></div>'}
-function defaults(){st.lang='en';st.subj='';st.aim='';st.pctMode='scaled';st.alpha=.05;st.levelChart='bar';st.mode='auto';st.corMethod='spearman';st.pctBasis='total';st.sel={freq:true,items:true,desc:true,domains:true,levels:true,chi:true,grp:true,cor:true,rel:true};st.s4=false;st.lastScale='';st.lastInst='';st.pred=[];st.outc=[];st.scoreVars=[];st.corVars=[]}
+function defaults(){st.lang='en';st.subj='';st.aim='';st.pctMode='scaled';st.alpha=.05;st.levelChart='bar';st.mode='auto';st.corMethod='spearman';st.pctBasis='total';st.sel={catfig:false,freq:true,items:true,desc:true,domains:true,levels:true,chi:true,grp:true,cor:true,rel:true};st.s4=false;st.lastScale='';st.lastInst='';st.pred=[];st.outc=[];st.scoreVars=[];st.corVars=[]}
 function initS4(){var V=registry();
  st.s4=true;st.pred=V.filter(function(v){return v.type==='cat'&&v.id.slice(0,2)!=='L:'}).map(function(v){return v.id});st.outc=V.filter(function(v){return v.id.slice(0,2)==='L:'}).map(function(v){return v.id});
  var sc=V.filter(function(v){return v.id.slice(0,2)==='s:'||v.id.slice(0,2)==='i:'});st.scoreVars=sc.map(function(v){return v.id});st.corVars=sc.length<=4?sc.map(function(v){return v.id}):V.filter(function(v){return v.id.slice(0,2)==='i:'}).map(function(v){return v.id});
- if(st.corVars.length<2)st.corVars=V.filter(function(v){return v.type==='num'}).slice(0,3).map(function(v){return v.id})}
+ if(st.corVars.length<2)st.corVars=V.filter(function(v){return v.type==='num'}).slice(0,3).map(function(v){return v.id});
+ var outs=[],nouts=[];st.cfg.forEach(function(g,i){var h=st.ds.cols[i].hint||{};if(h.out&&g.kind==='cat')outs.push('c'+i);if(h.out&&g.kind==='num')nouts.push('n'+i)});
+ if(!st.outc.length&&outs.length)st.outc=outs;
+ st.pred=st.pred.filter(function(id){return st.outc.indexOf(id)<0&&!(st.ds.cols[+id.slice(1)]&&(st.ds.cols[+id.slice(1)].hint||{}).tc&&/^(Recommended|الوسائل|Site|مخرجات)/.test(st.ds.cols[+id.slice(1)].hint.tc))});
+ st.sel.catfig=!st.cfg.some(function(g){return g.kind==='lik'})}
 function plist(key,V,filter){var h='<div class="lst">';V.filter(filter).forEach(function(v){h+='<label class="ck"><input type="checkbox" data-k="pick" data-l="'+key+'" data-v="'+E(v.id)+'"'+(st[key].indexOf(v.id)>=0?' checked':'')+'> '+E(v.label)+'</label>'});return h+'</div>'}
 function s4(b){
  var V=registry();
  if(!st.s4)initS4();
  var s=st.sel,h='<div class="bx"><h3 style="margin-top:0">'+U('اختاري ما تريدين في الفصل','Choose what goes in the chapter')+'</h3>'+
- [['freq','جداول التكرار والنسب (+Mean±SD)','Frequency tables (+ Mean±SD)'],['items','جداول بنود ليكرت (N و %)','Likert item tables (N and %)'],['desc','جدول Min / Max / Mean±SD / Median للبنود','Item descriptives (Min / Max / Mean±SD / Median)'],['domains','ترتيب المجالات + الرسم','Domain ranking + chart'],['levels','المستويات الكلية + الرسم','Total levels + chart'],['chi','علاقات مربع كاي (مع فيشر)','Chi-square relations (with Fisher)'],['grp','مقارنة المتوسطات (t / ANOVA / لا معلمي)','Mean comparisons (t / ANOVA / non-parametric)'],['cor','الارتباط + رسم الانتشار','Correlation + scatter plot'],['rel','ثبات ألفا كرونباخ','Cronbach\'s alpha reliability']].map(function(x){return ck('sel:'+x[0],U(x[1],x[2]),s[x[0]])}).join('<br>')+'<p class="hint">'+U('كلها مفعّلة افتراضيًا. أوقفي ما لا يخص بحثك. الاختيارات في الأسفل مضبوطة تلقائيًا ولا تحتاج تعديلاً غالبًا.','All are on by default. Turn off what your study does not need. The choices below are pre-selected.')+'</p></div>';
+ [['freq','جداول التكرار والنسب (+Mean±SD)','Frequency tables (+ Mean±SD)'],['items','جداول بنود ليكرت (N و %)','Likert item tables (N and %)'],['desc','جدول Min / Max / Mean±SD / Median للبنود','Item descriptives (Min / Max / Mean±SD / Median)'],['domains','ترتيب المجالات + الرسم','Domain ranking + chart'],['levels','المستويات الكلية + الرسم','Total levels + chart'],['chi','علاقات مربع كاي (مع فيشر)','Chi-square relations (with Fisher)'],['grp','مقارنة المتوسطات (t / ANOVA / لا معلمي)','Mean comparisons (t / ANOVA / non-parametric)'],['cor','الارتباط + رسم الانتشار','Correlation + scatter plot'],['rel','ثبات ألفا كرونباخ','Cronbach\'s alpha reliability'],['catfig','رسم أعمدة لكل متغير فئوي (حتى 12 رسمًا)','Bar chart for each categorical variable (up to 12)']].map(function(x){return ck('sel:'+x[0],U(x[1],x[2]),s[x[0]])}).join('<br>')+'<p class="hint">'+U('كلها مفعّلة افتراضيًا. أوقفي ما لا يخص بحثك. الاختيارات في الأسفل مضبوطة تلقائيًا ولا تحتاج تعديلاً غالبًا.','All are on by default. Turn off what your study does not need. The choices below are pre-selected.')+'</p></div>';
  h+='<div class="bx"><h3 style="margin-top:0">'+U('المتغيرات المستقلة (صفوف جداول العلاقات والمقارنات)','Predictors (rows of relation / comparison tables)')+'</h3>'+plist('pred',V,function(v){return v.type==='cat'&&v.id.slice(0,2)!=='L:'})+'<h3>'+U('المتغيرات التابعة لمربع كاي (أعمدة الجدول)','Chi-square outcomes (table columns)')+'</h3>'+plist('outc',V,function(v){return v.type==='cat'})+'<h3>'+U('درجات للمقارنة بين المجموعات','Scores to compare between groups')+'</h3>'+plist('scoreVars',V,function(v){return v.type==='num'})+'<h3>'+U('متغيرات الارتباط (كل زوج)','Correlation variables (every pair)')+'</h3>'+plist('corVars',V,function(v){return v.type==='num'})+'</div>';
  b.innerHTML=h+nav(true,true,U('إنشاء التقرير','Generate report'))+resetBtn()}
 function s5(b){
@@ -1387,7 +1467,7 @@ function closeR(){var r=$('resx');if(r)r.remove();st=null;R=null;FIG=[];if(locat
 function open(opts){
  if($('resx'))return;opts=opts||{};
  st={ui:(typeof LANG!=='undefined'&&LANG==='en')?'en':'ar',step:1,ds:null,cfg:[],scales:{},instc:{},sources:opts.sources||[],lang:'en',subj:'',aim:'',pctMode:'scaled',alpha:.05,levelChart:'bar',mode:'auto',corMethod:'spearman',pctBasis:'total',pred:[],outc:[],scoreVars:[],corVars:[],s4:false,demo:false,
-  sel:{freq:true,items:true,desc:true,domains:true,levels:true,chi:true,grp:true,cor:true,rel:true}};
+  sel:{catfig:false,freq:true,items:true,desc:true,domains:true,levels:true,chi:true,grp:true,cor:true,rel:true}};
  var d=document.createElement('div');d.id='resx';document.body.appendChild(d);
  d.addEventListener('click',onClick);d.addEventListener('change',onChange);render()}
 window.addEventListener('hashchange',function(){if(location.hash==='#spss')open({sources:[]})});

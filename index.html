@@ -915,10 +915,12 @@ function distinct(c){var m={},o=[];c.raw.forEach(function(v){if(!nn(v))return;va
 function detect(c){
  if(c.hint&&c.hint.kind)return c.hint.kind;
  var vals=c.raw.filter(nn),n=vals.length;if(!n)return'skip';
+ if(/^(id|sid|no\.?|serial|index|uuid|timestamp|رقم|م|مسلسل|الطابع الزمني)$/i.test(String(c.name).trim()))return'skip';
  var d=distinct(c),allNum=vals.every(isNum);
  if(allNum){var nums=vals.map(Number),ints=nums.every(function(x){return x===Math.floor(x)}),mn=Math.min.apply(null,nums),mx=Math.max.apply(null,nums);
   if(ints&&mn>=0&&mx<=7&&d.length>=5)return'lik';
   if(d.length<=8)return'cat';return'num'}
+ var low=d.map(function(x){return x.toLowerCase().trim()});if(d.length>=3&&LV.some(function(L){return low.every(function(x){return L.indexOf(x)>=0})}))return'lik';
  if(d.length>30||d.length/n>.6)return'skip';return'cat'}
 function defaultVmap(c,i){
  if(c.map){var ks=Object.keys(c.map).sort(function(a,b){return a-b});return ks.map(function(k){return k+'='+c.map[k]}).join(', ')}
@@ -1190,7 +1192,7 @@ var REPCSS='.rr{font-family:"Times New Roman",Times,serif;font-size:12pt;line-he
 function stripUi(h){return h.replace(/<br><a class="noprint"[^>]*>.*?<\/a>/g,'')}
 function b64(s){return btoa(unescape(encodeURIComponent(s)))}
 function wrap76(s){return s.replace(/(.{76})/g,'$1\r\n')}
-function exportWord(){
+function exportMht(){
  if(!R)return;var html=stripUi(R.html);FIG.forEach(function(f){html=html.split(f.url).join(f.name)});
  var doc='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Results</title><style>@page{size:21cm 29.7cm;margin:2cm}'+REPCSS+'</style></head><body>'+html+'</body></html>';
  var bd='----=_BaseeraPart_'+Date.now(),m='MIME-Version: 1.0\r\nContent-Type: multipart/related; boundary="'+bd+'"; type="text/html"\r\n\r\n--'+bd+'\r\nContent-Type: text/html; charset="utf-8"\r\nContent-Transfer-Encoding: base64\r\nContent-Location: file:///C:/results/index.htm\r\n\r\n'+wrap76(b64(doc))+'\r\n';
@@ -1208,6 +1210,77 @@ function demo(){
  for(var r=0;r<n;r++){var z=(rn()+rn()+rn())/3;age.raw.push(Math.round(18+rn()*27));var m=rn();mar.raw.push(m<.15?'Single':m<.85?'Married':'Divorced');var e=rn();edu.raw.push(e<.2?'Basic':e<.6?'Secondary':'University');res.raw.push(rn()<.5?'Rural':'Urban');
   qc.forEach(function(c){var v=Math.round(1+(z*.65+rn()*.35)*4.6);c.raw.push(Math.max(1,Math.min(5,v)))})}
  return{name:'demo',cols:cols,n:n}}
+/* ---------- real .docx export (no external libraries) ---------- */
+var CRCT=null;
+function crc32(u){if(!CRCT){CRCT=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CRCT[n]=c>>>0}}var c2=0xFFFFFFFF;for(var i=0;i<u.length;i++)c2=CRCT[(c2^u[i])&255]^(c2>>>8);return(c2^0xFFFFFFFF)>>>0}
+function utf8(s){return new TextEncoder().encode(s)}
+function zip(files){ // files:[{name,data:Uint8Array}] stored, no compression
+ var parts=[],cd=[],off=0;
+ files.forEach(function(f){var nm=utf8(f.name),crc=crc32(f.data),sz=f.data.length,h=new DataView(new ArrayBuffer(30));
+  h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,0,true);h.setUint16(12,0x21,true);h.setUint32(14,crc,true);h.setUint32(18,sz,true);h.setUint32(22,sz,true);h.setUint16(26,nm.length,true);h.setUint16(28,0,true);
+  parts.push(new Uint8Array(h.buffer),nm,f.data);
+  var c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,0,true);c.setUint16(14,0x21,true);c.setUint32(16,crc,true);c.setUint32(20,sz,true);c.setUint32(24,sz,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+  cd.push(new Uint8Array(c.buffer),nm);off+=30+nm.length+sz});
+ var cs=0;cd.forEach(function(x){cs+=x.length});
+ var e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+ return new Blob(parts.concat(cd,[new Uint8Array(e.buffer)]),{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'})}
+function x(s){return String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function pngSize(u8){var d=new DataView(u8.buffer,u8.byteOffset);return[d.getUint32(16),d.getUint32(20)]}
+function b64u8(u){var s=atob(u.split(',')[1]),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a}
+function buildDocx(){
+ var rtl=st.lang==='ar',doc=new DOMParser().parseFromString('<!doctype html><body>'+R.html,'text/html'),root=doc.querySelector('.rr'),body='',media=[],rels='',imgN=0;
+ function rpr(p){return'<w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>'+(p.b?'<w:b/><w:bCs/>':'')+(p.i?'<w:i/>':'')+(p.u?'<w:u w:val="single"/>':'')+(p.c?'<w:color w:val="'+p.c+'"/>':'')+(p.sup?'<w:vertAlign w:val="superscript"/>':'')+'<w:sz w:val="'+p.sz+'"/><w:szCs w:val="'+p.sz+'"/>'+(rtl?'<w:rtl/>':'')+'</w:rPr>'}
+ function runs(n,p){var o='';n.childNodes.forEach(function(c){
+  if(c.nodeType===3){var t=c.nodeValue.replace(/\s+/g,' ');if(t&&t!==' '||(t===' '&&o))o+='<w:r>'+rpr(p)+'<w:t xml:space="preserve">'+x(t)+'</w:t></w:r>'}
+  else if(c.nodeType===1){var tg=c.tagName,cl=c.getAttribute('class')||'';if(cl.indexOf('noprint')>=0||tg==='IMG')return;
+   if(tg==='BR'){o+='<w:r><w:br/></w:r>';return}
+   var q=Object.assign({},p);if(tg==='B'||tg==='STRONG'||tg==='TH')q.b=1;if(tg==='I'||tg==='EM')q.i=1;if(tg==='SUP')q.sup=1;if(tg==='SMALL')q.sz=Math.max(14,p.sz-4);
+   o+=runs(c,q)}});return o}
+ function para(n,o){o=o||{};var p={sz:o.sz||24,b:o.b,u:o.u,c:o.c},bl=o.bullet?'<w:r>'+rpr(p)+'<w:t xml:space="preserve">• </w:t></w:r>':'';return'<w:p><w:pPr>'+(o.keep?'<w:keepNext/>':'')+(rtl?'<w:bidi/>':'')+'<w:spacing w:before="'+(o.before||0)+'" w:after="'+(o.after==null?120:o.after)+'" w:line="360" w:lineRule="auto"/>'+(o.ind?'<w:ind w:left="'+o.ind+'" w:hanging="260"/>':'')+'<w:jc w:val="'+(o.jc||(rtl?'left':'both'))+'"/></w:pPr>'+bl+runs(n,p)+'</w:p>'}
+ function img(el){var u=el.getAttribute('src');if(!u||u.indexOf('data:image/png')!==0)return'';var u8=b64u8(u),sz=pngSize(u8),W=5400000,H=Math.round(W*sz[1]/sz[0]);imgN++;var id='rId'+(100+imgN),nm='media/image'+imgN+'.png';media.push({name:'word/'+nm,data:u8});rels+='<Relationship Id="'+id+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="'+nm+'"/>';
+  return'<w:p><w:pPr><w:keepNext/><w:jc w:val="center"/><w:spacing w:before="120" w:after="60"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+W+'" cy="'+H+'"/><wp:docPr id="'+imgN+'" name="Figure '+imgN+'"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="'+imgN+'" name="image'+imgN+'.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+id+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+W+'" cy="'+H+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>'}
+ function table(t){
+  var trs=[].slice.call(t.querySelectorAll('tr')),pend=[],nc=0,lay=[];
+  trs.forEach(function(tr){var s=0;[].forEach.call(tr.children,function(c){s+=+(c.getAttribute('colspan')||1)});nc=Math.max(nc,s)});
+  var wt=[];for(var g=0;g<nc;g++)wt[g]=0;
+  trs.forEach(function(tr){var cells=[].slice.call(tr.children),ci=0,col=0,row=[];
+   while(col<nc){
+    if(pend[col]&&pend[col].left>0){var pc=pend[col];row.push({cont:1,col:col,cs:pc.span});pc.left--;col+=pc.span;continue}
+    var c=cells[ci++];if(!c)break;var cs=+(c.getAttribute('colspan')||1),rs=+(c.getAttribute('rowspan')||1);
+    if(cs===1){var L=Math.min(30,Math.max(8,c.textContent.trim().length));if(L>wt[col])wt[col]=L}
+    row.push({c:c,col:col,cs:cs,rs:rs});if(rs>1)pend[col]={left:rs-1,span:cs};col+=cs}
+   lay.push(row)});
+  var sum=0;for(g=0;g<nc;g++){if(!wt[g])wt[g]=6;sum+=wt[g]}
+  var gw=wt.map(function(w){return Math.max(500,Math.round(9600*w/sum))});
+  function span(col,cs){var s=0;for(var k=col;k<col+cs;k++)s+=gw[k];return s}
+  var bd='<w:top w:val="single" w:sz="6" w:color="000000"/><w:left w:val="single" w:sz="6" w:color="000000"/><w:bottom w:val="single" w:sz="6" w:color="000000"/><w:right w:val="single" w:sz="6" w:color="000000"/>';
+  var out='<w:tbl><w:tblPr><w:tblW w:w="'+gw.reduce(function(a,b){return a+b},0)+'" w:type="dxa"/><w:jc w:val="center"/>'+(rtl?'<w:bidiVisual/>':'')+'<w:tblBorders>'+bd+'<w:insideH w:val="single" w:sz="4" w:color="000000"/><w:insideV w:val="single" w:sz="4" w:color="000000"/></w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="70" w:type="dxa"/><w:right w:w="70" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>';
+  gw.forEach(function(w){out+='<w:gridCol w:w="'+w+'"/>'});out+='</w:tblGrid>';
+  lay.forEach(function(row,ri){var tr=trs[ri],trCls=tr.getAttribute('class')||'';out+='<w:tr><w:trPr><w:cantSplit/>'+(trCls==='hd'?'<w:tblHeader/>':'')+'</w:trPr>';
+   row.forEach(function(it){
+    if(it.cont){out+='<w:tc><w:tcPr><w:tcW w:w="'+span(it.col,it.cs)+'" w:type="dxa"/>'+(it.cs>1?'<w:gridSpan w:val="'+it.cs+'"/>':'')+'<w:vMerge/></w:tcPr><w:p/></w:tc>';return}
+    var c=it.c,isH=c.tagName==='TH'||trCls==='hd',sec=trCls==='sec',first=it.col===0&&it.cs===1&&!isH&&!/ct/.test(c.getAttribute('class')||''),shade=isH?'F2F2F2':(sec?'FDE9D9':'');
+    out+='<w:tc><w:tcPr><w:tcW w:w="'+span(it.col,it.cs)+'" w:type="dxa"/>'+(it.cs>1?'<w:gridSpan w:val="'+it.cs+'"/>':'')+(it.rs>1?'<w:vMerge w:val="restart"/>':'')+(shade?'<w:shd w:val="clear" w:color="auto" w:fill="'+shade+'"/>':'')+'<w:vAlign w:val="center"/></w:tcPr>';
+    out+='<w:p><w:pPr>'+(rtl?'<w:bidi/>':'')+'<w:spacing w:before="20" w:after="20"/><w:jc w:val="'+((sec||(first&&!isH))?'left':'center')+'"/></w:pPr>'+runs(c,{sz:20,b:isH||sec})+'</w:p></w:tc>'});
+   out+='</w:tr>'});
+  out+='</w:tbl><w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>';return out}
+ [].forEach.call(root.children,function(n){var tg=n.tagName,cl=n.getAttribute('class')||'';
+  if(tg==='H1')body+=para(n,{sz:40,b:1,jc:'center',after:200});
+  else if(tg==='H2')body+=para(n,{sz:28,b:1,u:1,keep:1,before:240,jc:rtl?'left':'left'});
+  else if(tg==='H3')body+=para(n,{sz:26,b:1,keep:1,before:160,jc:'left'});
+  else if(tg==='P'){if(cl.indexOf('demo')>=0)body+=para(n,{b:1,c:'A32A2A',jc:'center'});else if(cl.indexOf('foot')>=0)body+=para(n,{sz:18,jc:'center'});else if(cl.indexOf('cap')>=0)body+=para(n,{keep:1,before:120,jc:'left'});else body+=para(n,{})}
+  else if(tg==='DIV'&&cl.indexOf('tw')>=0){var t=n.querySelector('table');if(t)body+=table(t)}
+  else if(tg==='DIV'&&cl.indexOf('fg')>=0){var im=n.querySelector('img');if(im)body+=img(im)}
+  else if(tg==='UL'){[].forEach.call(n.children,function(li){body+=para(li,{ind:420,jc:'left',after:60,bullet:1})})}});
+ var NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
+ var docx='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+NS+'><w:body>'+body+'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/>'+(rtl?'<w:bidi/>':'')+'</w:sectPr></w:body></w:document>';
+ var styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman" w:eastAsia="Times New Roman"/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>';
+ var ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>';
+ var rr='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+ var dr='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'+rels+'</Relationships>';
+ var files=[{name:'[Content_Types].xml',data:utf8(ct)},{name:'_rels/.rels',data:utf8(rr)},{name:'word/document.xml',data:utf8(docx)},{name:'word/styles.xml',data:utf8(styles)},{name:'word/_rels/document.xml.rels',data:utf8(dr)}].concat(media);
+ return zip(files)}
+function exportWord(){if(!R)return;try{dlBlob('results.docx',buildDocx())}catch(e){try{exportMht()}catch(e2){}}}
 /* ---------- part D: wizard UI ---------- */
 var UCSS='<style>#resx{position:fixed;inset:0;z-index:100001;overflow:auto;background:var(--bg,#f1f5f7);color:var(--ink,#12303d);padding:14px;line-height:1.6}#resx .bx{background:var(--surface,#fff);border:1px solid var(--line,#d3e0e6);border-radius:12px;padding:14px;margin:10px auto;max-width:1040px}#resx input[type=text],#resx input[type=number],#resx select,#resx textarea{font:inherit;padding:6px 8px;border:1.5px solid var(--line,#d3e0e6);border-radius:8px;background:var(--bg,#fff);color:inherit;max-width:100%;box-sizing:border-box}#resx .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}#resx .stp{display:flex;gap:6px;flex-wrap:wrap;max-width:1040px;margin:8px auto}#resx .stp span{padding:3px 12px;border-radius:20px;border:1px solid var(--line,#d3e0e6);font-size:.85rem;background:var(--surface,#fff)}#resx .stp span.on{background:var(--accent,#0f766e);color:var(--accent-ink,#fff);border-color:transparent}#resx .vc{border:1px solid var(--line,#d3e0e6);border-radius:10px;padding:8px 10px;margin:8px 0}#resx .vc input[type=text],#resx .vc label{width:100%;box-sizing:border-box}#resx .vc .row>label{flex:1 1 220px}#resx .vc b{font-size:.92rem}#resx .hint{color:var(--muted,#5a7380);font-size:.86rem}#resx .ck{display:inline-flex;gap:5px;align-items:center;margin:2px 10px 2px 0;font-size:.92rem}#resx .lst{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 10px}#resx .rwrap{background:#fff;color:#000;border-radius:8px;padding:14px;overflow-x:auto}'+REPCSS+'@media print{body>*{display:none!important}body>#resx{display:block!important;position:static!important;background:#fff!important}#resx .noprint{display:none!important}#resx .rwrap{padding:0}}</style>';
 var STEPS=[['البيانات','Data'],['المتغيرات','Variables'],['الإعدادات','Settings'],['الجداول','Tables'],['التقرير','Report']];
@@ -1224,12 +1297,14 @@ function s1(b){
  var h='<div class="bx"><p>'+U('اختاري مصدر البيانات. الأداة لا ترسل أي بيانات إلى أي مكان: التحليل يتم داخل المتصفح فقط.','Choose the data source. Nothing is uploaded anywhere: analysis runs inside your browser only.')+'</p><div class="row">';
  st.sources.forEach(function(s,i){h+='<button data-act="src" data-i="'+i+'">'+E(s.name)+'</button>'});
  h+='<label class="noprint"><span class="hint">'+U('أو ارفعي ملف CSV / Excel (الصف الأول = أسماء الأعمدة، كل صف = مشاركة):','Or upload a CSV / Excel file (first row = column names, one row per participant):')+'</span><br><input type="file" id="resf" accept=".csv,.txt,.tsv,.xlsx,.xls"></label></div><div class="row"><button class="ghost" data-act="demo">'+U('بيانات تجريبية للتدريب','Practice with demo data')+'</button><span class="hint">'+U('عشوائية، للتجربة فقط','random, for practice only')+'</span></div><p id="resm" class="hint"></p>';
- if(st.ds)h+='<p><b>'+U('البيانات المحمّلة: ','Loaded: ')+E(st.ds.name)+'</b> — '+st.ds.n+' '+U('صف','rows')+' × '+st.ds.cols.length+' '+U('عمود','columns')+'</p>';
- h+='</div>'+nav(false,!!st.ds);b.innerHTML=h;
+ h+='</div>';
+ if(st.ds){var kc={cat:0,num:0,lik:0,skip:0},lk=[];st.cfg.forEach(function(g,i){kc[g.kind]++;if(g.kind==='lik')lk.push(st.ds.cols[i].name)});
+  h+='<div class="bx"><h3 style="margin-top:0">'+U('هذا ما فهمتُه من بياناتك','This is what I understood from your data')+'</h3><p>'+st.ds.n+' '+U('مشاركة','participants')+' × '+st.ds.cols.length+' '+U('عمود','columns')+':</p><ul><li>'+kc.cat+' '+U('أعمدة فئوية (جداول تكرار ونسب)','categorical columns (frequency tables)')+'</li><li>'+kc.num+' '+U('أعمدة رقمية (متوسط ± انحراف)','numeric columns (mean ± SD)')+'</li><li>'+kc.lik+' '+U('بنود ليكرت','Likert items')+(lk.length?' <span class="hint">('+E(lk.slice(0,6).join(' | '))+(lk.length>6?' …':'')+')</span>':'')+'</li><li>'+kc.skip+' '+U('أعمدة متجاهلة (مثل الرقم التسلسلي)','ignored columns (e.g. serial number)')+'</li></ul><p class="hint">'+U('إن كان هذا صحيحًا فاضغطي «إنشاء التقرير الآن»: ستُستخدم الإعدادات الموصى بها تلقائيًا. وإن أردتِ تعديل نوع عمود أو أسماء الإجابات فاضغطي «تخصيص».','If this is right press “Generate report now”: recommended settings are applied automatically. To change a column type or answer names press “Customize”.')+'</p><div class="row"><button data-act="quick">'+U('إنشاء التقرير الآن (موصى به)','Generate report now (recommended)')+'</button><button class="ghost" data-act="next">'+U('تخصيص','Customize')+'</button></div></div>'}
+ b.innerHTML=h;
  var f=$('resf');if(f)f.onchange=function(){var fl=f.files[0];if(!fl)return;$('resm').textContent=U('جارٍ القراءة...','Reading...');readFile(fl,function(d){setDs(d,false)},function(e){$('resm').textContent=e==='lib'?U('تعذر تحميل مكتبة Excel. احفظي الملف CSV وأعيدي المحاولة.','Could not load the Excel library. Save as CSV and try again.'):U('تعذر قراءة الملف أو لا يحتوي صفين على الأقل.','Could not read the file, or it has fewer than 2 rows.')})}}
 function setDs(d,isDemo){st.ds=d;st.demo=!!isDemo;st.pred=[];st.outc=[];st.scoreVars=[];st.corVars=[];st.s4=false;st.lastScale='';st.lastInst='';initCfg(d);body()}
 function s2(b){
- var d=st.ds,h='<div class="bx"><p>'+U('راجعي كل عمود: نوعه، وتسميته كما ستظهر في الجداول. أنواع البنود: <b>فئوي</b> (جدول تكرار ونسب)، <b>رقمي</b> (متوسط±انحراف، مع حدود فئات اختيارية)، <b>بند ليكرت</b> (يُجمع في مقياس/مجال)، أو <b>تجاهل</b>.','Review each column: its type and the label shown in tables. Types: <b>Categorical</b> (frequency table), <b>Numeric</b> (Mean±SD, optional cut-points), <b>Likert item</b> (grouped into a scale/domain), or <b>Ignore</b>.')+'</p></div>';
+ var d=st.ds,h='<div class="bx"><p>'+U('راجعي كل عمود: نوعه، وتسميته كما ستظهر في الجداول. أنواع البنود: <b>فئوي</b> (جدول تكرار ونسب)، <b>رقمي</b> (متوسط±انحراف، مع حدود فئات اختيارية)، <b>بند ليكرت</b> (يُجمع في مقياس/مجال)، أو <b>تجاهل</b>. إن كان ما فهمتُه صحيحًا فاضغطي «التالي» دون تغيير.','If my reading is right just press Next. Review each column: its type and the label shown in tables. Types: <b>Categorical</b> (frequency table), <b>Numeric</b> (Mean±SD, optional cut-points), <b>Likert item</b> (grouped into a scale/domain), or <b>Ignore</b>.')+'</p></div>';
  d.cols.forEach(function(c,i){var g=st.cfg[i],sm=distinct(c).slice(0,4).join(' | ');
   h+='<div class="bx vc"><div class="row"><b>'+E(c.name)+'</b><span class="hint">('+E(sm)+')</span></div><div class="row"><input type="text" size="34" data-k="label" data-i="'+i+'" value="'+E(g.label)+'"><select data-k="kind" data-i="'+i+'">'+KINDS.map(function(k){return opt(k[0],U(k[1],k[2]),g.kind)}).join('')+'</select></div>';
   if(g.kind==='cat')h+='<div class="row"><label>'+U('القيم=التسميات (بالترتيب):','Values=labels (in order):')+'<br><input type="text" size="46" data-k="vmap" data-i="'+i+'" value="'+E(g.vmap)+'"></label><label>'+U('مجموعة الجدول:','Table group:')+'<br><input type="text" size="20" data-k="tc" data-i="'+i+'" value="'+E(g.tc)+'" placeholder="'+U('مثال: التاريخ الصحي','e.g. Health history')+'"></label>'+ck('skipFreq',U('استبعاد من جداول التكرار','Exclude from frequency tables'),g.skipFreq,' data-i="'+i+'"')+'</div>';
@@ -1240,38 +1315,56 @@ function s2(b){
  if(sc.length){h+='<div class="bx"><h3 style="margin-top:0">'+U('تسميات إجابات المقاييس','Scale answer labels')+'</h3><p class="hint">'+U('اكتبي التسميات من الأقل إلى الأعلى مفصولة بفواصل (تُطابَق مع النص أو الأرقام في بياناتك).','Write the labels from lowest to highest, comma-separated (matched against the text or numbers in your data).')+'</p>';
   sc.forEach(function(k){var s=st.scales[k];h+='<div class="vc"><b>'+E(k)+'</b> <span class="hint">('+scaleItems(k).length+' '+U('بنود','items')+')</span><div class="row"><input type="text" size="60" data-k="sclab" data-sc="'+E(k)+'" value="'+E(s.labels)+'"><label>'+U('أول درجة:','First code:')+' <select data-k="scstart" data-sc="'+E(k)+'">'+opt(0,'0',s.start)+opt(1,'1',s.start)+'</select></label></div></div>'});h+='</div>'}
  b.innerHTML=h+nav(true,true)}
+function hp(ar,en){return'<div class="hint" style="margin:2px 0 8px">'+U(ar,en)+'</div>'}
+function rec(){return' ✓ '+U('موصى به','recommended')}
 function s3(b){
- var h='<div class="bx"><h3 style="margin-top:0">'+U('معلومات التقرير','Report info')+'</h3><div class="row"><label>'+U('لغة التقرير:','Report language:')+' <select data-k="lang">'+opt('en','English',st.lang)+opt('ar','العربية',st.lang)+'</select></label><label>'+U('وصف العينة (مثال: women / patients):','Participants noun (e.g. women / patients):')+' <input type="text" size="18" data-k="subj" value="'+E(st.subj)+'"></label></div><label>'+U('جملة الهدف في مقدمة الفصل (اختياري):','Aim sentence for the intro (optional):')+'<br><textarea rows="2" style="width:100%" data-k="aim">'+E(st.aim)+'</textarea></label></div>';
- h+='<div class="bx"><h3 style="margin-top:0">'+U('الدرجات والمستويات','Scores and levels')+'</h3><div class="row"><label>'+U('طريقة النسبة المئوية للمتوسط:','Mean-percentage method:')+' <select data-k="pctMode">'+opt('scaled',U('(المتوسط − الأدنى) ÷ المدى','(mean − min) ÷ range'),st.pctMode)+opt('max',U('المتوسط ÷ الدرجة العظمى (كما في الملف النموذجي)','mean ÷ max score (as in the sample file)'),st.pctMode)+'</select></label></div>';
- var I=insts();Object.keys(st.instc).forEach(function(k){var c=st.instc[k];h+='<div class="vc"><b>'+E(k)+'</b> <span class="hint">('+(I[k]||[]).join(' + ')+')</span><div class="row"><label>'+U('حدود المستويات (% من الدرجة):','Level cut-offs (% of score):')+'<br><input type="text" size="14" data-k="icuts" data-in="'+E(k)+'" value="'+E(c.cuts)+'"></label><label>'+U('أسماء المستويات (واحد أكثر من الحدود):','Level names (one more than cut-offs):')+'<br><input type="text" size="34" data-k="ilabs" data-in="'+E(k)+'" value="'+E(c.labels)+'"></label></div></div>'});
- if(!Object.keys(st.instc).length)h+='<p class="hint">'+U('لا توجد بنود ليكرت (اختياري).','No Likert items (optional).')+'</p>';
- h+='<div class="row"><label>'+U('رسم المستويات:','Levels chart:')+' <select data-k="levelChart">'+opt('bar',U('أعمدة','Bars'),st.levelChart)+opt('pie',U('دائري','Pie'),st.levelChart)+'</select></label></div></div>';
- h+='<div class="bx"><h3 style="margin-top:0">'+U('الاختبارات','Tests')+'</h3><div class="row"><label>'+U('مستوى الدلالة α:','Significance α:')+' <select data-k="alpha">'+opt(.05,'0.05',st.alpha)+opt(.01,'0.01',st.alpha)+'</select></label><label>'+U('مقارنة المتوسطات:','Comparing means:')+' <select data-k="mode">'+opt('auto',U('تلقائي (لا معلمي إذا مجموعة < 30)','Auto (non-parametric if any group < 30)'),st.mode)+opt('param','t-test / ANOVA',st.mode)+opt('non','Mann-Whitney / Kruskal-Wallis',st.mode)+'</select></label><label>'+U('الارتباط:','Correlation:')+' <select data-k="corMethod">'+opt('spearman','Spearman',st.corMethod)+opt('pearson','Pearson',st.corMethod)+'</select></label><label>'+U('نسب جدول العلاقات:','Relation-table %:')+' <select data-k="pctBasis">'+opt('total',U('من الإجمالي (كالملف النموذجي)','of grand total (as sample)'),st.pctBasis)+opt('row',U('من الصف','of row'),st.pctBasis)+opt('col',U('من العمود','of column'),st.pctBasis)+'</select></label></div></div>';
- b.innerHTML=h+nav(true,true)}
+ var h='<div class="bx"><p><b>'+U('لا تحتاجين لتغيير شيء هنا في الغالب.','You usually do not need to change anything here.')+'</b> '+U('كل إعداد عليه علامة «موصى به» وهو الاختيار الأنسب، وتحت كل إعداد شرح بسيط. اضغطي «التالي» إذا كنتِ غير متأكدة.','Every setting has a “recommended” choice and a short explanation. Press Next if unsure.')+'</p></div>';
+ h+='<div class="bx"><h3 style="margin-top:0">'+U('معلومات التقرير','Report info')+'</h3>'+
+ '<label>'+U('لغة التقرير','Report language')+'<br><select data-k="lang">'+opt('en','English'+(st.lang==='en'?rec():''),st.lang)+opt('ar','العربية',st.lang)+'</select></label>'+hp('لغة الجداول والجمل. رسائل التخرج غالبًا بالإنجليزية.','Language of tables and sentences. Theses are usually in English.')+
+ '<label>'+U('كلمة وصف المشاركات (اختياري)','Participants noun (optional)')+'<br><input type="text" size="18" data-k="subj" value="'+E(st.subj)+'" placeholder="women"></label>'+hp('تظهر في الجمل مثل: «the studied women». إن تركتها فارغة تُكتب «participants».','Appears in sentences like “the studied women”. Left empty it reads “participants”.')+
+ '<label>'+U('جملة الهدف (اختياري)','Aim sentence (optional)')+'<br><textarea rows="2" style="width:100%" data-k="aim">'+E(st.aim)+'</textarea></label>'+hp('جملة واحدة تُكتب في أول الفصل، مثل: The present study was conducted to assess…','One sentence placed at the top of the chapter.')+'</div>';
+ h+='<div class="bx"><h3 style="margin-top:0">'+U('الدرجات والمستويات','Scores and levels')+'</h3>'+
+ '<label>'+U('طريقة حساب النسبة المئوية للمتوسط','Mean-percentage method')+'<br><select data-k="pctMode">'+opt('scaled',U('(المتوسط − الأدنى) ÷ المدى','(mean − min) ÷ range')+(st.pctMode==='scaled'?rec():''),st.pctMode)+opt('max',U('المتوسط ÷ الدرجة العظمى','mean ÷ max score'),st.pctMode)+'</select></label>'+hp('الأولى تعطي 0% لأقل إجابة و100% لأعلى إجابة. الثانية تطابق الملف النموذجي إن كانت درجاتك تبدأ من 0.','The first gives 0% for the lowest answer and 100% for the highest. The second matches the sample file when scores start from 0.');
+ var I=insts();Object.keys(st.instc).forEach(function(k){var c=st.instc[k];h+='<div class="vc"><b>'+E(k)+'</b> <span class="hint">('+(I[k]||[]).join(' + ')+')</span><div class="row"><label>'+U('حدود المستويات (% من الدرجة)','Level cut-offs (% of score)')+'<br><input type="text" size="14" data-k="icuts" data-in="'+E(k)+'" value="'+E(c.cuts)+'"></label><label>'+U('أسماء المستويات','Level names')+'<br><input type="text" size="34" data-k="ilabs" data-in="'+E(k)+'" value="'+E(c.labels)+'"></label></div>'+hp('«50,75» تعني: أقل من 50% = منخفض، من 50 إلى أقل من 75 = متوسط، 75 فأكثر = مرتفع. غيّريها فقط إذا كان لمقياسك حدود رسمية (مثل مقياس كيسلر). عدد الأسماء = عدد الحدود + 1.','“50,75” means: under 50% = Low, 50 to under 75 = Average, 75+ = High. Change only if your scale has official cut-offs. Names = cut-offs + 1.')+'</div>'});
+ if(!Object.keys(st.instc).length)h+='<p class="hint">'+U('لا توجد بنود ليكرت، فلا مستويات ولا درجات.','No Likert items, so no scores or levels.')+'</p>';
+ h+='<label>'+U('شكل رسم المستويات','Levels chart')+'<br><select data-k="levelChart">'+opt('bar',U('أعمدة','Bars')+(st.levelChart==='bar'?rec():''),st.levelChart)+opt('pie',U('دائري','Pie'),st.levelChart)+'</select></label>'+hp('الأعمدة أسهل في المقارنة، والدائري مناسب لثلاثة مستويات.','Bars compare more easily; pie suits three levels.')+'</div>';
+ h+='<div class="bx"><h3 style="margin-top:0">'+U('الاختبارات الإحصائية','Statistical tests')+'</h3>'+
+ '<label>'+U('مستوى الدلالة α','Significance level α')+'<br><select data-k="alpha">'+opt(.05,'0.05'+(st.alpha===.05?rec():''),st.alpha)+opt(.01,'0.01',st.alpha)+'</select></label>'+hp('0.05 هو المعتاد. اجعليه 0.01 فقط بتوجيه من المشرفة.','0.05 is the usual choice. Use 0.01 only if your supervisor asks.')+
+ '<label>'+U('مقارنة المتوسطات بين المجموعات','Comparing means between groups')+'<br><select data-k="mode">'+opt('auto',U('تلقائي','Automatic')+(st.mode==='auto'?rec():''),st.mode)+opt('param','t-test / ANOVA',st.mode)+opt('non','Mann-Whitney / Kruskal-Wallis',st.mode)+'</select></label>'+hp('«تلقائي» يختار الاختبار حسب حجم كل مجموعة: إن كانت مجموعة أقل من 30 يستخدم الاختبار اللامعلمي الأسلم للعينات الصغيرة.','“Automatic” picks the test by group size: any group under 30 uses the safer non-parametric test.')+
+ '<label>'+U('نوع الارتباط','Correlation type')+'<br><select data-k="corMethod">'+opt('spearman','Spearman'+(st.corMethod==='spearman'?rec():''),st.corMethod)+opt('pearson','Pearson',st.corMethod)+'</select></label>'+hp('سبيرمان مناسب لإجابات ليكرت. بيرسون للأرقام المتصلة الموزعة طبيعيًا.','Spearman suits Likert answers. Pearson is for continuous, normally distributed numbers.')+
+ '<label>'+U('نسب جدول مربع كاي','Chi-square table percentages')+'<br><select data-k="pctBasis">'+opt('total',U('من الإجمالي','of grand total')+(st.pctBasis==='total'?rec():''),st.pctBasis)+opt('row',U('من الصف','of row'),st.pctBasis)+opt('col',U('من العمود','of column'),st.pctBasis)+'</select></label>'+hp('«من الإجمالي» يطابق الملف النموذجي.','“Of grand total” matches the sample file.')+'</div>';
+ b.innerHTML=h+nav(true,true)+resetBtn()}
+function resetBtn(){return'<div class="row noprint" style="max-width:1040px;margin:0 auto 14px"><button class="ghost" data-act="reset">'+U('إعادة الضبط إلى الإعدادات الموصى بها','Reset to recommended settings')+'</button></div>'}
+function defaults(){st.lang='en';st.subj='';st.aim='';st.pctMode='scaled';st.alpha=.05;st.levelChart='bar';st.mode='auto';st.corMethod='spearman';st.pctBasis='total';st.sel={freq:true,items:true,desc:true,domains:true,levels:true,chi:true,grp:true,cor:true,rel:true};st.s4=false;st.lastScale='';st.lastInst='';st.pred=[];st.outc=[];st.scoreVars=[];st.corVars=[]}
+function initS4(){var V=registry();
+ st.s4=true;st.pred=V.filter(function(v){return v.type==='cat'&&v.id.slice(0,2)!=='L:'}).map(function(v){return v.id});st.outc=V.filter(function(v){return v.id.slice(0,2)==='L:'}).map(function(v){return v.id});
+ var sc=V.filter(function(v){return v.id.slice(0,2)==='s:'||v.id.slice(0,2)==='i:'});st.scoreVars=sc.map(function(v){return v.id});st.corVars=sc.length<=4?sc.map(function(v){return v.id}):V.filter(function(v){return v.id.slice(0,2)==='i:'}).map(function(v){return v.id});
+ if(st.corVars.length<2)st.corVars=V.filter(function(v){return v.type==='num'}).slice(0,3).map(function(v){return v.id})}
 function plist(key,V,filter){var h='<div class="lst">';V.filter(filter).forEach(function(v){h+='<label class="ck"><input type="checkbox" data-k="pick" data-l="'+key+'" data-v="'+E(v.id)+'"'+(st[key].indexOf(v.id)>=0?' checked':'')+'> '+E(v.label)+'</label>'});return h+'</div>'}
 function s4(b){
  var V=registry();
- if(!st.s4){st.s4=true;st.pred=V.filter(function(v){return v.type==='cat'&&v.id.charAt(0)!=='L'}).map(function(v){return v.id});st.outc=V.filter(function(v){return v.id.slice(0,2)==='L:'}).map(function(v){return v.id});
-  var sc=V.filter(function(v){return v.id.slice(0,2)==='s:'||v.id.slice(0,2)==='i:'});st.scoreVars=sc.map(function(v){return v.id});st.corVars=sc.length<=4?sc.map(function(v){return v.id}):V.filter(function(v){return v.id.slice(0,2)==='i:'}).map(function(v){return v.id});
-  if(st.corVars.length<2)st.corVars=V.filter(function(v){return v.type==='num'}).slice(0,3).map(function(v){return v.id})}
+ if(!st.s4)initS4();
  var s=st.sel,h='<div class="bx"><h3 style="margin-top:0">'+U('اختاري ما تريدين في الفصل','Choose what goes in the chapter')+'</h3>'+
- [['freq','جداول التكرار والنسب (+Mean±SD)','Frequency tables (+ Mean±SD)'],['items','جداول بنود ليكرت (N و %)','Likert item tables (N and %)'],['desc','جدول Min / Max / Mean±SD / Median للبنود','Item descriptives (Min / Max / Mean±SD / Median)'],['domains','ترتيب المجالات + الرسم','Domain ranking + chart'],['levels','المستويات الكلية + الرسم','Total levels + chart'],['chi','علاقات مربع كاي (مع فيشر)','Chi-square relations (with Fisher)'],['grp','مقارنة المتوسطات (t / ANOVA / لا معلمي)','Mean comparisons (t / ANOVA / non-parametric)'],['cor','الارتباط + رسم الانتشار','Correlation + scatter plot'],['rel','ثبات ألفا كرونباخ','Cronbach\'s alpha reliability']].map(function(x){return ck('sel:'+x[0],U(x[1],x[2]),s[x[0]])}).join('<br>')+'</div>';
+ [['freq','جداول التكرار والنسب (+Mean±SD)','Frequency tables (+ Mean±SD)'],['items','جداول بنود ليكرت (N و %)','Likert item tables (N and %)'],['desc','جدول Min / Max / Mean±SD / Median للبنود','Item descriptives (Min / Max / Mean±SD / Median)'],['domains','ترتيب المجالات + الرسم','Domain ranking + chart'],['levels','المستويات الكلية + الرسم','Total levels + chart'],['chi','علاقات مربع كاي (مع فيشر)','Chi-square relations (with Fisher)'],['grp','مقارنة المتوسطات (t / ANOVA / لا معلمي)','Mean comparisons (t / ANOVA / non-parametric)'],['cor','الارتباط + رسم الانتشار','Correlation + scatter plot'],['rel','ثبات ألفا كرونباخ','Cronbach\'s alpha reliability']].map(function(x){return ck('sel:'+x[0],U(x[1],x[2]),s[x[0]])}).join('<br>')+'<p class="hint">'+U('كلها مفعّلة افتراضيًا. أوقفي ما لا يخص بحثك. الاختيارات في الأسفل مضبوطة تلقائيًا ولا تحتاج تعديلاً غالبًا.','All are on by default. Turn off what your study does not need. The choices below are pre-selected.')+'</p></div>';
  h+='<div class="bx"><h3 style="margin-top:0">'+U('المتغيرات المستقلة (صفوف جداول العلاقات والمقارنات)','Predictors (rows of relation / comparison tables)')+'</h3>'+plist('pred',V,function(v){return v.type==='cat'&&v.id.slice(0,2)!=='L:'})+'<h3>'+U('المتغيرات التابعة لمربع كاي (أعمدة الجدول)','Chi-square outcomes (table columns)')+'</h3>'+plist('outc',V,function(v){return v.type==='cat'})+'<h3>'+U('درجات للمقارنة بين المجموعات','Scores to compare between groups')+'</h3>'+plist('scoreVars',V,function(v){return v.type==='num'})+'<h3>'+U('متغيرات الارتباط (كل زوج)','Correlation variables (every pair)')+'</h3>'+plist('corVars',V,function(v){return v.type==='num'})+'</div>';
- b.innerHTML=h+nav(true,true,U('إنشاء التقرير','Generate report'))}
+ b.innerHTML=h+nav(true,true,U('إنشاء التقرير','Generate report'))+resetBtn()}
 function s5(b){
  b.innerHTML='<div class="bx">'+U('جارٍ إنشاء التقرير...','Generating the report...')+'</div>';
  setTimeout(function(){
   try{R=build()}catch(e){b.innerHTML='<div class="bx"><p style="color:#a32a2a">'+U('حدث خطأ أثناء الحساب: ','Error while computing: ')+E(e&&e.message)+'</p></div>'+nav(true,false);return}
-  b.innerHTML='<div class="bx noprint"><div class="row"><button data-act="word">'+U('تصدير Word','Export Word')+'</button><button class="ghost" data-act="print">'+U('طباعة / PDF','Print / PDF')+'</button><span class="hint">'+R.tables+' '+U('جدول','tables')+' · '+R.figs+' '+U('شكل','figures')+'</span></div><p class="hint">'+U('راجعي الجمل التفسيرية قبل النسخ. للأرقام النهائية في الرسالة يُنصح بالتأكد منها في SPSS الأصلي.','Review the generated sentences before copying. For final thesis numbers, double-check in the original SPSS.')+'</p></div><div class="bx rwrap">'+R.html+'</div>'+nav(true,false);
+  b.innerHTML='<div class="bx noprint"><div class="row"><button data-act="word">'+U('تصدير Word','Export Word')+'</button><button class="ghost" data-act="print">'+U('طباعة / PDF','Print / PDF')+'</button><span class="hint">'+R.tables+' '+U('جدول','tables')+' · '+R.figs+' '+U('شكل','figures')+'</span></div><div class="row"><label>'+U('لغة التقرير','Language')+' <select data-k="lang">'+opt('en','English',st.lang)+opt('ar','العربية',st.lang)+'</select></label><label>'+U('مقارنة المتوسطات','Mean tests')+' <select data-k="mode">'+opt('auto',U('تلقائي','Automatic'),st.mode)+opt('param','t-test / ANOVA',st.mode)+opt('non',U('لا معلمي','Non-parametric'),st.mode)+'</select></label><label>'+U('الارتباط','Correlation')+' <select data-k="corMethod">'+opt('spearman','Spearman',st.corMethod)+opt('pearson','Pearson',st.corMethod)+'</select></label><button class="ghost" data-act="back5">'+U('تخصيص كامل','Full customize')+'</button></div><p class="hint">'+U('راجعي الجمل التفسيرية قبل النسخ. للأرقام النهائية في الرسالة يُنصح بالتأكد منها في SPSS الأصلي.','Review the generated sentences before copying. For final thesis numbers, double-check in the original SPSS.')+'</p></div><div class="bx rwrap">'+R.html+'</div>'+nav(true,false);
   var rw=b.querySelector('.rr');if(rw)rw.style.fontSize='12pt'},30)}
 function onClick(e){
  var t=e.target.closest?e.target.closest('[data-act]'):null;if(!t)return;var a=t.getAttribute('data-act');
  if(a==='close')closeR();
  else if(a==='ui'){st.ui=ui()?'en':'ar';render()}
  else if(a==='back'){st.step--;render()}
+ else if(a==='back5'){st.step=2;render()}
  else if(a==='next'){if(st.step===1&&!st.ds)return;st.step++;render();$('resx').scrollTop=0}
  else if(a==='src'){var s=st.sources[+t.getAttribute('data-i')],d=null;try{d=s.get()}catch(x){}if(!d||d.n<2){$('resm').textContent=U('لا توجد بيانات كافية في هذا المصدر بعد (يلزم صفان على الأقل).','Not enough data in this source yet (at least 2 rows needed).');return}setDs(d,false)}
  else if(a==='demo')setDs(demo(),true)
+ else if(a==='quick'){if(!st.ds)return;if(!st.s4)initS4();st.step=5;render();$('resx').scrollTop=0}
+ else if(a==='reset'){if(!st.ds)return;var dd=st.ds,dm=st.demo;defaults();initCfg(dd);st.demo=dm;body()}
  else if(a==='word')exportWord()
  else if(a==='print')window.print()}
 function onChange(e){
@@ -1289,7 +1382,7 @@ function onChange(e){
  else if(k==='alpha')st.alpha=+v;
  else if(k.indexOf('sel:')===0)st.sel[k.slice(4)]=v;
  else if(k==='pick'){var l=t.getAttribute('data-l'),id=t.getAttribute('data-v'),ix=st[l].indexOf(id);if(v&&ix<0)st[l].push(id);if(!v&&ix>=0)st[l].splice(ix,1)}
- else st[k]=v}
+ else{st[k]=v;if(st.step===5&&(k==='lang'||k==='mode'||k==='corMethod'))body()}}
 function closeR(){var r=$('resx');if(r)r.remove();st=null;R=null;FIG=[];if(location.hash==='#spss'){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){location.hash=''}}}
 function open(opts){
  if($('resx'))return;opts=opts||{};

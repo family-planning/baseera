@@ -15,8 +15,8 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1c23;--surface:#162832;--ink:#e3eef2;--muted:#9bb2bc;--line:#2a4350;--accent:#4fd1c1;--accent-ink:#06211e;--soft:#16393a;--warn:#f0b273;--warn-bg:#3a2a18;--stop:#ff9a9a;--stop-bg:#3d1b1b;--info-bg:#17324a;--info:#9cc7ee;--g1:#115e59;--g2:#0b2e22;--accent2:#f08a70;color-scheme:dark}}
 :root[data-theme="dark"]{--g1:#115e59;--g2:#0b2e22;--accent2:#f08a70;--bg:#0e1c23;--surface:#162832;--ink:#e3eef2;--muted:#9bb2bc;--line:#2a4350;--accent:#4fd1c1;--accent-ink:#06211e;--soft:#16393a;--warn:#f0b273;--warn-bg:#3a2a18;--stop:#ff9a9a;--stop-bg:#3d1b1b;--info-bg:#17324a;--info:#9cc7ee;color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--ff);font-size:16px;line-height:1.7;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+body{background:var(--bg);color:var(--ink);font-family:var(--ff);font-size:16px;line-height:1.7;padding-block:20px 48px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}@media(min-width:900px){body{padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}}
+.wrap{max-width:none;width:100%;margin:0;display:flex;flex-direction:column;gap:16px}
 h1{font-size:1.7rem;font-weight:800;margin:0;line-height:1.3;text-wrap:balance}h2{font-size:1.2rem;margin:0;font-weight:800}h3{font-size:1.05rem;margin:0;font-weight:600}
 .tag{color:var(--muted);margin:4px 0 0}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
@@ -477,14 +477,17 @@ function usageDS(m){
  return ds0('baseera-usage',cols,d.rows.length)}
 function evalDS(){
  if(!DATA||!DATA.eval||!DATA.eval.length)return null;
- var ev=isAr()?['سهل عليّ استخدام الموقع','كانت الأسئلة واضحة ومفهومة','كانت النتيجة واضحة ومفهومة','وجدت المعلومات عن الوسائل مفيدة','أنصح غيري باستخدام الموقع']:['The website was easy to use','The questions were clear and understandable','The result was clear and understandable','I found the information about the methods useful','I would recommend the website to others'],rows=DATA.eval,lab=isAr()?['لا أوافق إطلاقاً','لا أوافق','محايدة','أوافق','أوافق تماماً']:['Strongly disagree','Disagree','Neutral','Agree','Strongly agree'],cols=[];
- cols.push({name:'lang',label:isAr()?'لغة الواجهة':'Interface language',raw:rows.map(function(r){return r[1]==='en'?2:1}),map:{1:isAr()?'عربي':'Arabic',2:'English'},hint:{kind:'cat'}});
- for(var k=0;k<5;k++)(function(k){cols.push({name:'e'+(k+1),label:ev[k]||('Q'+(k+1)),raw:rows.map(function(r){var v=r[3+k];return v===''||v==null?null:Number(v)}),hint:{kind:'lik',scale:isAr()?'تقييم الموقع':'Website evaluation',inst:isAr()?'تقييم الموقع':'Website evaluation',labels:lab,start:1}})})(k);
+ var EQ=window.__EVQ,DM=window.__DEM;if(!EQ||!DM)return null;
+ var rows=DATA.eval.filter(function(r){return r&&r.length>=27}),cols=[],ar=isAr();if(!rows.length)return null;
+ var lab=ar?['لا أوافق إطلاقاً','لا أوافق','محايدة','أوافق','أوافق تماماً']:['Strongly disagree','Disagree','Neutral','Agree','Strongly agree'],tcN=ar?'خصائص المشاركات':'Participant characteristics',inst=ar?'تقييم الموقع':'Website evaluation';
+ cols.push({name:'lang',label:ar?'لغة الواجهة':'Interface language',raw:rows.map(function(r){return r[1]==='en'?2:1}),map:{1:ar?'عربي':'Arabic',2:'English'},hint:{kind:'cat',tc:tcN,noPred:true}});
+ DM.forEach(function(q,k){var mp={};q.o.forEach(function(o,i){mp[i+1]=ar?o[0]:o[1]});cols.push({name:q.k,label:ar?q.q[0]:q.q[1],raw:rows.map(function(r){var v=Number(r[3+k]);return v>0?v:null}),map:mp,hint:{kind:'cat',tc:tcN}})});
+ var n=0;EQ.forEach(function(g){g.i.forEach(function(it){var k=n++;cols.push({name:'e'+(k+1),label:ar?it[0]:it[1],raw:rows.map(function(r){var v=r[8+k];return v===''||v==null?null:Number(v)}),hint:{kind:'lik',scale:ar?g.d[0]:g.d[1],inst:inst,labels:lab,start:1,rev:!!it[2]}})})});
  return ds0('baseera-evaluations',cols,rows.length)}
 function openRes(){
  if(!window.RES)return;var m=LAST||calc();
  RES.open({sources:[{name:t('resUse'),get:function(){return usageDS(m)}},{name:t('resEv'),get:function(){return evalDS()}}]})}
-function evalPost(a){if(!URL_||!a||a.length!==5)return;post({type:'eval',lang:lg(),sid:sid,a:a})}
+function evalPost(a,d){if(!URL_||!a||a.length!==19)return;post({type:'eval',lang:lg(),sid:sid,d:d||[0,0,0,0,0],a:a})}
 function init(){visit();chk()}
 window.addEventListener('load',init);window.addEventListener('hashchange',chk);
 return{results:results,evalPost:evalPost};
@@ -707,18 +710,37 @@ function dueView(){
 var TEAM='';/* اكتبي هنا أسماء الفريق والمشرفة إن أردتِ: مثال 'إعداد: ... تحت إشراف: ...' */
 function about(){
  $('#app').innerHTML=L('<div class="card"><h2>عن الموقع</h2><p>«')+esc(U.site_title_ar)+L('» أداة تعليمية صُممت كمشروع تخرج في قسم صحة المرأة والتوليد، لمساعدة السيدات على فهم وسائل تنظيم الأسرة المناسبة لحالتهن قبل زيارة الطبيب.</p>')+(TEAM?'<p>'+esc(TEAM)+'</p>':'')+L('<h3>المصادر العلمية</h3><ul><li><a href="https://www.cdc.gov/mmwr/volumes/73/rr/rr7304a1.htm" target="_blank" rel="noopener">CDC: U.S. Medical Eligibility Criteria for Contraceptive Use, 2024</a></li><li><a href="https://www.cdc.gov/mmwr/volumes/73/rr/rr7303a1.htm" target="_blank" rel="noopener">CDC: U.S. Selected Practice Recommendations for Contraceptive Use, 2024</a></li><li><a href="https://www.who.int/publications/i/item/9789240115583" target="_blank" rel="noopener">WHO: Medical eligibility criteria for contraceptive use, 6th edition, 2025</a></li><li><a href="https://www.who.int/publications/i/item/9789240115606" target="_blank" rel="noopener">WHO: Selected practice recommendations for contraceptive use, 4th edition, 2025</a></li><li>ACOG Committee Opinion No. 700: Methods for Estimating the Due Date (للحاسبة)</li></ul><p class="hint">اعتُمدت معايير الأهلية الطبية من CDC 2024 وقورنت بمنظمة الصحة العالمية 2025، وعند اختلافهما طُبّق الأشد حذراً. نسب الفعالية تقريبية للاستخدام المعتاد. المعلومات تعليمية ولا تغني عن استشارة الطبيب.</p><h3>كيف يعمل؟</h3><p>تجيبين عن 18 سؤالاً بنظام الاختيار. يحوّل الموقع إجاباتك إلى حالات صحية، ثم يبحث عن تصنيف كل وسيلة لها في معايير MEC، ويستبعد الوسائل غير الآمنة، ويرتب الباقي حسب فعاليتها وما تفضلينه.</p><h3>حدود الأداة</h3><p>')+esc(U.disclaimer_ar)+L('</p><p>بعض قواعد الأداة ما زالت تحتاج مراجعة طبية متخصصة، ولم نتحقق من توفر كل الوسائل تجارياً في مصر.</p></div>')}
-var EV=[L('سهل عليّ استخدام الموقع'),L('كانت الأسئلة واضحة ومفهومة'),L('كانت النتيجة واضحة ومفهومة'),L('وجدت المعلومات عن الوسائل مفيدة'),L('أنصح غيري باستخدام الموقع')];
+function Z(a,e){return LANG==='en'?e:a}
+var EVQ=[
+{d:['سهولة الاستخدام','Ease of use'],i:[['سهل عليّ استخدام الموقع','The website was easy to use'],['كانت الأسئلة واضحة ومفهومة','The questions were clear and understandable'],['استطعت الوصول إلى ما أريد دون مساعدة','I could find what I needed without help'],['تنقلت بين أقسام الموقع بسهولة','I moved between the website sections easily'],['وجدت الموقع معقداً دون داعٍ','I found the website unnecessarily complex',1]]},
+{d:['وضوح المحتوى والنتائج','Clarity of content and results'],i:[['كانت النتيجة واضحة ومفهومة','The result was clear and understandable'],['كانت اللغة المستخدمة بسيطة','The language used was simple'],['ساعدتني الرسوم والشروحات على الفهم','The illustrations and explanations helped me understand'],['فهمتُ سبب ترشيح كل وسيلة','I understood why each method was recommended']]},
+{d:['الفائدة','Usefulness'],i:[['وجدت المعلومات عن الوسائل مفيدة','I found the information about the methods useful'],['زاد الموقع من معلوماتي عن وسائل تنظيم الأسرة','The website increased my knowledge about family planning methods'],['ساعدني الموقع على الاستعداد للحديث مع الطبيبة','The website helped me prepare to talk to the doctor'],['وفّر عليّ الموقع وقتاً في معرفة الخيارات','The website saved me time in learning about the options']]},
+{d:['الثقة والأمان','Trust and safety'],i:[['أثق في المعلومات التي قدمها الموقع','I trust the information provided by the website'],['شعرتُ بالأمان أثناء استخدام الموقع','I felt safe while using the website'],['أشعر أن مصادر المعلومات موثوقة','I feel the sources of information are reliable']]},
+{d:['الرضا ونية الاستخدام','Satisfaction and intention to use'],i:[['أنا راضية عن الموقع بشكل عام','I am satisfied with the website overall'],['سأستخدم الموقع مرة أخرى عند الحاجة','I would use the website again when needed'],['أنصح غيري باستخدام الموقع','I would recommend the website to others']]}];
+var DEM=[
+{k:'age',q:['الفئة العمرية','Age group'],o:[['أقل من 20 سنة','Under 20'],['20 - 29 سنة','20 - 29'],['30 - 39 سنة','30 - 39'],['40 سنة فأكثر','40 or older']]},
+{k:'edu',q:['المستوى التعليمي','Education'],o:[['أساسي أو أقل','Basic or less'],['ثانوي','Secondary'],['جامعي','University'],['دراسات عليا','Postgraduate']]},
+{k:'mar',q:['الحالة الاجتماعية','Marital status'],o:[['عزباء','Single'],['متزوجة','Married'],['مطلقة أو أرملة','Divorced or widowed']]},
+{k:'res',q:['مكان السكن','Residence'],o:[['ريف','Rural'],['حضر','Urban']]},
+{k:'prior',q:['هل سبق أن بحثتِ عن معلومات صحية على الإنترنت؟','Have you searched for health information online before?'],o:[['نعم','Yes'],['لا','No']]}];
+window.__EVQ=EVQ;window.__DEM=DEM;
 function evalView(){
- var h=L('<div class="card"><h2>قيّمي الموقع</h2><p class="hint">اختاري من 1 (لا أوافق إطلاقاً) إلى 5 (أوافق تماماً).</p><form id="evf">');
- EV.forEach(function(s,i){h+='<fieldset style="border:0;padding:0;margin:10px 0"><legend><b>'+esc(s)+'</b></legend><div class="sc">'+[1,2,3,4,5].map(function(n){return'<label><input type="radio" name="e'+i+'" value="'+n+'" required> '+n+'</label>'}).join('')+'</div></fieldset>'});
- h+=L('<label for="ecm"><b>ملاحظاتك (اختياري)</b></label><textarea id="ecm" rows="3"></textarea><div class="row" style="margin-top:10px"><button type="submit">حفظ التقييم</button></div></form><div id="evo"></div></div>');
+ var n=0,tot=0;EVQ.forEach(function(g){tot+=g.i.length});
+ var h='<div class="card"><h2>'+Z('قيّمي الموقع','Rate the website')+'</h2><p class="hint">'+Z('المشاركة اختيارية وبدون أسماء، وتساعدنا على تحسين الموقع. اختاري من 1 (لا أوافق إطلاقاً) إلى 5 (أوافق تماماً).','Taking part is voluntary and anonymous, and helps us improve the website. Choose from 1 (strongly disagree) to 5 (strongly agree).')+'</p><form id="evf"><h3>'+Z('عنكِ (اختياري)','About you (optional)')+'</h3>';
+ DEM.forEach(function(q){h+='<label for="d_'+q.k+'"><b>'+esc(Z(q.q[0],q.q[1]))+'</b></label><select id="d_'+q.k+'" style="width:100%;margin:4px 0 10px;padding:8px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit"><option value="0">—</option>'+q.o.map(function(o,i){return'<option value="'+(i+1)+'">'+esc(Z(o[0],o[1]))+'</option>'}).join('')+'</select>'});
+ EVQ.forEach(function(g){h+='<h3 style="margin-top:18px">'+esc(Z(g.d[0],g.d[1]))+'</h3>';g.i.forEach(function(it){var i=n++;h+='<fieldset style="border:0;padding:0;margin:10px 0"><legend><b>'+(i+1)+'. '+esc(Z(it[0],it[1]))+'</b></legend><div class="sc">'+[1,2,3,4,5].map(function(k){return'<label><input type="radio" name="e'+i+'" value="'+k+'" required> '+k+'</label>'}).join('')+'</div></fieldset>'})});
+ h+='<p class="hint">'+Z('1 = لا أوافق إطلاقاً … 5 = أوافق تماماً','1 = strongly disagree … 5 = strongly agree')+'</p><label for="ecm"><b>'+Z('ملاحظاتك (اختياري)','Your comments (optional)')+'</b></label><textarea id="ecm" rows="3"></textarea><div class="row" style="margin-top:10px"><button type="submit">'+Z('حفظ التقييم','Save evaluation')+'</button></div></form><div id="evo"></div></div>';
  $('#app').innerHTML=h;
  $('#evf').addEventListener('submit',function(e){e.preventDefault();
-  var a=EV.map(function(s,i){return+document.querySelector('input[name=e'+i+']:checked').value}),c=$('#ecm').value.trim();
-  try{BSR.evalPost(a)}catch(x){}try{var l=JSON.parse(localStorage.getItem('fp_eval')||'[]');l.push({a:a,c:c,t:Date.now()});localStorage.setItem('fp_eval',JSON.stringify(l))}catch(x){}
-  var txt=L('تقييم «')+U.site_title_ar+'»\n'+EV.map(function(s,i){return s+': '+a[i]+'/5'}).join('\n')+(c?L('\nملاحظات: ')+c:'');
-  $('#evo').innerHTML=L('<p class="note info">شكراً لكِ. حُفظ تقييمك على هذا الجهاز فقط. لإرساله لفريق الموقع انسخي النص التالي وأرسليه لهم.</p><textarea id="evt" rows="7" readonly>')+esc(txt)+L('</textarea><div class="row" style="margin-top:8px"><button id="evc">نسخ التقييم</button></div>');
+  var a=[];for(var i=0;i<tot;i++)a.push(+document.querySelector('input[name=e'+i+']:checked').value);
+  var d=DEM.map(function(q){return+($('#d_'+q.k).value||0)}),c=$('#ecm').value.trim();
+  try{BSR.evalPost(a,d)}catch(x){}
+  try{var l=JSON.parse(localStorage.getItem('fp_eval')||'[]');l.push({a:a,d:d,c:c,t:Date.now()});localStorage.setItem('fp_eval',JSON.stringify(l))}catch(x){}
+  var k=0,lines=[];EVQ.forEach(function(g){lines.push(Z(g.d[0],g.d[1]));g.i.forEach(function(it){lines.push(' - '+Z(it[0],it[1])+': '+a[k++]+'/5')})});
+  var txt=Z('تقييم «','Evaluation of «')+U.site_title_ar+'»\n'+lines.join('\n')+(c?'\n'+Z('ملاحظات: ','Comments: ')+c:'');
+  $('#evo').innerHTML='<p class="note info">'+Z('شكراً لكِ. وصل تقييمك دون أي اسم أو بيانات تعريفية، وحُفظت نسخة على هذا الجهاز. يمكنك أيضاً نسخ النص التالي إن أرادت الباحثة جمعه يدوياً.','Thank you. Your evaluation was sent without any name or identifying data, and a copy was kept on this device. You can also copy the text below if the researcher collects it manually.')+'</p><textarea id="evt" rows="7" readonly>'+esc(txt)+'</textarea><div class="row" style="margin-top:8px"><button id="evc">'+Z('نسخ التقييم','Copy evaluation')+'</button></div>';
   copyBox('evt','evc')})}
+
 chrome();document.querySelectorAll('#nav button').forEach(function(b){b.onclick=function(){go(b.dataset.v)}});$('#lg').onclick=function(){setData(LANG==='ar');try{localStorage.setItem('fp_lang',LANG)}catch(e){}boot()};
 $('#siteTitle').textContent=U.site_title_ar;$('#siteTitle').insertAdjacentHTML('afterbegin',logoSvg('hlogo'));$('#tagline').textContent=U.tagline_ar;
 
@@ -911,6 +933,27 @@ S.dunn=function(gs){var all=[],lab=[];gs.forEach(function(g,i){g.forEach(functio
  var sig=N*(N+1)/12-tc/(12*(N-1)),k=gs.length,m=k*(k-1)/2,out=[];for(i=0;i<k;i++)for(var j=i+1;j<k;j++){var d=sum[i]/gs[i].length-sum[j]/gs[j].length,z=d/Math.sqrt(sig*(1/gs[i].length+1/gs[j].length)),p=2*(1-S.pnorm(Math.abs(z)));out.push({i:i,j:j,z:z,p:Math.min(1,p*m)})}return out};
 S.holm=function(ps){var o=ps.map(function(p,i){return[p,i]}).sort(function(a,b){return a[0]-b[0]}),m=ps.length,adj=new Array(m),prev=0;o.forEach(function(x,k){var v=Math.min(1,(m-k)*x[0]);v=Math.max(v,prev);prev=v;adj[x[1]]=v});return adj};
 S.itemAnalysis=function(M){var k=M.length,n=M[0].length,out=[];for(var i=0;i<k;i++){var rest=[],j,r;for(r=0;r<n;r++){var s=0;for(j=0;j<k;j++)if(j!==i)s+=M[j][r];rest.push(s)}var others=M.filter(function(_,j){return j!==i});out.push({r:S.pearson(M[i],rest).r,alphaDel:k>2?S.alpha(others):NaN})}return out};
+
+function inv(M){var n=M.length,A=M.map(function(r,i){var q=r.slice();for(var j=0;j<n;j++)q.push(i===j?1:0);return q}),i,j,k;
+ for(i=0;i<n;i++){var p=i;for(j=i+1;j<n;j++)if(Math.abs(A[j][i])>Math.abs(A[p][i]))p=j;if(Math.abs(A[p][i])<1e-12)return null;var t=A[i];A[i]=A[p];A[p]=t;var d=A[i][i];for(k=0;k<2*n;k++)A[i][k]/=d;
+  for(j=0;j<n;j++)if(j!==i){var f=A[j][i];if(f!==0)for(k=0;k<2*n;k++)A[j][k]-=f*A[i][k]}}
+ return A.map(function(r){return r.slice(n)})}
+function xtx(X,w){var n=X.length,k=X[0].length,M=[],i,j,r;for(i=0;i<k;i++){M[i]=[];for(j=0;j<k;j++)M[i][j]=0}for(r=0;r<n;r++){var wr=w?w[r]:1;for(i=0;i<k;i++){var xi=X[r][i]*wr;for(j=0;j<k;j++)M[i][j]+=xi*X[r][j]}}return M}
+S.ols=function(X,y){var n=X.length,k=X[0].length,i,j,r,iv=inv(xtx(X));if(!iv||n<=k)return null;var xy=[];for(i=0;i<k;i++){xy[i]=0;for(r=0;r<n;r++)xy[i]+=X[r][i]*y[r]}
+ var b=iv.map(function(row){var s=0;for(j=0;j<k;j++)s+=row[j]*xy[j];return s}),sse=0,my=S.mean(y),sst=0;
+ for(r=0;r<n;r++){var f=0;for(j=0;j<k;j++)f+=X[r][j]*b[j];sse+=(y[r]-f)*(y[r]-f);sst+=(y[r]-my)*(y[r]-my)}
+ var df=n-k,mse=sse/df,se=b.map(function(_,i2){return Math.sqrt(iv[i2][i2]*mse)}),t=b.map(function(v,i2){return v/se[i2]}),p=t.map(function(v){return S.tP(v,df)}),tq=S.tinv(.05,df),r2=1-sse/sst,F=((sst-sse)/(k-1))/mse;
+ return{b:b,se:se,t:t,p:p,df:df,n:n,k:k,r2:r2,adj:1-(1-r2)*(n-1)/df,F:F,pF:S.fP(F,k-1,df),ci:b.map(function(v,i2){return[v-tq*se[i2],v+tq*se[i2]]})}};
+S.logit=function(X,y){var n=X.length,k=X[0].length,b=[],i,j,r,it,ok=false,n1=0;for(i=0;i<k;i++)b[i]=0;y.forEach(function(v){n1+=v});var n0=n-n1;if(n1===0||n0===0||n<=k)return null;
+ var p,iv;
+ for(it=0;it<60;it++){p=[];var w=[];for(r=0;r<n;r++){var e=0;for(j=0;j<k;j++)e+=X[r][j]*b[j];var pr=1/(1+Math.exp(-e));p.push(pr);w.push(Math.max(pr*(1-pr),1e-10))}
+  iv=inv(xtx(X,w));if(!iv)return null;var g=[];for(i=0;i<k;i++){g[i]=0;for(r=0;r<n;r++)g[i]+=X[r][i]*(y[r]-p[r])}
+  var mx=0;for(i=0;i<k;i++){var st2=0;for(j=0;j<k;j++)st2+=iv[i][j]*g[j];b[i]+=st2;if(Math.abs(st2)>mx)mx=Math.abs(st2)}
+  if(mx<1e-8){ok=true;break}}
+ p=[];var w2=[],ll=0,acc=0;for(r=0;r<n;r++){var e2=0;for(j=0;j<k;j++)e2+=X[r][j]*b[j];var pr2=1/(1+Math.exp(-e2));p.push(pr2);w2.push(Math.max(pr2*(1-pr2),1e-10));ll+=y[r]*Math.log(Math.max(pr2,1e-300))+(1-y[r])*Math.log(Math.max(1-pr2,1e-300));if((pr2>=.5?1:0)===y[r])acc++}
+ iv=inv(xtx(X,w2));if(!iv)return null;var se=b.map(function(_,i2){return Math.sqrt(iv[i2][i2])}),z=b.map(function(v,i2){return v/se[i2]}),wald=z.map(function(v){return v*v}),pv=wald.map(function(v){return S.chiP(v,1)}),q=S.qnorm(.975),
+  ll0=n1*Math.log(n1/n)+n0*Math.log(n0/n),chi=2*(ll-ll0),cs=1-Math.exp(-chi/n);
+ return{b:b,se:se,wald:wald,p:pv,or:b.map(Math.exp),orci:b.map(function(v,i2){return[Math.exp(v-q*se[i2]),Math.exp(v+q*se[i2])]}),n:n,k:k,ll:ll,chi:chi,df:k-1,pModel:S.chiP(chi,k-1),cox:cs,nagel:cs/(1-Math.exp(2*ll0/n)),acc:acc/n,converged:ok,maxSE:Math.max.apply(null,se.slice(1))}};
 return S})();
 /* ===== RES: SPSS-style results generator (flexible) — part A: data ===== */
 var RES=(function(){
@@ -972,7 +1015,7 @@ function defaultVmap(c,i){
 function parseVmap(s){var o=[],m={};String(s||'').split(/[,،;\n]+/).forEach(function(p){p=p.trim();if(!p)return;var k=p.indexOf('=');var a=k<0?p:p.slice(0,k).trim(),b=k<0?p:p.slice(k+1).trim();if(!(a in m)){m[a]=b;o.push(a)}});return{map:m,order:o}}
 function initCfg(ds){
  st.cfg=ds.cols.map(function(c,i){var kind=detect(c),h=c.hint||{};
-  return{kind:kind,label:c.label||c.name,scale:h.scale||'',inst:h.inst||'',rev:false,cuts:h.cuts||'',vmap:kind==='cat'?defaultVmap(c,i):'',tc:h.tc||''}});
+  return{kind:kind,label:c.label||c.name,scale:h.scale||'',inst:h.inst||'',rev:!!h.rev,cuts:h.cuts||'',vmap:kind==='cat'?defaultVmap(c,i):'',tc:h.tc||''}});
  st.scales={};st.instc={};
  syncScales(ds)}
 var LV=[['never','rarely','sometimes','often','always'],['strongly disagree','disagree','neutral','agree','strongly agree'],['none of the time','a little of the time','some of the time','most of the time','all of the time'],['not at all','a little','moderately','quite a bit','extremely'],['poor','fair','good','very good','excellent'],['أبدا','أبداً','نادرا','نادراً','أحيانا','أحياناً','غالبا','غالباً','دائما','دائماً'],['لا أوافق بشدة','لا أوافق','محايد','محايدة','أوافق','أوافق بشدة'],['لا','قليلا','قليلاً','متوسط','كثيرا','كثيراً','جدا','جداً']];
@@ -1006,7 +1049,7 @@ function itemCodes(i,keep){
  return c.raw.map(function(v){if(!nn(v))return NaN;var s=String(v).trim().toLowerCase(),ix=low.indexOf(s),code;
   if(ix>=0)code=si.start+ix;else if(isNum(v)){var x=+v;code=(x>=si.start&&x<=si.top)?x:NaN}else code=NaN;
   if(!keep&&!isNaN(code)&&g.rev)code=si.start+si.top-code;return code})}
-function scaleScore(sc){var its=scaleItems(sc).map(itemCodes),n=st.ds.n,out=[];
+function scaleScore(sc){var its=scaleItems(sc).map(function(i){return itemCodes(i)}),n=st.ds.n,out=[];
  for(var r=0;r<n;r++){var s=0,ok=true;for(var j=0;j<its.length;j++){var v=its[j][r];if(isNaN(v)){ok=false;break}s+=v}out.push(ok&&its.length?s:NaN)}return out}
 function scaleRange(sc){var si=scaleInfo(sc),m=scaleItems(sc).length;return{min:m*si.start,max:m*si.top,m:m}}
 function insts(){var o={};Object.keys(st.scales).forEach(function(sc){var its=scaleItems(sc);if(!its.length)return;var ins=st.cfg[its[0]].inst||'Questionnaire';(o[ins]=o[ins]||[]).push(sc)});return o}
@@ -1113,7 +1156,7 @@ function build(){
     fig(T('Distribution of the studied '+sj()+' regarding their total level of '+ins+' '+nTxt+'.','توزيع المشاركات حسب المستوى الكلي لـ '+ins+' '+nTxt+'.'),
      st.levelChart==='pie'?chartPie(T('Total level of '+ins,'المستوى الكلي لـ '+ins),lv.order,pv):chartBarV(T('Total level of '+ins,'المستوى الكلي لـ '+ins),lv.order,pv),stx)}})}
  /* ---- Part: relations ---- */
- var useChi=sel.chi&&st.pred.length&&st.outc.length,useGrp=sel.grp&&st.pred.length&&st.scoreVars.length,useCor=sel.cor&&st.corVars.length>1,relOn=useChi||useGrp||useCor,usedPH=false,usedHolm=false,usedEff=false;
+ var useChi=sel.chi&&st.pred.length&&st.outc.length,useGrp=sel.grp&&st.pred.length&&st.scoreVars.length,useCor=sel.cor&&st.corVars.length>1,useReg=sel.reg&&st.regY&&st.regX&&st.regX.length,relOn=useChi||useGrp||useCor||useReg,usedPH=false,usedHolm=false,usedEff=false;
  function normalGroup(g){if(g.length<3)return false;var sk=S.skew(g),ku=S.kurt(g);if(g.length>=30&&Math.abs(sk)<2&&Math.abs(ku)<7)return true;var sw=S.shapiro(g);return!!sw&&sw.p>st.alpha}
  function stat2(l,v,df){return l+(df!=null?'('+(Array.isArray(df)?df.map(function(d){return S.fmt(d,d===Math.floor(d)?0:1)}).join(', '):S.fmt(df,df===Math.floor(df)?0:1))+')':'')+'= '+f2(v)}
  if(relOn){
@@ -1176,6 +1219,38 @@ function build(){
    tab(T('Comparison of the mean scores of the studied '+sj()+' according to their '+E(pv.label)+' '+nTxt+'.','مقارنة متوسطات الدرجات حسب '+E(pv.label)+' '+nTxt+'.'),
     '<table class="rt"><tr class="hd"><th>'+T('Score','الدرجة')+'</th>'+labs.map(function(l){return'<th>'+E(l)+'<br><small>Mean±SD</small></th>'}).join('')+'<th>'+T('Test','الاختبار')+'</th><th>'+T('Statistic','القيمة')+'</th><th>P-value</th><th>'+T('Effect size','حجم الأثر')+'</th></tr>'+rows+'</table>',tx,
     '<span>* P-value ≤ '+st.alpha+' Significant (S); P-value > '+st.alpha+' Non-significant (NS). '+T('The test was chosen automatically from the normality of each group and, for two groups, Levene\'s test.','اختير الاختبار تلقائيًا حسب طبيعية توزيع كل مجموعة، ولمجموعتين حسب اختبار Levene.')+'</span>'+(ph.length?'<br><span><b>'+T('Post-hoc (adjusted P):','المقارنات البعدية (P المصححة):')+'</b> '+ph.map(E).join(' | ')+'</span>':''))});
+
+  /* regression */
+  if(useReg){(function(){
+   var yv=vget(st.regY);if(!yv)return;var yd=yv.get(),binary=yv.type==='cat',ylev=null,yarr=new Array(N);
+   if(binary){var present=yd.order.filter(function(o){return yd.vals.indexOf(o)>=0});if(present.length!==2)return;ylev=present;for(var r0=0;r0<N;r0++)yarr[r0]=yd.vals[r0]==null?NaN:(yd.vals[r0]===ylev[1]?1:0)}
+   else for(var r1=0;r1<N;r1++)yarr[r1]=yd.vals[r1];
+   var names=[],cols=[],refs=[];
+   st.regX.forEach(function(id){if(id===st.regY)return;var xv=vget(id);if(!xv)return;var xd=xv.get();
+    if(xv.type==='num'){names.push(xv.label);cols.push(xd.vals.slice())}
+    else{var lv=xd.order.filter(function(o){return xd.vals.indexOf(o)>=0});if(lv.length<2)return;refs.push(xv.label+': '+lv[0]);lv.slice(1).forEach(function(L){names.push(xv.label+' ('+L+')');cols.push(xd.vals.map(function(v){return v==null?NaN:(v===L?1:0)}))})}});
+   if(!cols.length)return;
+   var rows=[],yy=[];for(var r=0;r<N;r++){if(isNaN(yarr[r]))continue;var ok=true,row=[1];for(var c=0;c<cols.length;c++){if(isNaN(cols[c][r])){ok=false;break}row.push(cols[c][r])}if(ok){rows.push(row);yy.push(yarr[r])}}
+   if(rows.length<cols.length+3)return;
+   var nm=[T('(Constant)','(الثابت)')].concat(names),body='',tx,fnt='',small=rows.length<10*cols.length;
+   var sdx=[0].concat(cols.map(function(_,j){return S.sd(rows.map(function(rw){return rw[j+1]}))})),sdy=S.sd(yy);
+   var vifs=[];if(cols.length>1)for(var j=0;j<cols.length;j++){var Xo=rows.map(function(rw){return rw.filter(function(_,q){return q!==j+1})}),fo=S.ols(Xo,rows.map(function(rw){return rw[j+1]}));vifs.push(fo?1/(1-fo.r2):NaN)}
+   var maxV=vifs.filter(function(x){return!isNaN(x)}).length?Math.max.apply(null,vifs.filter(function(x){return!isNaN(x)})):NaN;
+   if(!binary){var f=S.ols(rows,yy);if(!f)return;
+    nm.forEach(function(n2,i){body+='<tr><td>'+E(n2)+'</td>'+tdc(f2(f.b[i]))+tdc(f2(f.se[i]))+tdc(i?f2(f.b[i]*sdx[i]/sdy):'-')+tdc(f2(f.t[i]))+tdc(sigCell(f.p[i]))+tdc('['+f2(f.ci[i][0])+', '+f2(f.ci[i][1])+']')+tdc(i&&vifs.length?f2(vifs[i-1]):'-')+'</tr>'});
+    var sig=[];nm.forEach(function(n2,i){if(i&&f.p[i]<=st.alpha)sig.push(E(n2)+' (B= '+f2(f.b[i])+', P= '+S.fp(f.p[i])+')')});
+    tx=T('the model '+(f.pF<=st.alpha?'was statistically significant':'was not statistically significant')+' (F('+(f.k-1)+', '+f.df+')= '+f2(f.F)+', P= '+S.fp(f.pF)+') and explained '+f1(f.r2*100)+'% of the variance of '+E(yv.label)+' (R<sup>2</sup>= '+f2(f.r2)+', adjusted R<sup>2</sup>= '+f2(f.adj)+'). '+(sig.length?'Significant predictors: '+sig.join(', ')+'.':'No predictor reached significance.'),
+     'كان النموذج '+(f.pF<=st.alpha?'دالاً إحصائياً':'غير دال إحصائياً')+' (F('+(f.k-1)+', '+f.df+')= '+f2(f.F)+'، P= '+S.fp(f.pF)+') وفسّر '+f1(f.r2*100)+'% من تباين '+E(yv.label)+' (R<sup>2</sup>= '+f2(f.r2)+'). '+(sig.length?'المتنبئات الدالة: '+sig.join('، ')+'.':'لا يوجد متنبئ دال.'));
+    tab(T('Multiple linear regression analysis for the predictors of '+E(yv.label)+' (n='+f.n+').','تحليل الانحدار الخطي المتعدد لمتنبئات '+E(yv.label)+' (n='+f.n+').'),'<table class="rt"><tr class="hd"><th>'+T('Predictor','المتنبئ')+'</th><th>B</th><th>SE</th><th>β</th><th>t</th><th>P-value</th><th>95% CI (B)</th><th>VIF</th></tr>'+body+'</table>',tx,
+     '<span>B= unstandardized coefficient; β= standardized coefficient; VIF= variance inflation factor'+(isNaN(maxV)?'':' (max '+f2(maxV)+(maxV>5?', >5 suggests multicollinearity':', no multicollinearity concern')+')')+'. '+(refs.length?T('Reference categories: ','الفئات المرجعية: ')+refs.map(E).join('; ')+'. ':'')+(small?T('The sample is small relative to the number of predictors (fewer than 10 participants per predictor); interpret with caution.','العينة صغيرة بالنسبة لعدد المتنبئات (أقل من 10 مشاركات لكل متنبئ)؛ تُفسَّر بحذر.'):'')+'</span>')}
+   else{var g=S.logit(rows,yy);if(!g)return;
+    nm.forEach(function(n2,i){body+='<tr><td>'+E(n2)+'</td>'+tdc(f2(g.b[i]))+tdc(f2(g.se[i]))+tdc(f2(g.wald[i]))+tdc(sigCell(g.p[i]))+tdc(i?f2(g.or[i]):'-')+tdc(i?'['+f2(g.orci[i][0])+', '+f2(g.orci[i][1])+']':'-')+'</tr>'});
+    var sg3=[];nm.forEach(function(n2,i){if(i&&g.p[i]<=st.alpha)sg3.push(E(n2)+' (OR= '+f2(g.or[i])+', 95% CI '+f2(g.orci[i][0])+' to '+f2(g.orci[i][1])+', P= '+S.fp(g.p[i])+')')});
+    tx=T('the logistic model '+(g.pModel<=st.alpha?'was statistically significant':'was not statistically significant')+' (χ<sup>2</sup>('+g.df+')= '+f2(g.chi)+', P= '+S.fp(g.pModel)+'; Nagelkerke R<sup>2</sup>= '+f2(g.nagel)+'; overall correct classification '+f1(g.acc*100)+'%). '+(sg3.length?'Significant predictors: '+sg3.join(', ')+'.':'No predictor reached significance.'),
+     'كان نموذج الانحدار اللوجستي '+(g.pModel<=st.alpha?'دالاً إحصائياً':'غير دال إحصائياً')+' (χ<sup>2</sup>('+g.df+')= '+f2(g.chi)+'، P= '+S.fp(g.pModel)+'؛ Nagelkerke R<sup>2</sup>= '+f2(g.nagel)+'؛ نسبة التصنيف الصحيح '+f1(g.acc*100)+'%). '+(sg3.length?'المتنبئات الدالة: '+sg3.join('، ')+'.':'لا يوجد متنبئ دال.'));
+    tab(T('Binary logistic regression analysis for the predictors of '+E(yv.label)+' = "'+E(ylev[1])+'" (n='+g.n+').','تحليل الانحدار اللوجستي الثنائي لمتنبئات '+E(yv.label)+' = «'+E(ylev[1])+'» (n='+g.n+').'),'<table class="rt"><tr class="hd"><th>'+T('Predictor','المتنبئ')+'</th><th>B</th><th>SE</th><th>Wald</th><th>P-value</th><th>OR</th><th>95% CI (OR)</th></tr>'+body+'</table>',tx,
+     '<span>OR= odds ratio. '+T('Event modelled: ','الحدث المنمذج: ')+E(ylev[1])+' ('+T('reference outcome: ','المرجع: ')+E(ylev[0])+'). '+(refs.length?T('Reference categories: ','الفئات المرجعية: ')+refs.map(E).join('; ')+'. ':'')+(g.converged?'':T('The model did not fully converge. ','لم يتقارب النموذج بالكامل. '))+(g.maxSE>10?T('Very large standard errors suggest separation or too few cases; results are unreliable. ','الأخطاء المعيارية الكبيرة جدًا تشير إلى فصل تام أو قلة الحالات؛ النتائج غير موثوقة. '):'')+(yy.filter(function(v){return v===1}).length<10*cols.length||yy.filter(function(v){return v===0}).length<10*cols.length?T('Fewer than 10 events per predictor; interpret with caution.','أقل من 10 حالات لكل متنبئ؛ تُفسَّر بحذر.'):'')+'</span>')}
+  })()}
   /* correlation */
   if(useCor){
    var cv=st.corVars.map(vget).filter(Boolean),pairs=[],i,j,rows5='',sg2=[];
@@ -1208,6 +1283,7 @@ function build(){
  if((sel.grp&&st.pred.length&&st.scoreVars.length)||(sel.cor&&st.corVars.length>1))tests.push(T('<b>Shapiro-Wilk test</b> (with skewness and kurtosis) was used to assess the normality of quantitative variables.','<b>اختبار Shapiro-Wilk</b> (مع الالتواء والتفرطح) لتقييم التوزيع الطبيعي للمتغيرات الكمية.'));
  if(sel.grp&&st.pred.length&&st.scoreVars.length)tests.push(st.mode==='non'?T('<b>Mann-Whitney U and Kruskal-Wallis tests</b> (with Dunn-Bonferroni post-hoc comparisons) were used to compare scores between two and more than two groups respectively; effect sizes were r and ε².','<b>اختبارا مان ويتني وكروسكال واليس</b> (مع مقارنات Dunn-Bonferroni البعدية) لمقارنة الدرجات بين مجموعتين وأكثر، وحجم الأثر r وε².'):st.mode==='auto'?T('<b>Independent t-test</b> (Student, or Welch when Levene\'s test was significant) and <b>one-way ANOVA</b> (with Bonferroni post-hoc comparisons) were used when all groups were normally distributed; otherwise the <b>Mann-Whitney U</b> and <b>Kruskal-Wallis</b> tests (with Dunn-Bonferroni post-hoc comparisons) were used. Effect sizes were Cohen\'s d, η², r and ε² respectively.','<b>اختبار t المستقل</b> (Student، أو Welch عند دلالة Levene) و<b>تحليل التباين الأحادي</b> (مع مقارنات Bonferroni البعدية) عند طبيعية توزيع كل المجموعات، وإلا استُخدم <b>مان ويتني</b> و<b>كروسكال واليس</b> (مع Dunn-Bonferroni). وأحجام الأثر: Cohen\'s d وη² وr وε² على الترتيب.'):T('<b>Independent t-test</b> (Student, or Welch when Levene\'s test was significant) and <b>one-way ANOVA</b> (with Bonferroni post-hoc comparisons) were used to compare mean scores between two and more than two groups; effect sizes were Cohen\'s d and η².','<b>اختبار t المستقل</b> (Student أو Welch) و<b>تحليل التباين الأحادي</b> (مع Bonferroni) لمقارنة المتوسطات، وحجم الأثر Cohen\'s d وη².'));
  if(sel.cor&&st.corVars.length>1)tests.push(sp0()?T('<b>Spearman correlation coefficient (r)</b> with its 95% confidence interval was used to evaluate the strength and direction of correlation between two ranked variables.','<b>معامل ارتباط سبيرمان (r)</b> مع فترة الثقة 95% لتقييم قوة واتجاه الارتباط بين متغيرين.'):T('<b>Pearson correlation coefficient (r)</b> with its 95% confidence interval was used to evaluate the strength and direction of the linear correlation between two quantitative variables.','<b>معامل ارتباط بيرسون (r)</b> مع فترة الثقة 95% لتقييم قوة واتجاه الارتباط الخطي.'));
+ if(useReg)tests.push(T('<b>Multiple linear regression</b> (or <b>binary logistic regression</b> for a dichotomous outcome) was used to identify independent predictors, reporting B, β, odds ratios, 95% confidence intervals and the variance inflation factor (VIF).','<b>الانحدار الخطي المتعدد</b> (أو <b>الانحدار اللوجستي الثنائي</b> للمتغير التابع الثنائي) لتحديد المتنبئات المستقلة مع B وβ ونسب الأرجحية وفترات الثقة 95% وVIF.'));
  if(sel.rel&&relRows)tests.push(T('<b>Cronbach\'s alpha</b> (with corrected item-total correlations and alpha-if-item-deleted) was used to test the internal consistency (reliability) of the scales.','<b>معامل ألفا كرونباخ</b> (مع ارتباط البند بالمجموع وألفا عند حذف البند) لاختبار الاتساق الداخلي (ثبات) المقاييس.'));
  tests.push(T('Missing values were excluded pairwise (each test used the participants with valid answers to the variables involved).','استُبعدت القيم المفقودة لكل تحليل على حدة (يستخدم كل اختبار المشاركات اللواتي أجبن عن المتغيرات المعنية).'));
  function sp0(){return st.corMethod==='spearman'}
@@ -1411,22 +1487,27 @@ function s3(b){
  '<label>'+U('نسب جدول مربع كاي','Chi-square table percentages')+'<br><select data-k="pctBasis">'+opt('total',U('من الإجمالي','of grand total')+(st.pctBasis==='total'?rec():''),st.pctBasis)+opt('row',U('من الصف','of row'),st.pctBasis)+opt('col',U('من العمود','of column'),st.pctBasis)+'</select></label>'+hp('«من الإجمالي» يطابق الملف النموذجي.','“Of grand total” matches the sample file.')+'</div>';
  b.innerHTML=h+nav(true,true)+resetBtn()}
 function resetBtn(){return'<div class="row noprint" style="max-width:1040px;margin:0 auto 14px"><button class="ghost" data-act="reset">'+U('إعادة الضبط إلى الإعدادات الموصى بها','Reset to recommended settings')+'</button></div>'}
-function defaults(){st.lang='en';st.subj='';st.aim='';st.pctMode='scaled';st.alpha=.05;st.levelChart='bar';st.mode='auto';st.corMethod='spearman';st.pctBasis='total';st.sel={catfig:false,freq:true,items:true,desc:true,domains:true,levels:true,chi:true,grp:true,cor:true,rel:true};st.s4=false;st.lastScale='';st.lastInst='';st.pred=[];st.outc=[];st.scoreVars=[];st.corVars=[]}
+function defaults(){st.lang='en';st.subj='';st.aim='';st.pctMode='scaled';st.alpha=.05;st.levelChart='bar';st.mode='auto';st.corMethod='spearman';st.pctBasis='total';st.regY='';st.regX=[];st.sel={reg:false,catfig:false,freq:true,items:true,desc:true,domains:true,levels:true,chi:true,grp:true,cor:true,rel:true};st.s4=false;st.lastScale='';st.lastInst='';st.pred=[];st.outc=[];st.scoreVars=[];st.corVars=[]}
 function initS4(){var V=registry();
  st.s4=true;st.pred=V.filter(function(v){return v.type==='cat'&&v.id.slice(0,2)!=='L:'}).map(function(v){return v.id});st.outc=V.filter(function(v){return v.id.slice(0,2)==='L:'}).map(function(v){return v.id});
  var sc=V.filter(function(v){return v.id.slice(0,2)==='s:'||v.id.slice(0,2)==='i:'});st.scoreVars=sc.map(function(v){return v.id});st.corVars=sc.length<=4?sc.map(function(v){return v.id}):V.filter(function(v){return v.id.slice(0,2)==='i:'}).map(function(v){return v.id});
  if(st.corVars.length<2)st.corVars=V.filter(function(v){return v.type==='num'}).slice(0,3).map(function(v){return v.id});
  var outs=[],nouts=[];st.cfg.forEach(function(g,i){var h=st.ds.cols[i].hint||{};if(h.out&&g.kind==='cat')outs.push('c'+i);if(h.out&&g.kind==='num')nouts.push('n'+i)});
  if(!st.outc.length&&outs.length)st.outc=outs;
- st.pred=st.pred.filter(function(id){return st.outc.indexOf(id)<0&&!(st.ds.cols[+id.slice(1)]&&(st.ds.cols[+id.slice(1)].hint||{}).tc&&/^(Recommended|الوسائل|Site|مخرجات)/.test(st.ds.cols[+id.slice(1)].hint.tc))});
- st.sel.catfig=!st.cfg.some(function(g){return g.kind==='lik'})}
+ st.pred=st.pred.filter(function(id){var hh=(st.ds.cols[+id.slice(1)]||{}).hint||{};return!hh.noPred&&st.outc.indexOf(id)<0&&!(st.ds.cols[+id.slice(1)]&&(st.ds.cols[+id.slice(1)].hint||{}).tc&&/^(Recommended|الوسائل|Site|مخرجات)/.test(st.ds.cols[+id.slice(1)].hint.tc))});
+ st.sel.catfig=!st.cfg.some(function(g){return g.kind==='lik'});
+ var yi=V.filter(function(v){return v.id.slice(0,2)==='i:'})[0]||V.filter(function(v){return v.id.charAt(0)==='n'&&(!st.ds.cols[+v.id.slice(1)].hint||!st.ds.cols[+v.id.slice(1)].hint.out)})[0]||V.filter(function(v){return v.id.charAt(0)==='c'&&st.outc.indexOf(v.id)>=0&&v.get().order.filter(function(o){return v.get().vals.indexOf(o)>=0}).length===2})[0];
+ st.regY=yi?yi.id:'';st.regX=V.filter(function(v){return(v.type==='cat'&&v.id.slice(0,2)!=='L:'&&st.pred.indexOf(v.id)>=0||v.id.charAt(0)==='n')&&v.id!==st.regY}).map(function(v){return v.id}).slice(0,12);
+ st.sel.reg=!!st.regY&&st.regX.length>=2&&st.ds.n>=30}
+function regBox(V){var Y=V.filter(function(v){return v.type==='num'||(v.type==='cat'&&v.id.slice(0,2)!=='L:'&&(function(){var g=v.get();return g.order.filter(function(o){return g.vals.indexOf(o)>=0}).length===2})())});
+ return'<div class="bx"><h3 style="margin-top:0">'+U('الانحدار','Regression')+'</h3>'+hp('اختاري المتغير التابع (الدرجة أو الأمر الذي تريدين تفسيره). إن كان رقمياً يُجرى انحدار خطي، وإن كان له خياران فقط يُجرى انحدار لوجستي. ثم حددي المتنبئات.','Choose the outcome. A numeric outcome gives linear regression; a two-category outcome gives logistic regression. Then choose the predictors.')+'<label>'+U('المتغير التابع','Outcome')+'<br><select data-k="regY"><option value="">—</option>'+Y.map(function(v){return opt(v.id,v.label,st.regY)}).join('')+'</select></label><h4>'+U('المتنبئات','Predictors')+'</h4>'+plist('regX',V,function(v){return(v.type==='num'||v.type==='cat'&&v.id.slice(0,2)!=='L:')&&v.id!==st.regY})+'</div>'}
 function plist(key,V,filter){var h='<div class="lst">';V.filter(filter).forEach(function(v){h+='<label class="ck"><input type="checkbox" data-k="pick" data-l="'+key+'" data-v="'+E(v.id)+'"'+(st[key].indexOf(v.id)>=0?' checked':'')+'> '+E(v.label)+'</label>'});return h+'</div>'}
 function s4(b){
  var V=registry();
  if(!st.s4)initS4();
  var s=st.sel,h='<div class="bx"><h3 style="margin-top:0">'+U('اختاري ما تريدين في الفصل','Choose what goes in the chapter')+'</h3>'+
- [['freq','جداول التكرار والنسب (+Mean±SD)','Frequency tables (+ Mean±SD)'],['items','جداول بنود ليكرت (N و %)','Likert item tables (N and %)'],['desc','جدول Min / Max / Mean±SD / Median للبنود','Item descriptives (Min / Max / Mean±SD / Median)'],['domains','ترتيب المجالات + الرسم','Domain ranking + chart'],['levels','المستويات الكلية + الرسم','Total levels + chart'],['chi','علاقات مربع كاي (مع فيشر)','Chi-square relations (with Fisher)'],['grp','مقارنة المتوسطات (t / ANOVA / لا معلمي)','Mean comparisons (t / ANOVA / non-parametric)'],['cor','الارتباط + رسم الانتشار','Correlation + scatter plot'],['rel','ثبات ألفا كرونباخ','Cronbach\'s alpha reliability'],['catfig','رسم أعمدة لكل متغير فئوي (حتى 12 رسمًا)','Bar chart for each categorical variable (up to 12)']].map(function(x){return ck('sel:'+x[0],U(x[1],x[2]),s[x[0]])}).join('<br>')+'<p class="hint">'+U('كلها مفعّلة افتراضيًا. أوقفي ما لا يخص بحثك. الاختيارات في الأسفل مضبوطة تلقائيًا ولا تحتاج تعديلاً غالبًا.','All are on by default. Turn off what your study does not need. The choices below are pre-selected.')+'</p></div>';
- h+='<div class="bx"><h3 style="margin-top:0">'+U('المتغيرات المستقلة (صفوف جداول العلاقات والمقارنات)','Predictors (rows of relation / comparison tables)')+'</h3>'+plist('pred',V,function(v){return v.type==='cat'&&v.id.slice(0,2)!=='L:'})+'<h3>'+U('المتغيرات التابعة لمربع كاي (أعمدة الجدول)','Chi-square outcomes (table columns)')+'</h3>'+plist('outc',V,function(v){return v.type==='cat'})+'<h3>'+U('درجات للمقارنة بين المجموعات','Scores to compare between groups')+'</h3>'+plist('scoreVars',V,function(v){return v.type==='num'})+'<h3>'+U('متغيرات الارتباط (كل زوج)','Correlation variables (every pair)')+'</h3>'+plist('corVars',V,function(v){return v.type==='num'})+'</div>';
+ [['freq','جداول التكرار والنسب (+Mean±SD)','Frequency tables (+ Mean±SD)'],['items','جداول بنود ليكرت (N و %)','Likert item tables (N and %)'],['desc','جدول Min / Max / Mean±SD / Median للبنود','Item descriptives (Min / Max / Mean±SD / Median)'],['domains','ترتيب المجالات + الرسم','Domain ranking + chart'],['levels','المستويات الكلية + الرسم','Total levels + chart'],['chi','علاقات مربع كاي (مع فيشر)','Chi-square relations (with Fisher)'],['grp','مقارنة المتوسطات (t / ANOVA / لا معلمي)','Mean comparisons (t / ANOVA / non-parametric)'],['cor','الارتباط + رسم الانتشار','Correlation + scatter plot'],['rel','ثبات ألفا كرونباخ','Cronbach\'s alpha reliability'],['reg','تحليل الانحدار (خطي متعدد أو لوجستي)','Regression analysis (multiple linear or logistic)'],['catfig','رسم أعمدة لكل متغير فئوي (حتى 12 رسمًا)','Bar chart for each categorical variable (up to 12)']].map(function(x){return ck('sel:'+x[0],U(x[1],x[2]),s[x[0]])}).join('<br>')+'<p class="hint">'+U('كلها مفعّلة افتراضيًا. أوقفي ما لا يخص بحثك. الاختيارات في الأسفل مضبوطة تلقائيًا ولا تحتاج تعديلاً غالبًا.','All are on by default. Turn off what your study does not need. The choices below are pre-selected.')+'</p></div>';
+ h+='<div class="bx"><h3 style="margin-top:0">'+U('المتغيرات المستقلة (صفوف جداول العلاقات والمقارنات)','Predictors (rows of relation / comparison tables)')+'</h3>'+plist('pred',V,function(v){return v.type==='cat'&&v.id.slice(0,2)!=='L:'})+'<h3>'+U('المتغيرات التابعة لمربع كاي (أعمدة الجدول)','Chi-square outcomes (table columns)')+'</h3>'+plist('outc',V,function(v){return v.type==='cat'})+'<h3>'+U('درجات للمقارنة بين المجموعات','Scores to compare between groups')+'</h3>'+plist('scoreVars',V,function(v){return v.type==='num'})+'<h3>'+U('متغيرات الارتباط (كل زوج)','Correlation variables (every pair)')+'</h3>'+plist('corVars',V,function(v){return v.type==='num'})+'</div>'+regBox(V);
  b.innerHTML=h+nav(true,true,U('إنشاء التقرير','Generate report'))+resetBtn()}
 function s5(b){
  b.innerHTML='<div class="bx">'+U('جارٍ إنشاء التقرير...','Generating the report...')+'</div>';
@@ -1467,7 +1548,7 @@ function closeR(){var r=$('resx');if(r)r.remove();st=null;R=null;FIG=[];if(locat
 function open(opts){
  if($('resx'))return;opts=opts||{};
  st={ui:(typeof LANG!=='undefined'&&LANG==='en')?'en':'ar',step:1,ds:null,cfg:[],scales:{},instc:{},sources:opts.sources||[],lang:'en',subj:'',aim:'',pctMode:'scaled',alpha:.05,levelChart:'bar',mode:'auto',corMethod:'spearman',pctBasis:'total',pred:[],outc:[],scoreVars:[],corVars:[],s4:false,demo:false,
-  sel:{catfig:false,freq:true,items:true,desc:true,domains:true,levels:true,chi:true,grp:true,cor:true,rel:true}};
+  regY:'',regX:[],sel:{reg:false,catfig:false,freq:true,items:true,desc:true,domains:true,levels:true,chi:true,grp:true,cor:true,rel:true}};
  var d=document.createElement('div');d.id='resx';document.body.appendChild(d);
  d.addEventListener('click',onClick);d.addEventListener('change',onChange);render()}
 window.addEventListener('hashchange',function(){if(location.hash==='#spss')open({sources:[]})});

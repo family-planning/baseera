@@ -321,9 +321,9 @@ function calc(){
 }
 function A2(a,e){return isAr()?a:e}
 function thTbl(o){var sec=function(r){return r.length>1&&r.slice(1).every(function(c){return c===''||c==null})};
- return'<div style="overflow-x:auto"><table class="tt"><thead><tr>'+o.head.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+o.rows.map(function(r){if(o.empty)return'<tr class="em"><td colspan="'+o.head.length+'">'+E(r[0])+'</td></tr>';if(sec(r))return'<tr class="sec"><td colspan="'+o.head.length+'">'+E(r[0])+'</td></tr>';return'<tr>'+r.map(function(c,i){var t=String(c==null?'':c);return'<td'+(i===0&&/^\s/.test(t)?' class="ind"':'')+'>'+E(t.trim())+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
+ return'<div style="overflow-x:auto"><table class="tt"><thead><tr>'+o.head.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+o.rows.map(function(r){if(o.empty)return'<tr class="em"><td colspan="'+o.head.length+'">'+E(r[0])+'</td></tr>';if(sec(r))return'<tr class="sec"><td colspan="'+o.head.length+'">'+E(r[0])+'</td></tr>';return'<tr>'+r.map(function(c,i){var t=String(c==null?'':c);return'<td'+(i===0&&/^\s/.test(t)?' class="ind"':'')+'>'+bdi(t.trim())+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
 function thCard(o){return'<div class="bc" id="th'+o.k+'"><div class="thh"><h3 style="margin:0">'+E(o.title)+'</h3>'+(o.empty?'':'<button class="ghost noprint" data-cp="'+o.k+'">'+E(A2('نسخ الجدول','Copy table'))+'</button>')+'</div>'+thTbl(o)+(o.txt?'<p class="thx"><b>'+E(A2('يتضح من الجدول: ','As shown in the table: '))+'</b>'+E(o.txt)+'</p>':'')+(o.note?'<p class="hint">'+E(o.note)+'</p>':'')+'</div>'}
-function tbl(h,rows){return'<div style="overflow-x:auto"><table class="bt"><thead><tr>'+h.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return'<tr>'+r.map(function(c){return'<td>'+E(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
+function tbl(h,rows){return'<div style="overflow-x:auto"><table class="bt"><thead><tr>'+h.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return'<tr>'+r.map(function(c){return'<td>'+bdi(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
 function shell(kp){
  $i('admOut').innerHTML='<div class="bc noprint"><div class="ex"><label>'+E(t('from'))+' <input type="date" id="admF"></label><label>'+E(t('to'))+' <input type="date" id="admU"></label></div><p class="hint">'+E(t('dateHint'))+'</p><div class="ex"><button id="exX">'+E(t('xlsx'))+'</button><button id="exC" class="ghost">'+E(t('csv'))+'</button><button id="exP" class="ghost">'+E(t('print'))+'</button></div><div class="ex" style="margin-top:8px"><button id="exA">'+E(t('spssAllCsv'))+'</button><button id="exAs" class="ghost">'+E(t('spssAllSps'))+'</button><button id="exR">'+E(t('chBtn'))+'</button></div><div class="ex" style="margin-top:8px"><button id="exS" class="ghost">'+E(t('spssCsv'))+'</button><button id="exY" class="ghost">'+E(t('spssSps'))+'</button></div><p id="exM" class="hint"></p></div><div id="admRep"></div>';
  if(kp){$i('admF').value=kp.f||'';$i('admU').value=kp.u||''}
@@ -349,6 +349,7 @@ var TH=[];
 function mean(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:NaN}
 function sdv(a){if(a.length<2)return NaN;var m=mean(a);return Math.sqrt(a.reduce(function(s,x){return s+(x-m)*(x-m)},0)/(a.length-1))}
 function f2(x){return isFinite(x)?(Math.round(x*100)/100).toFixed(2):'-'}
+function bdi(c){c=String(c==null?'':c);return /±/.test(c)?'<span dir="ltr">'+E(c)+'</span>':E(c)}
 function msd(a){return a.length?f2(mean(a))+' ± '+f2(sdv(a)):'-'}
 function np(c,n){return c+' ('+(n?(Math.round(c/n*1000)/10).toFixed(1):'0.0')+'%)'}
 function pf(p){return isFinite(p)?(p<0.001?'<0.001':p.toFixed(3)):'-'}
@@ -392,19 +393,25 @@ function thesis(){
  /* T1 */
  var r1=[];function sec(t0,rs){r1.push([t0,''].concat([]));rs.forEach(function(x){r1.push(['   '+x[0],x[1]])})}
  var ia=di('age'),ik=di('kids');
- if(ia>=0)sec(A('العمر (سنة)','Age (years)'),numRows(EV.map(function(e){return e.d[ia]}),[[A('أقل من 20','Under 20'),function(x){return x<20}],[A('20 – 29','20 – 29'),function(x){return x>=20&&x<30}],[A('30 – 39','30 – 39'),function(x){return x>=30&&x<40}],[A('40 فأكثر','40 and over'),function(x){return x>=40}]]));
+ if(ia>=0)sec(A('العمر (سنة)','Age (years)'),catRows(EV.map(function(e){return e.d[ia]}),DM[ia]));
  ['edu','res','mar','job'].forEach(function(k){var i=di(k);if(i>=0)sec(A(DM[i].q[0],DM[i].q[1]),catRows(EV.map(function(e){return e.d[i]}),DM[i]))});
   ['dev','net'].forEach(function(k){var i=di(k);if(i>=0)sec(A(DM[i].q[0],DM[i].q[1]),catRows(EV.map(function(e){return e.d[i]}),DM[i]))});
  add(A('الخصائص الاجتماعية والديموغرافية للمشاركات (ن = '+n+')','Socio-demographic Characteristics of the Participants (n = '+n+')'),[A('المتغير','Variable'),A('العدد (%) أو المتوسط','n (%) or mean')],r1);
  /* T2 */
  var OB=D.ob,r2=[];function ob(i){return OB.map(function(r){var v=Number(r[i]);return r[i]===''||r[i]==null||isNaN(v)?null:v}).filter(function(v){return v!=null})}
- function osec(t0,a){r2.push([t0,msd(a)])}
- osec(A('عدد مرات الحمل','Gravidity'),ob(3));osec(A('عدد الولادات','Parity'),ob(4));osec(A('عدد مرات الإجهاض','Number of abortions'),ob(5));osec(A('عدد الأطفال الأحياء','Living children'),ob(6));osec(A('عمر أول حيض (سنة)','Age at menarche (years)'),ob(8));osec(A('طول الدورة (يوم)','Cycle length (days)'),ob(9));
- function ocat(t0,i,m){var vs=OB.map(function(r){return String(r[i]||'')}).filter(Boolean);r2.push([t0,'']);Object.keys(m).forEach(function(k){r2.push(['   '+m[k],np(vs.filter(function(v){return v===k}).length,vs.length)])})}
-  ocat(A('انتظام الدورة الشهرية','Menstrual cycle regularity'),7,{regular:A('منتظمة','Regular'),irregular:A('غير منتظمة','Irregular'),none:A('لا توجد دورة حالياً','No cycle at present')});
- var SR={side:A('الأعراض الجانبية','Side effects'),wish:A('الرغبة في الحمل','Wish to become pregnant'),preg:A('حدوث حمل أثناء الاستخدام','Pregnancy while using'),access:A('صعوبة الحصول عليها','Difficult access'),husband:A('رفض الزوج','Husband’s refusal'),medical:A('نصيحة طبية','Medical advice'),other:A('أسباب أخرى','Other reasons')};
- r2.push([A('أسباب التوقف عن الوسيلة السابقة (يمكن اختيار أكثر من سبب)','Reasons for stopping a previous method (multiple answers)'),'']);
- var sn=OB.filter(function(r){return String(r[10]||'')!==''}).length;Object.keys(SR).forEach(function(k){r2.push(['   '+SR[k],np(OB.filter(function(r){return String(r[10]||'').split('|').indexOf(k)>=0}).length,sn)])});
+ function osec(t0,i){var a=ob(i);r2.push([t0+' ('+A('ن = ','n = ')+a.length+')',msd(a)])}
+ osec(A('عدد مرات الحمل','Gravidity'),3);osec(A('عدد الولادات','Parity'),4);osec(A('عدد مرات الإجهاض','Number of abortions'),5);osec(A('عدد الأطفال الأحياء','Living children'),6);
+ function ocn(t0,i,bins){var a=ob(i),N=a.length;r2.push([t0+' ('+A('ن = ','n = ')+N+')','']);bins.forEach(function(b){r2.push(['   '+b[0],np(a.filter(b[1]).length,N)])})}
+ ocn(A('عدد الولادات (تصنيف)','Parity (categories)'),4,[[A('لا توجد ولادة','None'),function(x){return x===0}],[A('ولادة واحدة','One'),function(x){return x===1}],[A('ولادتان','Two'),function(x){return x===2}],[A('ثلاث ولادات فأكثر','Three or more'),function(x){return x>=3}]]);
+ ocn(A('عدد مرات الإجهاض (تصنيف)','Abortions (categories)'),5,[[A('لا يوجد إجهاض','None'),function(x){return x===0}],[A('مرة واحدة','Once'),function(x){return x===1}],[A('مرتان فأكثر','Twice or more'),function(x){return x>=2}]]);
+ function ocat(t0,i,m){var vs=OB.map(function(r){return String(r[i]||'')}).filter(Boolean);r2.push([t0+' ('+A('ن = ','n = ')+vs.length+')','']);Object.keys(m).forEach(function(k){r2.push(['   '+m[k],np(vs.filter(function(v){return v===k}).length,vs.length)])})}
+ ocat(A('انتظام الدورة الشهرية','Menstrual cycle regularity'),7,{regular:A('منتظمة','Regular'),irregular:A('غير منتظمة','Irregular'),none:A('لا توجد دورة حالياً','No cycle at present')});
+ function ocv(t0,i,labs){var a=ob(i).filter(function(v){return v>=1&&v<=labs.length}),N=a.length;r2.push([t0+' ('+A('ن = ','n = ')+N+')','']);labs.forEach(function(l,k){r2.push(['   '+l,np(a.filter(function(v){return v===k+1}).length,N)])})}
+ ocv(A('العمر عند أول دورة شهرية (Age at menarche)','Age at menarche'),8,[A('10 سنوات أو أقل (مبكر)','10 years or younger (early)'),A('من 11 إلى 14 سنة (طبيعي)','11 to 14 years (typical)'),A('15 سنة فأكثر (متأخر)','15 years or older (late)')]);
+ ocv(A('الفاصل بين الدورات الشهرية (Interval of menstruation)','Interval of menstruation'),9,[A('أقل من 21 يوماً (متقاربة)','Less than 21 days (polymenorrhea)'),A('من 21 إلى 35 يوماً (طبيعية)','21 to 35 days (normal)'),A('أكثر من 35 يوماً (متباعدة)','More than 35 days (oligomenorrhea)')]);
+ ocv(A('مدة الدورة الشهرية (Duration of menstruation)','Duration of menstruation'),10,[A('أقل من 3 أيام','Less than 3 days'),A('من 3 إلى 7 أيام','3 – 7 days'),A('أكثر من 7 أيام','More than 7 days')]);
+ ocv(A('كمية نزول الدم أثناء الدورة (Amount of menstrual flow)','Amount of menstrual flow'),11,[A('قليلة','Light'),A('متوسطة (عادية)','Moderate (normal)'),A('غزيرة','Heavy')]);
+ ocv(A('ألم أثناء الدورة الشهرية (Dysmenorrhea)','Dysmenorrhea (pain during periods)'),12,[A('لا','No'),A('نعم','Yes')]);
  var P2={};D.r2.forEach(function(r){P2[String(r[2])]=r});var pu=D.r2.map(function(r){return String(r[9]||'')}).filter(Boolean);
  var ipv=di('prev'),EVB={};EV.forEach(function(e){EVB[e.sid]=e});
  if(ipv>=0){var pv=OB.map(function(r){return EVB[String(r[2])]}).filter(function(e){return e&&e.d[ipv]!=null}).map(function(e){return e.d[ipv]});
@@ -481,7 +488,7 @@ function thesis(){
   /* characteristics of concordant vs not */
   var CO=PRK.filter(function(x){return x.cat==='top1'}),NC=PRK.filter(function(x){return x.cat!=='top1'}),r9=[];
   function dv(a,k){var i=di(k);return a.map(function(x){return x.ev?x.ev.d[i]:null}).filter(function(v){return v!=null})}
-  ['age','kids'].forEach(function(k){var i=di(k);if(i<0)return;var a=dv(CO,k),b=dv(NC,k);r9.push([A(DM[i].q[0],DM[i].q[1]),msd(a),msd(b),pf(mwu(a,b))])});
+  ['kids'].forEach(function(k){var i=di(k);if(i<0)return;var a=dv(CO,k),b=dv(NC,k);r9.push([A(DM[i].q[0],DM[i].q[1]),msd(a),msd(b),pf(mwu(a,b))])});
   ['edu','res','mar','job'].forEach(function(k){var i=di(k);if(i<0)return;var q=DM[i],T2=q.o.map(function(_,c){return[CO.filter(function(x){return x.ev&&x.ev.d[i]===c+1}).length,NC.filter(function(x){return x.ev&&x.ev.d[i]===c+1}).length]}),c2=chiTab(T2),nA=T2.reduce(function(a,r){return a+r[0]},0),nB=T2.reduce(function(a,r){return a+r[1]},0);
    r9.push([A(q.q[0],q.q[1]),'','',c2?pf(c2.p):'-']);q.o.forEach(function(o,c){r9.push(['   '+A(o[0],o[1]),np(T2[c][0],nA),np(T2[c][1],nB),''])})});
   add(A('خصائص المشاركات حسب توافق الوسيلة الأولى المرشّحة (ن = '+nk+')','Participant characteristics by agreement with the first recommended method (n = '+nk+')'),[A('الخاصية','Characteristic'),A('متوافقة (ن = '+CO.length+')','Agreement (n = '+CO.length+')'),A('غير متوافقة (ن = '+NC.length+')','No agreement (n = '+NC.length+')'),A('قيمة p','p value')],r9,
@@ -502,7 +509,7 @@ function thesis(){
   add(A('التحديات المدركة لاستخدام المنصة (ن = '+NC+')','Perceived Challenges of Using the Platform (n = '+NC+')'),[A('العبارة','Statement'),A('أوافق (ن)','Agree (n)'),A('أوافق (%)','Agree (%)'),A('محايدة (ن)','Neutral (n)'),A('محايدة (%)','Neutral (%)'),A('لا أوافق (ن)','Disagree (n)'),A('لا أوافق (%)','Disagree (%)')],r5,A('العبارات صيغت سلبياً؛ فالموافقة تعني وجود التحدي. النسب محسوبة من عدد من أجبن عن كل عبارة.','Statements are negatively worded; agreement indicates the presence of the challenge. Percentages are of those who answered each statement.'))}
  var TXT=[];
  try{var ia2=di('age'),ages=ia2>=0?EV.map(function(e){return e.d[ia2]}).filter(function(v){return v!=null}):[];
-  TXT[0]=A('شملت الدراسة '+n+' مشاركة، وبلغ متوسط أعمارهن '+msd(ages)+' سنة.','The study included '+n+' participants, and their mean age was '+msd(ages)+' years.');
+  TXT[0]=A('شملت الدراسة '+n+' مشاركة'+(ia2>=0&&ages.length?'، توزّعت أعمارهن كما يلي: '+DM[ia2].o.map(function(o,i){return o[0]+': '+np(ages.filter(function(v){return v===i+1}).length,ages.length)}).join('، '):'')+'.','The study included '+n+' participants'+(ia2>=0&&ages.length?'; ages were distributed as: '+DM[ia2].o.map(function(o,i){return o[1]+': '+np(ages.filter(function(v){return v===i+1}).length,ages.length)}).join(', '):'')+'.');
   var ob1=function(c){return OB.map(function(r){return r[c]===''||r[c]==null?NaN:Number(r[c])}).filter(function(v){return isFinite(v)})};
   TXT[1]=A('بلغ متوسط عدد مرات الحمل '+msd(ob1(3))+'، وعدد مرات الولادة '+msd(ob1(4))+'، وعدد مرات الإجهاض '+msd(ob1(5))+'، وعدد الأطفال الأحياء '+msd(ob1(6))+' (ن = '+OB.length+').','The mean number of pregnancies was '+msd(ob1(3))+', deliveries '+msd(ob1(4))+', abortions '+msd(ob1(5))+', and living children '+msd(ob1(6))+' (n = '+OB.length+').');
   if(typeof PRK!=='undefined'&&PRK.length){var c1=PRK.filter(function(x){return x.cat==='top1'}).length,ce=PRA.filter(function(x){return x.cat==='exc'}).length;
@@ -521,7 +528,7 @@ function thesis(){
  h+='<div class="thn noprint">'+TH.map(function(o){return'<button class="ghost" data-go="th'+o.k+'">'+E(A2('جدول ','Table ')+(o.k+1))+(o.empty?' …':'')+'</button>'}).join('')+'</div>';
  TH.forEach(function(o){h+=thCard(o)});
  return h}
-function thBind(){var b=$i('thW');if(!b)return;b.onclick=function(){var ar=isAr(),html='<div class="rr" dir="'+(ar?'rtl':'ltr')+'">'+TH.map(function(o){return'<h3>'+E(o.title)+'</h3><table class="rt" border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%"><thead><tr>'+o.head.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+o.rows.map(function(r){return'<tr>'+r.map(function(c){return'<td>'+E(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table>'+(o.note?'<p>'+E(o.note)+'</p>':'')}).join('')+'</div>';
+function thBind(){var b=$i('thW');if(!b)return;b.onclick=function(){var ar=isAr(),html='<div class="rr" dir="'+(ar?'rtl':'ltr')+'">'+TH.map(function(o){return'<h3>'+E(o.title)+'</h3><table class="rt" border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%"><thead><tr>'+o.head.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+o.rows.map(function(r){return'<tr>'+r.map(function(c){return'<td>'+bdi(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table>'+(o.note?'<p>'+E(o.note)+'</p>':'')}).join('')+'</div>';
   var doc='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Tables</title><style>@page{size:21cm 29.7cm;margin:2cm}'+(window.REPCSS||'')+'</style></head><body>'+html+'</body></html>';
   dl('baseera-thesis-tables-'+lg()+'.doc',new Blob(['﻿'+doc],{type:'application/msword'}))}}
 var PAL=['#0f766e','#e8745a','#3b6ea5','#d9a23a','#8e5ea2','#5f8f3e','#b5485d'];
@@ -691,7 +698,7 @@ function evalDS(){
  var n=0;EQ.forEach(function(g,gi){g.i.forEach(function(it,ii){var k=n++;cols.push({name:'D'+(gi+1)+'_Q'+(ii+1),label:ar?it[0]:it[1],raw:rows.map(function(r){var v=r[3+ns+k];return v===''||v==null?null:Number(v)}),hint:{kind:'lik',scale:ar?g.d[0]:g.d[1],inst:inst,labels:lab,start:1,rev:!!it[2]}})})});
  cols.push({name:'overall',label:ar?'التقييم العام للموقع (1 = ضعيف … 3 = ممتاز)':'Overall rating (1 = poor … 3 = excellent)',raw:rows.map(function(r){var v=r[3+ns+tot];return v===''||v==null?null:Number(v)}),hint:{kind:'num'}});
  return ds0('baseera-evaluations',cols,rows.length)}
-function thTable(o){return'<table class="rt" border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%"><thead><tr>'+o.head.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+o.rows.map(function(r){return'<tr>'+r.map(function(c){return'<td>'+E(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table>'}
+function thTable(o){return'<table class="rt" border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%"><thead><tr>'+o.head.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+o.rows.map(function(r){return'<tr>'+r.map(function(c){return'<td>'+bdi(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table>'}
 function chHtml(){
  var ar=isAr(),A=function(a,e){return ar?a:e};thesis();
  var NAMES=[A('الخصائص الاجتماعية والديموغرافية للمشاركات','Socio-demographic Characteristics of the Participants'),A('التاريخ الإنجابي والنسائي للمشاركات','Reproductive and Gynecological History'),A('فعالية مرشد تنظيم الأسرة: نسبة التوافق مع الوسيلة المركّبة','Effectiveness of the Family Planning Navigator (Concordance Rate)'),A('مستوى سهولة الاستخدام والرضا','Usability and Satisfaction Level'),A('التحديات المدركة لاستخدام المنصة','Perceived Challenges of Using the Platform')];
@@ -737,9 +744,8 @@ function allDS(){
  var ob=function(c){return function(q){return q.ob?nv(q.ob[c]):''}};
  C('gravida',A('عدد مرات الحمل','Number of pregnancies'),null,ob(3));C('para',A('عدد مرات الولادة','Number of deliveries'),null,ob(4));C('abortions',A('عدد مرات الإجهاض','Number of abortions'),null,ob(5));C('living_children',A('عدد الأطفال الأحياء (البطاقة التوليدية)','Living children (obstetric card)'),null,ob(6));
  C('cycle_reg',A('انتظام الدورة الشهرية','Menstrual cycle regularity'),[[1,A('منتظمة','Regular')],[2,A('غير منتظمة','Irregular')],[3,A('لا توجد دورة حالياً','No cycle at present')]],function(q){if(!q.ob)return'';return{regular:1,irregular:2,none:3}[String(q.ob[7])]||''});
- C('menarche_age',A('العمر عند أول دورة (سنة)','Age at menarche (years)'),null,ob(8));C('cycle_days',A('طول الدورة (يوم)','Cycle length (days)'),null,ob(9));
+ C('menarche_cat',A('العمر عند أول دورة شهرية','Age at menarche'),[[1,A('10 سنوات أو أقل','10 years or younger')],[2,A('11 إلى 14 سنة','11 to 14 years')],[3,A('15 سنة فأكثر','15 years or older')]],ob(8));C('cycle_interval',A('الفاصل بين الدورات الشهرية','Interval of menstruation'),[[1,A('أقل من 21 يوماً','Less than 21 days')],[2,A('21 إلى 35 يوماً','21 to 35 days')],[3,A('أكثر من 35 يوماً','More than 35 days')]],ob(9));C('flow_amount',A('كمية نزول الدم','Amount of menstrual flow'),[[1,A('قليلة','Light')],[2,A('متوسطة','Moderate')],[3,A('غزيرة','Heavy')]],ob(11));C('dysmenorrhea',A('ألم أثناء الدورة','Dysmenorrhea'),[[1,A('لا','No')],[2,A('نعم','Yes')]],ob(12));C('period_duration',A('مدة الدورة الشهرية','Duration of menstruation'),[[1,A('أقل من 3 أيام','Less than 3 days')],[2,A('3 إلى 7 أيام','3 – 7 days')],[3,A('أكثر من 7 أيام','More than 7 days')]],ob(10));
  var YN=[[0,A('لا','No')],[1,A('نعم','Yes')]];
- [['side','آثار جانبية','Side effects'],['wish','الرغبة في الحمل','Wish to become pregnant'],['preg','حدوث حمل','Pregnancy'],['access','صعوبة الحصول عليها','Difficult access'],['husband','اعتراض الزوج','Husband’s objection'],['medical','نصيحة طبية','Medical advice'],['other','أخرى','Other']].forEach(function(x){C('stop_'+x[0],A('سبب إيقاف وسيلة سابقة: ','Reason for stopping a previous method: ')+A(x[1],x[2]),YN,function(q){if(!q.ob||String(q.ob[10]||'')==='')return'';return String(q.ob[10]).split('|').indexOf(x[0])>=0?1:0})});
  var ef=function(c){return function(q){return q.ef?nv(q.ef[c]):''}};
  C('actual_method',A('الوسيلة المركّبة فعلياً','Method actually fitted'),mv,ef(3));
  C('chosen_by',A('من اختار الوسيلة','Who chose the method'),[[1,A('مقدّمة الخدمة الصحية','Health care provider')],[2,A('المرأة','The woman')],[3,A('الزوج','Husband')],[4,A('قريبة أو صديقة','Relative or friend')]],ef(4));
@@ -763,16 +769,16 @@ function spssAllSps(){
  L.push('VARIABLE LABELS');d.cols.forEach(function(c,i){L.push((i?' /':' ')+c.n+' '+sq(c.l))});L.push(' .');
  var wv=d.cols.filter(function(c){return c.v});
  L.push('VALUE LABELS');wv.forEach(function(c,i){L.push((i?' /':' ')+c.n);c.v.forEach(function(p){L.push('  '+p[0]+' '+sq(p[1]))})});L.push(' .');
- var num=['age','kids','gravida','para','abortions','living_children','menarche_age','cycle_days'];
+ var num=['kids','gravida','para','abortions','living_children'];
  var cat=d.names.filter(function(n){return num.indexOf(n)<0&&!/^(id|date|total|D\d)$/.test(n)&&!/^D\d_Q\d+$/.test(n)});
  L.push('VARIABLE LEVEL '+cat.filter(function(n){return n!=='id'&&n!=='date'}).join(' ')+' (NOMINAL) .');L.push('EXECUTE .');
  var T=function(a,e){L.push('');L.push('* '+A(a,e))};
  T('الجدول 1: الخصائص الاجتماعية والديموغرافية','Table 1: Socio-demographic characteristics');
- L.push('DESCRIPTIVES VARIABLES=age kids /STATISTICS=MEAN STDDEV MIN MAX .');
+ L.push('DESCRIPTIVES VARIABLES=kids /STATISTICS=MEAN STDDEV MIN MAX .');
  L.push('FREQUENCIES VARIABLES=edu res mar job prev dev net /ORDER=ANALYSIS .');
  T('الجدول 2: التاريخ الإنجابي والنسائي','Table 2: Reproductive and gynecological history');
- L.push('DESCRIPTIVES VARIABLES=gravida para abortions living_children menarche_age cycle_days /STATISTICS=MEAN STDDEV MIN MAX .');
- L.push('FREQUENCIES VARIABLES=cycle_reg prev stop_side stop_wish stop_preg stop_access stop_husband stop_medical stop_other /ORDER=ANALYSIS .');
+ L.push('DESCRIPTIVES VARIABLES=gravida para abortions living_children /STATISTICS=MEAN STDDEV MIN MAX .');
+ L.push('FREQUENCIES VARIABLES=cycle_reg menarche_cat cycle_interval period_duration flow_amount dysmenorrhea prev /ORDER=ANALYSIS .');
  T('الجدول 3: فعالية المرشد (نسبة التوافق) - من اختارتها مقدّمة الخدمة فقط','Table 3: Effectiveness (concordance) - provider-chosen cases only');
  L.push('FREQUENCIES VARIABLES=chosen_by .');L.push('USE ALL .');L.push('COMPUTE filter_$=(analysis_set = 1) .');L.push('FILTER BY filter_$ .');
  L.push('FREQUENCIES VARIABLES=match_top1 conc_cat provider_fit /ORDER=ANALYSIS .');L.push('FILTER OFF .');L.push('USE ALL .');L.push('EXECUTE .');
@@ -961,18 +967,15 @@ function researchCard(r){
  h+=num('ob_g',L('كم مرة حملتِ؟'),0,20)+num('ob_p',L('كم مرة أنجبتِ؟'),0,20)+num('ob_a',L('كم مرة أُصبتِ بإجهاض (تلقائي أو مُجرى)؟'),0,20)+num('ob_k',L('عدد أطفالكِ الأحياء حالياً'),0,20)+
   sel('ob_l',L('عمر آخر طفل (إن كان لديكِ أطفال)'),[['lt1',L('أقل من سنة')],['1to2',L('من سنة إلى سنتين')],['gt2',L('أكثر من سنتين')]])+
   sel('ob_r',L('هل دورتكِ الشهرية منتظمة؟'),[['regular',L('منتظمة')],['irregular',L('غير منتظمة')],['none',L('لا توجد لديّ دورة شهرية حالياً')]])+
-  num('ob_m',L('عمر أول دورة شهرية (بالسنوات)'),8,20)+num('ob_c',L('كم يوماً تستغرق دورتكِ عادةً؟'),15,60);
- if(past){h+='<fieldset style="border:0;padding:0;margin:8px 0"><legend><b>'+L('ما سبب توقفكِ عن استخدام الوسيلة السابقة؟')+'</b></legend>'+
-  [['side',L('آثار جانبية')],['wish',L('الرغبة في الحمل')],['preg',L('حدوث حمل')],['access',L('صعوبة الحصول عليها')],['husband',L('اعتراض الزوج')],['medical',L('نصيحة طبية')],['other',L('أخرى')]].map(function(x){return'<label style="display:block;margin:4px 0"><input type="checkbox" name="ob_s" value="'+x[0]+'"> '+x[1]+'</label>'}).join('')+'</fieldset>'}
+  sel('ob_m',L('كم كان عمركِ عند أول دورة شهرية؟'),[['1',L('10 سنوات أو أقل')],['2',L('من 11 إلى 14 سنة')],['3',L('15 سنة فأكثر')]])+sel('ob_i',L('الفاصل المعتاد بين دورتين شهريتين'),[['1',L('أقل من 21 يوماً')],['2',L('من 21 إلى 35 يوماً')],['3',L('أكثر من 35 يوماً')]])+sel('ob_d',L('كم يوماً يستمر نزول الدم عادةً؟'),[['1',L('أقل من 3 أيام')],['2',L('من 3 إلى 7 أيام')],['3',L('أكثر من 7 أيام')]])+sel('ob_f',L('كيف تصفين كمية نزول الدم أثناء الدورة عادةً؟'),[['1',L('قليلة')],['2',L('متوسطة (عادية)')],['3',L('غزيرة')]])+sel('ob_y',L('هل تعانين من ألم أثناء الدورة الشهرية؟'),[['1',L('لا')],['2',L('نعم')]]);
  h+='<button id="ob_go">'+L('إرسال')+'</button><div id="ob_msg"></div></div>';
  $('#app').insertAdjacentHTML('beforeend',h);
  $('#ob_go').onclick=function(){
   var g=function(id){var v=$('#'+id).value;return v===''?null:v},n=function(id,mn,mx){var v=g(id);if(v===null)return null;v=Math.round(+v);return(v>=mn&&v<=mx)?v:undefined};
-  var o={g:n('ob_g',0,20),p:n('ob_p',0,20),ab:n('ob_a',0,20),kids:n('ob_k',0,20),lastkid:g('ob_l'),reg:g('ob_r'),menarche:n('ob_m',8,20),cyc:n('ob_c',15,60)};
+  var o={g:n('ob_g',0,20),p:n('ob_p',0,20),ab:n('ob_a',0,20),kids:n('ob_k',0,20),lastkid:g('ob_l'),reg:g('ob_r'),menarche:n('ob_m',1,3),ic:n('ob_i',1,3),pd:n('ob_d',1,3),fa:n('ob_f',1,3),dy:n('ob_y',1,2)};
   var bad=Object.keys(o).some(function(k){return o[k]===undefined});
   if(bad){$('#ob_msg').innerHTML='<p class="note refer">'+L('تأكدي من أن الأرقام ضمن الحدود المعقولة.')+'</p>';return}
-  o.stop=Array.prototype.map.call(document.querySelectorAll('input[name=ob_s]:checked'),function(x){return x.value});
-  var any=Object.keys(o).some(function(k){return k==='stop'?o.stop.length:o[k]!==null});
+  var any=Object.keys(o).some(function(k){return o[k]!==null});
   if(!any){$('#ob_msg').innerHTML='<p class="note info">'+L('لم تُدخلي أي إجابة بعد.')+'</p>';return}
   BSR.obsPost(o);
   try{sessionStorage.setItem('bsr_obs_'+BSR.sid(),'1')}catch(e){}
@@ -1051,7 +1054,7 @@ var EVQ=[
 {d:["الرضا ونية الاستخدام","Satisfaction and intention to use"],i:[["سأستخدم الموقع مرة أخرى عند الحاجة.","I will use the website again when needed."],["سأوصي صديقاتي وقريباتي باستخدام الموقع.","I will recommend the website to my friends and relatives."],["سأعود إلى الموقع قبل اتخاذ قرار بشأن وسيلة تنظيم الأسرة.","I will return to the website before making a decision about a family planning method."]]}];
 var MID19=['cu','lng','implant','dmpa','cic','pop','coc','patch','ring','condom_male','condom_female','diaphragm','spermicide','fab','lam','withdrawal','ec','tubal','vasectomy'];
 var DEM=[
-{k:"age",t:"num",min:12,max:60,q:["كم عمركِ بالسنوات؟","How old are you (in years)?"]},
+{k:"age",q:["ما عمركِ؟","What is your age?"],o:[["من 18 إلى أقل من 25 سنة","18 – <25 years"],["من 25 إلى أقل من 35 سنة","25 – <35 years"],["من 35 إلى 49 سنة","35 – 49 years"]]},
 {k:"edu",q:["ما مستواكِ التعليمي؟","What is your education level?"],o:[["تعليم أساسي أو أقل","Basic education or less"],["ثانوي أو ما يعادله","Secondary or equivalent"],["جامعي","University"],["دراسات عليا","Postgraduate"]]},
 {k:"res",q:["ما محل إقامتكِ؟","Where do you live?"],o:[["ريف","Rural"],["حضر","Urban"]]},
 {k:"mar",q:["ما حالتكِ الاجتماعية؟","What is your marital status?"],o:[["متزوجة","Married"],["مطلقة أو أرملة","Divorced or widowed"],["غير متزوجة","Not married"]]},
@@ -1083,9 +1086,11 @@ function evalView(){
  function osel(id,l,o){return'<label for="'+id+'"><b>'+esc(l)+'</b></label><select id="'+id+'" style="'+FS+'"><option value="">'+Z('اختاري الإجابة','Choose an answer')+'</option>'+o.map(function(x){return'<option value="'+x[0]+'">'+esc(Z(x[1],x[2]))+'</option>'}).join('')+'</select>'}
  h+=onum('ob_g',Z('كم مرة حملتِ؟','How many times have you been pregnant?'),0,20)+onum('ob_p',Z('كم مرة أنجبتِ؟','How many times have you given birth?'),0,20)+onum('ob_a',Z('كم مرة أُصبتِ بإجهاض (تلقائي أو مُجرى)؟','How many times have you had a miscarriage or an abortion?'),0,20)
   +osel('ob_r',Z('هل دورتكِ الشهرية منتظمة؟','Is your menstrual cycle regular?'),[['regular','منتظمة','Regular'],['irregular','غير منتظمة','Irregular'],['none','لا توجد لديّ دورة شهرية حالياً','I have no period at present']])
-  +onum('ob_m',Z('كم كان عمركِ عند أول دورة شهرية (بالسنوات)؟','How old were you at your first period (in years)?'),8,20)+onum('ob_c',Z('كم يوماً تستغرق دورتكِ عادةً؟','How many days does your cycle usually last?'),15,60)
-  +'<div id="ob_sw" hidden><fieldset style="border:0;padding:0;margin:8px 0"><legend><b>'+Z('ما سبب توقفكِ عن استخدام الوسيلة السابقة؟ (يمكنكِ اختيار أكثر من سبب)','Why did you stop your previous method? (you may choose more than one)')+'</b></legend>'
-  +[['side','آثار جانبية','Side effects'],['wish','الرغبة في الحمل','Wish to become pregnant'],['preg','حدوث حمل','Pregnancy'],['access','صعوبة الحصول عليها','Difficult to obtain'],['husband','اعتراض الزوج','Husband’s objection'],['medical','نصيحة طبية','Medical advice'],['other','أخرى','Other']].map(function(x){return'<label style="display:block;margin:4px 0"><input type="checkbox" name="ob_s" value="'+x[0]+'"> '+esc(Z(x[1],x[2]))+'</label>'}).join('')+'</fieldset></div>';
+  +osel('ob_m',Z('كم كان عمركِ عند أول دورة شهرية؟','How old were you when you had your first period?'),[[1,'10 سنوات أو أقل','10 years or younger'],[2,'من 11 إلى 14 سنة','11 to 14 years'],[3,'15 سنة فأكثر','15 years or older']])
+  +osel('ob_i',Z('ما الفاصل المعتاد بين دورتين شهريتين؟ (من أول يوم في دورة إلى أول يوم في الدورة التالية)','What is the usual interval between two periods? (from the first day of one period to the first day of the next)'),[[1,'أقل من 21 يوماً','Less than 21 days'],[2,'من 21 إلى 35 يوماً','21 to 35 days'],[3,'أكثر من 35 يوماً','More than 35 days']])
+  +osel('ob_d',Z('كم يوماً يستمر نزول الدم عادةً؟','How many days does the bleeding usually last?'),[[1,'أقل من 3 أيام','Less than 3 days'],[2,'من 3 إلى 7 أيام','3 – 7 days'],[3,'أكثر من 7 أيام','More than 7 days']])
+  +osel('ob_f',Z('كيف تصفين كمية نزول الدم أثناء الدورة عادةً؟','How would you describe the amount of bleeding during your period?'),[[1,'قليلة','Light'],[2,'متوسطة (عادية)','Moderate (normal)'],[3,'غزيرة','Heavy']])
+  +osel('ob_y',Z('هل تعانين من ألم أثناء الدورة الشهرية؟','Do you have pain during your period?'),[[1,'لا','No'],[2,'نعم','Yes']]);
  h+='<h3 style="margin-top:18px">'+Z('أسئلة عن وسيلتكِ (اختيارية)','About your method (optional)')+'</h3>';
  h+=osel('st_m',Z('ما الوسيلة التي بدأتِ استخدامها أو التي رُكِّبت لكِ مؤخراً؟','Which method did you start using, or have had fitted, recently?'),MID19.map(function(id,i){var m=KB0.methods.filter(function(x){return x.id===id})[0];return[i+1,m.ar,m.en]}))
   +osel('st_t',Z('ما الوسيلة التي ظهرت لكِ في المرتبة الأولى (الأنسب لكِ) على الموقع؟','Which method appeared first (“Best for you”) on the website?'),MID19.map(function(id,i){var m=KB0.methods.filter(function(x){return x.id===id})[0];return[i+1,m.ar,m.en]}).concat([[99,'لا أتذكّر','I do not remember']]))
@@ -1108,7 +1113,7 @@ function evalView(){
    else if(w==='t'||w==='m'){if(mv&&+t.value===mv)r.value='1';else if(+r.value===1)r.value=''}
    tv=+t.value;r.options[1].disabled=!!(tv&&tv!==99&&tv!==mv)}
   m.addEventListener('change',function(){sync('m')});t.addEventListener('change',function(){sync('t')});r.addEventListener('change',function(){sync('r')});sync('')})();
- (function(){var p=$('#d_prev');function sw(){$('#ob_sw').hidden=(+p.value!==2)}p.addEventListener('change',sw);sw()})();
+ (function(){var r=$('#ob_r'),a=$('#ob_i'),b=$('#ob_d'),c=$('#ob_f'),e=$('#ob_y');function sw(){var z=r.value==='none';a.disabled=b.disabled=c.disabled=e.disabled=z;if(z){a.value='';b.value='';c.value='';e.value=''}}r.addEventListener('change',sw);sw()})();
  function prog(){var d=0;for(var i=0;i<tot;i++)if(document.querySelector('input[name=e'+i+']:checked'))d++;if(document.querySelector('input[name=eo]:checked'))d++;$('#evp').textContent=Z('أجبتِ عن '+d+' من '+(tot+1)+' سؤالاً.','You have answered '+d+' of '+(tot+1)+' questions.')}
  $('#evf').addEventListener('change',prog);prog();
  $('#evf').addEventListener('submit',function(e){e.preventDefault();
@@ -1118,8 +1123,8 @@ function evalView(){
   try{BSR.evalPost(a,d,o)}catch(x){}
   try{var gv=function(id){var v=$('#'+id).value;return v===''?null:v},nv=function(id,mn,mx){var v=gv(id);if(v===null)return null;v=Math.round(+v);return(v>=mn&&v<=mx)?v:null};
    var ik=DEM.map(function(q){return q.k}).indexOf('kids');
-   var ob={g:nv('ob_g',0,20),p:nv('ob_p',0,20),ab:nv('ob_a',0,20),kids:(ik>=0&&d[ik]!=null&&d[ik]<=20)?d[ik]:null,reg:gv('ob_r'),menarche:nv('ob_m',8,20),cyc:nv('ob_c',15,60),stop:$('#ob_sw').hidden?[]:Array.prototype.map.call(document.querySelectorAll('input[name=ob_s]:checked'),function(x){return x.value})};
-   if(Object.keys(ob).some(function(k){return k==='stop'?ob.stop.length:ob[k]!==null}))BSR.obsPost(ob)}catch(x){}
+   var ob={g:nv('ob_g',0,20),p:nv('ob_p',0,20),ab:nv('ob_a',0,20),kids:(ik>=0&&d[ik]!=null&&d[ik]<=20)?d[ik]:null,reg:gv('ob_r'),menarche:nv('ob_m',1,3),ic:nv('ob_i',1,3),pd:nv('ob_d',1,3),fa:nv('ob_f',1,3),dy:nv('ob_y',1,2)};
+   if(Object.keys(ob).some(function(k){return ob[k]!==null}))BSR.obsPost(ob)}catch(x){}
   try{var ef=['st_m','st_w',null,null,null,'st_t','st_n','st_r'].map(function(id){return id?(+$('#'+id).value||null):null});if(ef.some(function(v){return v!==null}))BSR.effPost(ef,($('#st_k')||{}).value)}catch(x){}
   try{var cv=[];for(var ci=0;ci<12;ci++){var cc=document.querySelector('input[name=c'+ci+']:checked');cv.push(cc?+cc.value:0)}if(cv.some(function(v){return v>0}))BSR.chPost(cv)}catch(x){}
   try{var l=JSON.parse(localStorage.getItem('fp_eval3')||'[]');l.push({a:a,d:d,o:o,t:Date.now()});localStorage.setItem('fp_eval3',JSON.stringify(l))}catch(x){}

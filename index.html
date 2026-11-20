@@ -201,7 +201,7 @@ header.top .hlogo{width:44px;margin-inline-end:8px;vertical-align:middle}header.
 <script>
 /* بصيرة: إحصاء مجهول + لوحة إدارة ثنائية اللغة (#admin) */
 var BSR=(function(){
-var URL_='https://script.google.com/macros/s/AKfycbw_d4JisGAjRRxCPOadoGAQOdesVoZq51ILaVE-08ovmf9O4QleYzWsS6Q-U5027Fo0kA/exec',sid=rnd(),code=mkCode(),opened=[],DATA=null,LAST=null,lastSig='';
+var URL_='https://script.google.com/macros/s/AKfycbw_d4JisGAjRRxCPOadoGAQOdesVoZq51ILaVE-08ovmf9O4QleYzWsS6Q-U5027Fo0kA/exec',sid=rnd(),code=mkCode(),opened=[],DATA=null,LAST=null,lastSig='',LASTRES=null;
 function mkCode(){var al='ABCDEFGHJKMNPQRSTUVWXYZ23456789',o='';try{var a=new Uint8Array(5);crypto.getRandomValues(a);for(var i=0;i<5;i++)o+=al[a[i]%al.length]}catch(e){for(var j=0;j<5;j++)o+=al[Math.floor(Math.random()*al.length)]}return o}
 function normCode(c){return String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5)}
 function rnd(){try{var a=new Uint8Array(8);crypto.getRandomValues(a);return Array.prototype.map.call(a,function(x){return('0'+x.toString(16)).slice(-2)}).join('')}catch(e){return String(Math.random()).slice(2,18)}}
@@ -235,6 +235,7 @@ function post(o){if(!URL_)return;try{fetch(URL_,{method:'POST',mode:'no-cors',bo
 function visit(){if(!URL_)return;try{if(sessionStorage.getItem('bsr_v'))return;sessionStorage.setItem('bsr_v','1')}catch(e){}post({type:'visit',lang:lg()})}
 document.addEventListener('toggle',function(e){var d=e.target;if(d&&d.tagName==='DETAILS'&&d.open&&d.getAttribute&&d.getAttribute('data-id')){var id=d.getAttribute('data-id');if(opened.indexOf(id)<0&&opened.length<12)opened.push(id)}},true);
 function results(r){
+ try{var tp=(r.ranking||[]).filter(function(x){return x.rank<=3}).sort(function(x,y){return x.rank-y.rank}).map(function(x){return x.id});LASTRES={top:tp,ex:Object.keys(r.excluded||{})};sessionStorage.setItem('bsr_last',JSON.stringify(LASTRES))}catch(e){}
  if(!URL_)return;
  var a=r.answers||{},sig=JSON.stringify(a);
  if(sig===lastSig)return;
@@ -797,7 +798,8 @@ function codeCard(){if(!URL_)return;var ar=isAr(),h='<div class="card" id="bsrco
 function evalPost(a,d,o){var N=window.__EVN;if(!URL_||!a||a.length!==N||!d||d.length!==window.__DEM.length||!(o>=1&&o<=3)||a.some(function(v){return!(v>=1&&v<=3)}))return;post({type:'eval3',lang:lg(),sid:sid,d:d,a:a,o:o})}
 function init(){visit();chk()}
 window.addEventListener('load',init);window.addEventListener('hashchange',chk);
-return{results:results,evalPost:evalPost,effPost:effPost,codeCard:codeCard,code:function(){return code},canPost:function(){return!!URL_},sid:function(){return sid},chPost:function(c){if(!URL_||!c||c.length!==12)return false;post({type:'ch',lang:lg(),sid:sid,c:c});return true},obsPost:function(o){if(!URL_)return false;post({type:'obs',lang:lg(),sid:sid,o:o});return true}};
+function lastRes(){if(LASTRES)return LASTRES;try{var j=JSON.parse(sessionStorage.getItem('bsr_last')||'null');if(j&&j.top&&j.top.length)return j}catch(e){}return null}
+return{last:lastRes,results:results,evalPost:evalPost,effPost:effPost,codeCard:codeCard,code:function(){return code},canPost:function(){return!!URL_},sid:function(){return sid},chPost:function(c){if(!URL_||!c||c.length!==12)return false;post({type:'ch',lang:lg(),sid:sid,c:c});return true},obsPost:function(o){if(!URL_)return false;post({type:'obs',lang:lg(),sid:sid,o:o});return true}};
 })();
 
 </script>
@@ -1070,7 +1072,7 @@ var CHQ=[
 {d:["اللغة والفهم","Language and understanding"],i:[["وجدتُ بعض الكلمات صعبة الفهم.","I found some words difficult to understand."],["كانت بعض المعلومات غير واضحة لي.","Some of the information was unclear to me."],["كان من الصعب عليّ فهم نتيجة الترشيح.","It was difficult for me to understand the recommendation result."]]},
 {d:["الخصوصية والثقة","Privacy and trust"],i:[["قلقتُ على خصوصية بياناتي الصحية.","I was worried about the privacy of my health data."],["لم أثق في نتيجة الترشيح.","I did not trust the recommendation result."],["شعرتُ بالحرج من بعض الأسئلة.","I felt embarrassed by some of the questions."]]},
 {d:["المهارات الرقمية والمساندة","Digital skills and support"],i:[["احتجتُ إلى مساعدة من غيري لاستخدام الموقع.","I needed help from others to use the website."],["لم أجد من أسأله عندما واجهتُ مشكلة في الموقع.","I found no one to ask when I had a problem with the website."],["مهاراتي في استخدام الهاتف أو الإنترنت جعلت استخدام الموقع صعباً.","My skills in using the phone or the internet made using the website difficult."]]}];window.__CHQ=CHQ;
-function copt(name,labs){return'<div class="ev5">'+labs.map(function(t,k){return'<label><input type="radio" name="'+name+'" value="'+(k+1)+'"><span>'+esc(t)+'</span></label>'}).join('')+'</div>'}
+function copt(name,labs){return'<div class="ev5">'+labs.map(function(t,k){return'<label><input type="radio" name="'+name+'" value="'+(k+1)+'" required><span>'+esc(t)+'</span></label>'}).join('')+'</div>'}
 function evalView(){
  var n=0,tot=window.__EVN,LB=EVL.lab[LANG==='en'?1:0],OV=EVL.ovl[LANG==='en'?1:0];
  var FS='width:100%;margin:4px 0 10px;padding:8px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit';
@@ -1091,27 +1093,29 @@ function evalView(){
   +osel('ob_d',Z('كم يوماً يستمر نزول الدم عادةً؟','How many days does the bleeding usually last?'),[[1,'أقل من 3 أيام','Less than 3 days'],[2,'من 3 إلى 7 أيام','3 – 7 days'],[3,'أكثر من 7 أيام','More than 7 days']])
   +osel('ob_f',Z('كيف تصفين كمية نزول الدم أثناء الدورة عادةً؟','How would you describe the amount of bleeding during your period?'),[[1,'قليلة','Light'],[2,'متوسطة (عادية)','Moderate (normal)'],[3,'غزيرة','Heavy']])
   +osel('ob_y',Z('هل تعانين من ألم أثناء الدورة الشهرية؟','Do you have pain during your period?'),[[1,'لا','No'],[2,'نعم','Yes']]);
- h+='<h3 style="margin-top:18px">'+Z('أسئلة عن وسيلتكِ (اختيارية)','About your method (optional)')+'</h3>';
+ h+='<h3 style="margin-top:18px">'+Z('أسئلة عن وسيلتكِ','About your method')+'</h3>';
  h+=osel('st_m',Z('ما الوسيلة التي بدأتِ استخدامها أو التي رُكِّبت لكِ مؤخراً؟','Which method did you start using, or have had fitted, recently?'),MID19.map(function(id,i){var m=KB0.methods.filter(function(x){return x.id===id})[0];return[i+1,m.ar,m.en]}))
   +osel('st_t',Z('ما الوسيلة التي ظهرت لكِ في المرتبة الأولى (الأنسب لكِ) على الموقع؟','Which method appeared first (“Best for you”) on the website?'),MID19.map(function(id,i){var m=KB0.methods.filter(function(x){return x.id===id})[0];return[i+1,m.ar,m.en]}).concat([[99,'لا أتذكّر','I do not remember']]))
-  +osel('st_r',Z('أين ظهرت الوسيلة التي رُكِّبت لكِ في نتيجة الموقع؟','Where did the method fitted for you appear in the website result?'),[[1,'هي الوسيلة الأولى (الأنسب لي)','It was the first method (“Best for you”)'],[2,'ظهرت ضمن الوسائل الثلاث الأولى لكنها ليست الأولى','It was within the top three but not first'],[3,'ظهرت في ترتيب أقل من الثلاث الأولى','It appeared lower than the top three'],[4,'ظهرت ضمن الوسائل غير المناسبة لحالتي','It appeared among the methods unsuitable for my case'],[5,'لا أتذكر','I do not remember']])+'<p class="hint" id="st_nr" hidden>'+Z('هذه الوسيلة (دائمة أو طوارئ) خارج ترتيب الموقع، فلا حاجة للإجابة عن السؤالين السابقين.','This method (permanent or emergency) is outside the website ranking, so the two previous questions are not needed.')+'</p>'
+  +osel('st_r',Z('أين ظهرت الوسيلة التي رُكِّبت لكِ في نتيجة الموقع؟','Where did the method fitted for you appear in the website result?'),[[1,'هي الوسيلة الأولى (الأنسب لي)','It was the first method (“Best for you”)'],[2,'ظهرت ضمن الوسائل الثلاث الأولى لكنها ليست الأولى','It was within the top three but not first'],[3,'ظهرت في ترتيب أقل من الثلاث الأولى','It appeared lower than the top three'],[4,'ظهرت ضمن الوسائل غير المناسبة لحالتي','It appeared among the methods unsuitable for my case'],[5,'لا أتذكر','I do not remember']])+'<p class="hint" id="st_auto" hidden></p><p class="hint" id="st_nr" hidden>'+Z('هذه الوسيلة (دائمة أو طوارئ) خارج ترتيب الموقع، فلا حاجة للإجابة عن السؤالين السابقين.','This method (permanent or emergency) is outside the website ranking, so the two previous questions are not needed.')+'</p>'
   +osel('st_w',Z('من اختار هذه الوسيلة؟','Who chose this method?'),[[1,'مقدّمة الخدمة الصحية بعد الفحص والشرح','The health care provider, after examination and counselling'],[2,'أنا بنفسي','I did, myself'],[3,'زوجي','My husband'],[4,'إحدى القريبات أو الصديقات','A relative or friend']])
   +osel('st_n',Z('تقدير مقدّمة الخدمة الصحية: هل الوسيلة التي رُكِّبت مناسبة طبياً لحالة المرأة؟','Health care provider’s assessment: is the method fitted medically suitable for this woman?'),[[1,'نعم، مناسبة','Yes, suitable'],[2,'مناسبة مع بعض التحفظ','Suitable with some reservations'],[3,'غير مناسبة','Not suitable']])
   +'<div hidden><label for="st_k"><b>'+esc(Z('رمز المتابعة (يظهر في صفحة نتيجة المرشد). اتركيه كما هو إن أنهيتِ المرشد في هذه الجلسة، واكتبيه إن أنهيتِه قبل ذلك أو من جهاز آخر.','Follow-up code (shown on the guide result page). Leave it as it is if you finished the guide in this session; type it if you finished it earlier or on another device.'))+'</b></label><input type="text" id="st_k" maxlength="5" autocomplete="off" autocapitalize="characters" dir="ltr" value="'+esc(BSR.code())+'" style="'+FS+';letter-spacing:.2em;text-transform:uppercase"></div>';
  EVQ.forEach(function(g){h+='<h3 style="margin-top:18px">'+esc(Z(g.d[0],g.d[1]))+'</h3>';g.i.forEach(function(it){var i=n++;h+='<fieldset style="border:0;padding:0;margin:12px 0"><legend><b>'+(i+1)+'. '+esc(Z(it[0],it[1]))+'</b></legend>'+opts('e'+i,LB)+'</fieldset>'})});
- h+='<h3 style="margin-top:18px">'+Z('التحديات التي واجهتِها (اختيارية)','Challenges you faced (optional)')+'</h3><p class="hint">'+Z('اختاري ما يعبّر عن تجربتكِ مع الموقع في كل عبارة.','For each statement, choose what matches your experience with the website.')+'</p>';
+ h+='<h3 style="margin-top:18px">'+Z('التحديات التي واجهتِها','Challenges you faced')+'</h3><p class="hint">'+Z('اختاري ما يعبّر عن تجربتكِ مع الموقع في كل عبارة.','For each statement, choose what matches your experience with the website.')+'</p>';
  var cn=0;CHQ.forEach(function(g){h+='<h4 style="margin:14px 0 4px">'+esc(Z(g.d[0],g.d[1]))+'</h4>';g.i.forEach(function(it){var i=cn++;h+='<fieldset style="border:0;padding:0;margin:10px 0"><legend><b>'+(i+1)+'. '+esc(Z(it[0],it[1]))+'</b></legend>'+copt('c'+i,LB)+'</fieldset>'})});
  h+='<h3 style="margin-top:18px">'+Z('رأيكِ العام','Your overall opinion')+'</h3><fieldset style="border:0;padding:0;margin:12px 0"><legend><b>'+Z('كيف تقيّمين الموقع بوجه عام؟','How would you rate the website overall?')+'</b></legend>'+opts('eo',OV)+'</fieldset>'
   +'<p class="hint">'+Z('لا تكتبي اسمكِ أو أي بيانات شخصية في أي مكان.','Please do not write your name or any personal details anywhere.')+'</p><div class="row" style="margin-top:10px"><button type="submit">'+Z('حفظ تقييمي','Save my evaluation')+'</button></div></form><div id="evo"></div></div>';
  $('#app').innerHTML=h;
- DEM.forEach(function(q){var el=$('#d_'+q.k);el.required=true;if(el.tagName==='SELECT')el.options[0].value=''});['ob_g','ob_p','ob_a','ob_r'].forEach(function(i){$('#'+i).required=true});
+ DEM.forEach(function(q){var el=$('#d_'+q.k);el.required=true;if(el.tagName==='SELECT')el.options[0].value=''});['ob_g','ob_p','ob_a','ob_r','ob_m','ob_i','ob_d','ob_f','ob_y','st_m','st_t','st_r','st_w','st_n'].forEach(function(i){var e=$('#'+i);if(e)e.required=true});
  DEM.forEach(function(q){if(!q.after)return;var p=$('#d_'+q.after);function sync(){var v=+p.value,w=$('#dw_'+q.k);w.hidden=!(v===1||v===2);if(v===1||v===2){$('#dl_'+q.k).textContent=Z((v===1?q.q:q.q2)[0],(v===1?q.q:q.q2)[1])}else $('#d_'+q.k).value='0'}p.addEventListener('change',sync);sync()});
  (function(){var m=$('#st_m'),t=$('#st_t'),r=$('#st_r'),NR=['tubal','vasectomy','ec'].map(function(x){return MID19.indexOf(x)+1}).filter(function(x){return x>0});
   function sync(w){var mv=+m.value,tv=+t.value,perm=NR.indexOf(mv)>=0;t.disabled=r.disabled=perm;$('#st_nr').hidden=!perm;
-   if(perm){t.value='';r.value='';return}
+   if(perm){t.value='';r.value='';$('#st_auto').hidden=true;return}
    if(w==='r'){if(+r.value===1&&mv)t.value=String(mv);else if(+r.value>1&&+t.value===mv)t.value=''}
    else if(w==='t'||w==='m'){if(mv&&+t.value===mv)r.value='1';else if(+r.value===1)r.value=''}
-   tv=+t.value;r.options[1].disabled=!!(tv&&tv!==99&&tv!==mv)}
+   tv=+t.value;r.options[1].disabled=!!(tv&&tv!==99&&tv!==mv);
+   var au=$('#st_auto'),both=!perm&&tv===99&&+r.value===5;au.hidden=!both;
+   if(both){var lr=BSR.last();au.textContent=lr?Z('سنستخدم تلقائياً نتيجة المرشد المحفوظة في هذه الجلسة.','We will automatically use the Method Finder result saved in this session.'):Z('لم نجد نتيجة المرشد في هذه الجلسة، فستُحفظ إجابتكِ «لا أتذكر». لدقة أفضل يمكنكِ استخدام المرشد الآن ثم العودة إلى الاستبيان.','No Method Finder result was found in this session, so your answer will be saved as “I do not remember”. For better accuracy you can use the Method Finder now and then return to the survey.')}}
   m.addEventListener('change',function(){sync('m')});t.addEventListener('change',function(){sync('t')});r.addEventListener('change',function(){sync('r')});sync('')})();
  (function(){var r=$('#ob_r'),a=$('#ob_i'),b=$('#ob_d'),c=$('#ob_f'),e=$('#ob_y');function sw(){var z=r.value==='none';a.disabled=b.disabled=c.disabled=e.disabled=z;if(z){a.value='';b.value='';c.value='';e.value=''}}r.addEventListener('change',sw);sw()})();
  function prog(){var d=0;for(var i=0;i<tot;i++)if(document.querySelector('input[name=e'+i+']:checked'))d++;if(document.querySelector('input[name=eo]:checked'))d++;$('#evp').textContent=Z('أجبتِ عن '+d+' من '+(tot+1)+' سؤالاً.','You have answered '+d+' of '+(tot+1)+' questions.')}
@@ -1125,7 +1129,8 @@ function evalView(){
    var ik=DEM.map(function(q){return q.k}).indexOf('kids');
    var ob={g:nv('ob_g',0,20),p:nv('ob_p',0,20),ab:nv('ob_a',0,20),kids:(ik>=0&&d[ik]!=null&&d[ik]<=20)?d[ik]:null,reg:gv('ob_r'),menarche:nv('ob_m',1,3),ic:nv('ob_i',1,3),pd:nv('ob_d',1,3),fa:nv('ob_f',1,3),dy:nv('ob_y',1,2)};
    if(Object.keys(ob).some(function(k){return ob[k]!==null}))BSR.obsPost(ob)}catch(x){}
-  try{var ef=['st_m','st_w',null,null,null,'st_t','st_n','st_r'].map(function(id){return id?(+$('#'+id).value||null):null});if(ef.some(function(v){return v!==null}))BSR.effPost(ef,($('#st_k')||{}).value)}catch(x){}
+  try{var ef=['st_m','st_w',null,null,null,'st_t','st_n','st_r'].map(function(id){return id?(+$('#'+id).value||null):null});
+   if(ef[5]===99&&ef[7]===5){var lr=BSR.last(),fid=MID19[ef[0]-1];if(lr&&lr.top.length&&fid){var t1=MID19.indexOf(lr.top[0])+1;if(t1>0)ef[5]=t1;ef[7]=fid===lr.top[0]?1:lr.top.indexOf(fid)>=0?2:lr.ex.indexOf(fid)>=0?4:3}}if(ef.some(function(v){return v!==null}))BSR.effPost(ef,($('#st_k')||{}).value)}catch(x){}
   try{var cv=[];for(var ci=0;ci<12;ci++){var cc=document.querySelector('input[name=c'+ci+']:checked');cv.push(cc?+cc.value:0)}if(cv.some(function(v){return v>0}))BSR.chPost(cv)}catch(x){}
   try{var l=JSON.parse(localStorage.getItem('fp_eval3')||'[]');l.push({a:a,d:d,o:o,t:Date.now()});localStorage.setItem('fp_eval3',JSON.stringify(l))}catch(x){}
   var k=0,lines=[];EVQ.forEach(function(g){lines.push(Z(g.d[0],g.d[1]));g.i.forEach(function(it){lines.push(' - '+Z(it[0],it[1])+' '+LB[a[k++]-1])})});

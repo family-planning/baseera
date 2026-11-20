@@ -214,10 +214,10 @@ checking:['جارٍ التحقق...','Checking...'],bad:['الرقم السري 
 conn:['تعذر الاتصال بالجدول. تأكدي من الإنترنت ومن نشر السكربت بصلاحية Anyone.','Could not reach the sheet. Check your internet and that the script is deployed with access: Anyone.'],
 nourl:['لم يُضبط رابط الإحصاء في الموقع.','The statistics URL is not set in the site.'],from:['من','From'],to:['إلى','To'],
 dateHint:['استخدمي التاريخ لاستبعاد أيام التجربة والاختبار.','Use the dates to exclude test days.'],
-xlsx:['تصدير Excel','Export Excel'],csv:['تصدير CSV','Export CSV'],print:['طباعة / PDF','Print / PDF'],spssCsv:['بيانات SPSS (CSV)','SPSS data (CSV)'],spssSps:['أوامر SPSS (.sps)','SPSS syntax (.sps)'],
+xlsx:['تصدير Excel','Export Excel'],csv:['تصدير CSV','Export CSV'],print:['طباعة / PDF','Print / PDF'],spssCsv:['SPSS: إجابات المرشد (CSV)','SPSS: guide answers (CSV)'],spssAllCsv:['SPSS: بيانات الدراسة الكاملة (CSV)','SPSS: full study dataset (CSV)'],spssAllSps:['SPSS: أوامر الدراسة الكاملة (.sps)','SPSS: full study syntax (.sps)'],chBtn:['فصل النتائج (الجداول الخمسة)','Results chapter (five tables)'],spssSps:['أوامر SPSS (.sps)','SPSS syntax (.sps)'],
 xBuild:['جارٍ تجهيز ملف Excel...','Preparing the Excel file...'],xDone:['تم تجهيز الملف.','File ready.'],xFail:['تعذر تحميل مكتبة Excel. استخدمي CSV أو PDF.','Could not load the Excel library. Use CSV or PDF.'],
 visits:['الزيارات','Visits'],done:['أنهوا الأسئلة','Completed the questions'],rate:['نسبة الإنهاء','Completion rate'],resp:['إجابات مستلمة','Responses received'],
-respRate:['نسبة الإجابات المستلمة من المنهيات','Responses as % of completions'],stops:['ظهرت لهن رسالة توقف','Stop message shown'],refs:['أُحلن للطبيبة','Referred to a doctor'],effN:['إجابات أسئلة الفعالية','Effectiveness answers'],effLink:['مربوطة بنتيجة المرشد تلقائياً','Linked to the guide result automatically'],effSelf:['بإفادة المشاركة (من ذاكرتها)','Self-reported first method'],effProv:['اختارت وسيلتها مقدّمة الخدمة','Method chosen by the provider'],effTop1:['اتفاق الوسيلة الأولى مع الوسيلة المركّبة','Top-1 concordance with fitted method'],hCode:['رمز المتابعة','Follow-up code'],
+respRate:['نسبة الإجابات المستلمة من المنهيات','Responses as % of completions'],stops:['ظهرت لهن رسالة توقف','Stop message shown'],refs:['أُحلن للطبيبة','Referred to a doctor'],effN:['إجابات أسئلة الفعالية','Effectiveness answers'],effLink:['حدّدت موقع الوسيلة في نتيجة الموقع','Located the fitted method in the result'],effSelf:['لم تحدّد موقعها (لا أتذكر)','Position not reported'],effProv:['اختارت وسيلتها مقدّمة الخدمة','Method chosen by the provider'],effTop1:['اتفاق الوسيلة الأولى مع الوسيلة المركّبة','Top-1 concordance with fitted method'],hCode:['رمز المتابعة','Follow-up code'],
 note:['تنبيه: الإجابات التفصيلية تخص من أنهين الأسئلة فقط (عينة ميسّرة)، وليست كل الزائرات.','Note: detailed answers cover only those who finished the questions (a convenience sample), not all visitors.'],
 secSum:['ملخص','Summary'],secDaily:['الزيارات حسب اليوم','Visits by day'],secDist:['توزيع الإجابات','Answer distribution'],secMeth:['الوسائل','Methods'],secLatest:['أحدث الإجابات (حتى 100)','Latest responses (up to 100)'],
 allRows:['كل الصفوف تُصدَّر في Excel وCSV.','All rows are included in the Excel and CSV exports.'],noResp:['لا توجد إجابات بعد.','No responses yet.'],
@@ -244,7 +244,7 @@ function results(r){
  post({type:'resp',lang:lg(),sid:sid,code:code,a:a,top:top,ex:Object.keys(r.excluded||{}).join('|'),stop:(r.stops||[]).length>0,ref:(r.refers||[]).length,open:opened.join('|')});
 }
 /* ---------- لوحة الإدارة ---------- */
-var CSS='<style>#adm{position:fixed;inset:0;z-index:100000;overflow:auto;background:var(--bg,#f1f5f7);color:var(--ink,#12303d);padding:16px;font-family:inherit;line-height:1.6}#adm .bc{background:var(--surface,#fff);border:1px solid var(--line,#d3e0e6);border-radius:14px;padding:14px;margin:12px 0}#adm .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}#adm .kp div{background:var(--soft,#eef6f5);border-radius:12px;padding:10px;text-align:center}#adm .kp b{display:block;font-size:1.6rem}#adm table.bt{border-collapse:collapse;width:100%;font-size:.88rem}#adm .bt th,#adm .bt td{border-bottom:1px solid var(--line,#d3e0e6);padding:6px 8px;text-align:start;vertical-align:top}#adm .bt th{background:var(--soft,#eef6f5)}#adm .bb{height:8px;background:var(--line,#d3e0e6);border-radius:4px;min-width:80px}#adm .bb i{display:block;height:100%;background:var(--accent,#0f766e);border-radius:4px}#adm input{font:inherit;padding:8px;border:1.5px solid var(--line,#d3e0e6);border-radius:10px;background:var(--surface,#fff);color:inherit}#adm .ch svg{max-width:100%;height:auto;display:block;margin:0 auto;border-radius:10px}#adm .ex{display:flex;flex-wrap:wrap;gap:8px;align-items:center}@media print{body>*:not(#adm){display:none!important}#adm{position:static!important;overflow:visible!important}#adm .noprint{display:none!important}}</style>';
+var CSS='<style>#adm table.tt{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;border:1px solid var(--line,#d3e0e6);border-radius:10px;overflow:hidden}#adm table.tt th{background:var(--accent,#0e6f80);color:#fff;padding:9px 10px;text-align:start;font-weight:700}#adm table.tt th:not(:first-child),#adm table.tt td:not(:first-child){text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}#adm table.tt td{padding:7px 10px;border-top:1px solid var(--line,#d3e0e6)}#adm table.tt tbody tr:nth-child(even) td{background:rgba(14,111,128,.045)}#adm table.tt tr.sec td{background:rgba(14,111,128,.14)!important;font-weight:800;text-align:start!important}#adm table.tt td.ind{padding-inline-start:22px}#adm table.tt tr.em td{color:var(--muted,#6b7f88);text-align:center!important;white-space:normal}#adm .thn{position:sticky;top:-16px;z-index:5;display:flex;gap:6px;flex-wrap:wrap;background:var(--bg,#f1f5f7);padding:8px 0;border-bottom:1px solid var(--line,#d3e0e6)}#adm .thn button{padding:6px 12px;font-size:13px;min-height:0}#adm .thh{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}#adm .thh button{padding:5px 10px;font-size:12px;min-height:0}#adm .thx{margin:8px 0 0;font-size:13.5px}@media print{#adm .thn,#adm .thh button{display:none}#adm table.tt tr{break-inside:avoid}#adm table.tt th{background:#eee!important;color:#000!important}}#adm{position:fixed;inset:0;z-index:100000;overflow:auto;background:var(--bg,#f1f5f7);color:var(--ink,#12303d);padding:16px;font-family:inherit;line-height:1.6}#adm .bc{background:var(--surface,#fff);border:1px solid var(--line,#d3e0e6);border-radius:14px;padding:14px;margin:12px 0}#adm .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}#adm .kp div{background:var(--soft,#eef6f5);border-radius:12px;padding:10px;text-align:center}#adm .kp b{display:block;font-size:1.6rem}#adm table.bt{border-collapse:collapse;width:100%;font-size:.88rem}#adm .bt th,#adm .bt td{border-bottom:1px solid var(--line,#d3e0e6);padding:6px 8px;text-align:start;vertical-align:top}#adm .bt th{background:var(--soft,#eef6f5)}#adm .bb{height:8px;background:var(--line,#d3e0e6);border-radius:4px;min-width:80px}#adm .bb i{display:block;height:100%;background:var(--accent,#0f766e);border-radius:4px}#adm input{font:inherit;padding:8px;border:1.5px solid var(--line,#d3e0e6);border-radius:10px;background:var(--surface,#fff);color:inherit}#adm .ch svg{max-width:100%;height:auto;display:block;margin:0 auto;border-radius:10px}#adm .ex{display:flex;flex-wrap:wrap;gap:8px;align-items:center}@media print{body>*:not(#adm){display:none!important}#adm{position:static!important;overflow:visible!important}#adm .noprint{display:none!important}}</style>';
 function chk(){if(location.hash==='#admin')admin()}
 function closeA(){var a=document.getElementById('adm');if(a)a.remove();DATA=null;LAST=null;if(location.hash==='#admin'){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){location.hash=''}}}
 function $i(i){return document.getElementById(i)}
@@ -284,13 +284,10 @@ var R2C={q19:3,q20:4,q21:5,q22:6,q23:7,q24:8,q25:9,q26:10,q28:11,q29:12,q30:13,q
 function p2map(a){var m={};dd(a).forEach(function(r){m[String(r[2])]=r});return m}
 function qv(r,p2,id){var n=+String(id).slice(1);var v;if(n<=18)v=r[2+n];else{var r2=p2&&p2[String(r[2])],c=R2C[id];v=(r2&&c!=null)?r2[c]:''}return v==null?'':v}
 function DCOL(k){return 3+k}
-function effInfo(resp,effs){var bs={},bc={};resp.forEach(function(r){bs[String(r[2])]=r;var c=String(r[26]||'').toUpperCase();if(c)bc[c]=r});
- var MD=window.__MID||[],o={n:0,auto:0,self:0,prov:0,hit:0};
- effs.forEach(function(e){o.n++;var rr=bs[String(e[2])]||bc[String(e[10]||'').toUpperCase()],top=null,src=null;
-  if(rr){var t1=String(rr[21]||'').split('|').filter(Boolean)[0];if(t1){top=t1;src='a'}}
-  if(!top){var s=Number(e[8]);if(s>=1&&s<=MD.length){top=MD[s-1];src='s'}}
-  if(src==='a')o.auto++;else if(src==='s')o.self++;
-  if(top&&Number(e[4])===1){o.prov++;if(MD[Number(e[3])-1]===top)o.hit++}});return o}
+function effInfo(resp,effs){var MD=window.__MID||[],o={n:0,auto:0,self:0,prov:0,hit:0};
+ effs.forEach(function(e){o.n++;var id=MD[Number(e[3])-1],st=MD[Number(e[8])-1],pos=Number(e[11])||0,top=st||(pos===1?id:null);
+  if(pos>=1&&pos<=4)o.auto++;else o.self++;
+  if(top&&Number(e[4])===1){o.prov++;if(id===top)o.hit++}});return o}
 function calc(){
  var f=val('admF'),u=val('admU'),fT=f?new Date(f+'T00:00:00').getTime():0,uT=u?new Date(u+'T23:59:59').getTime():0;
  function ok(x){var y=new Date(x).getTime();if(isNaN(y))return false;if(fT&&y<fT)return false;if(uT&&y>uT)return false;return true}
@@ -322,13 +319,17 @@ function calc(){
   return row}).reverse();
  return{kpi:kpi,daily:daily,dist:dist,meth:meth,head:head,rows:rows,n:resp.length,raw:resp,p2:p2};
 }
+function A2(a,e){return isAr()?a:e}
+function thTbl(o){var sec=function(r){return r.length>1&&r.slice(1).every(function(c){return c===''||c==null})};
+ return'<div style="overflow-x:auto"><table class="tt"><thead><tr>'+o.head.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+o.rows.map(function(r){if(o.empty)return'<tr class="em"><td colspan="'+o.head.length+'">'+E(r[0])+'</td></tr>';if(sec(r))return'<tr class="sec"><td colspan="'+o.head.length+'">'+E(r[0])+'</td></tr>';return'<tr>'+r.map(function(c,i){var t=String(c==null?'':c);return'<td'+(i===0&&/^\s/.test(t)?' class="ind"':'')+'>'+E(t.trim())+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
+function thCard(o){return'<div class="bc" id="th'+o.k+'"><div class="thh"><h3 style="margin:0">'+E(o.title)+'</h3>'+(o.empty?'':'<button class="ghost noprint" data-cp="'+o.k+'">'+E(A2('نسخ الجدول','Copy table'))+'</button>')+'</div>'+thTbl(o)+(o.txt?'<p class="thx"><b>'+E(A2('يتضح من الجدول: ','As shown in the table: '))+'</b>'+E(o.txt)+'</p>':'')+(o.note?'<p class="hint">'+E(o.note)+'</p>':'')+'</div>'}
 function tbl(h,rows){return'<div style="overflow-x:auto"><table class="bt"><thead><tr>'+h.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return'<tr>'+r.map(function(c){return'<td>'+E(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
 function shell(kp){
- $i('admOut').innerHTML='<div class="bc noprint"><div class="ex"><label>'+E(t('from'))+' <input type="date" id="admF"></label><label>'+E(t('to'))+' <input type="date" id="admU"></label></div><p class="hint">'+E(t('dateHint'))+'</p><div class="ex"><button id="exX">'+E(t('xlsx'))+'</button><button id="exC" class="ghost">'+E(t('csv'))+'</button><button id="exP" class="ghost">'+E(t('print'))+'</button></div><div class="ex" style="margin-top:8px"><button id="exS">'+E(t('spssCsv'))+'</button><button id="exY" class="ghost">'+E(t('spssSps'))+'</button><button id="exR">'+E(t('resBtn'))+'</button></div><p id="exM" class="hint"></p></div><div id="admRep"></div>';
+ $i('admOut').innerHTML='<div class="bc noprint"><div class="ex"><label>'+E(t('from'))+' <input type="date" id="admF"></label><label>'+E(t('to'))+' <input type="date" id="admU"></label></div><p class="hint">'+E(t('dateHint'))+'</p><div class="ex"><button id="exX">'+E(t('xlsx'))+'</button><button id="exC" class="ghost">'+E(t('csv'))+'</button><button id="exP" class="ghost">'+E(t('print'))+'</button></div><div class="ex" style="margin-top:8px"><button id="exA">'+E(t('spssAllCsv'))+'</button><button id="exAs" class="ghost">'+E(t('spssAllSps'))+'</button><button id="exR">'+E(t('chBtn'))+'</button></div><div class="ex" style="margin-top:8px"><button id="exS" class="ghost">'+E(t('spssCsv'))+'</button><button id="exY" class="ghost">'+E(t('spssSps'))+'</button></div><p id="exM" class="hint"></p></div><div id="admRep"></div>';
  if(kp){$i('admF').value=kp.f||'';$i('admU').value=kp.u||''}
  $i('admF').onchange=$i('admU').onchange=draw;
- $i('admRep').onclick=function(e){var b=e.target.closest&&e.target.closest('[data-dl]');if(!b)return;var k=b.getAttribute('data-dl');if(k==='all'){dlAll();return}var c=CH[+k];if(c)png(c.svg,c.w,c.h,'baseera-chart-'+c.name+'.png')};
- $i('exC').onclick=csv;$i('exS').onclick=spssCsv;$i('exY').onclick=spssSps;$i('exR').onclick=openRes;$i('exX').onclick=xlsx;$i('exP').onclick=function(){window.print()};
+ $i('admRep').onclick=function(e){var g=e.target.closest&&e.target.closest('[data-go]');if(g){var el=$i(g.getAttribute('data-go'));if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});return}var cp=e.target.closest&&e.target.closest('[data-cp]');if(cp){var o=TH.filter(function(x){return x.k===+cp.getAttribute('data-cp')})[0];if(o){var tsv=[o.head].concat(o.rows).map(function(r){return r.map(function(c){return String(c==null?'':c).trim()}).join('\t')}).join('\n');var done=function(){cp.textContent=A2('تم النسخ ✓','Copied ✓');setTimeout(function(){cp.textContent=A2('نسخ الجدول','Copy table')},1500)};try{navigator.clipboard.writeText(tsv).then(done,function(){})}catch(x){}}return}var b=e.target.closest&&e.target.closest('[data-dl]');if(!b)return;var k=b.getAttribute('data-dl');if(k==='all'){dlAll();return}var c=CH[+k];if(c)png(c.svg,c.w,c.h,'baseera-chart-'+c.name+'.png')};
+ $i('exC').onclick=csv;$i('exS').onclick=spssCsv;$i('exY').onclick=spssSps;$i('exR').onclick=openChapter;$i('exA').onclick=spssAllCsv;$i('exAs').onclick=spssAllSps;$i('exX').onclick=xlsx;$i('exP').onclick=function(){window.print()};
  draw();
 }
 function draw(){
@@ -376,14 +377,14 @@ function thData(){
  function flt(a){return dd(a).filter(function(r){return r&&String(r[2]||'')!==''&&ok(r[0])})}
  var nd=(window.__DEM||[]).length,tot=window.__EVN||0,ns=nd,need=3+ns+tot+1;
  var ev=flt(DATA.eval).filter(function(r){return r.length>=need}).map(function(r){var d=[],a=[];for(var k=0;k<nd;k++){var v=Number(r[DCOL(k)]);d.push(r[DCOL(k)]===''||r[DCOL(k)]==null||isNaN(v)||v===0&&!(window.__DEM[k].t==='num')?null:v)}
-  for(var i=0;i<tot;i++){var w=Number(r[3+ns+i]);a.push(r[3+ns+i]===''||isNaN(w)||w<1||w>3?null:w)}var o=Number(r[3+ns+tot]);return{sid:String(r[2]),d:d,a:a,o:(o>=1&&o<=3?o:null)}});
- return{ev:ev,r2:flt(DATA.resp2),ob:flt(DATA.obs),rs:flt(DATA.resp),ef:flt(DATA.eff),bf:flt(DATA.bf)}}
+  for(var i=0;i<tot;i++){var w=Number(r[3+ns+i]);a.push(r[3+ns+i]===''||isNaN(w)||w<1||w>3?null:w)}var o=Number(r[3+ns+tot]);return{sid:String(r[2]),t:r[0],d:d,a:a,o:(o>=1&&o<=3?o:null)}});
+ return{ev:ev,r2:flt(DATA.resp2),ob:flt(DATA.obs),rs:flt(DATA.resp),ef:flt(DATA.eff),ch:flt(DATA.ch)}}
 function mgrp(id){var G={cu:'iud',lng:'iud',implant:'imp',dmpa:'inj',cic:'inj',pop:'pil',coc:'pil',patch:'pr',ring:'pr',condom_male:'bar',condom_female:'bar',diaphragm:'bar',spermicide:'bar',fab:'nat',lam:'nat',withdrawal:'nat',tubal:'perm',vasectomy:'perm',ec:'ec'};return G[id]||null}
 function gname(g){var A=function(a,e){return isAr()?a:e};return{iud:A('اللولب','IUD'),imp:A('الغرسة','Implant'),inj:A('الحقن','Injectables'),pil:A('الحبوب','Pills'),pr:A('اللصقة والحلقة','Patch and ring'),bar:A('الواقيات والحواجز','Barrier methods'),nat:A('الطرق الطبيعية','Natural methods'),perm:A('الطرق الدائمة','Permanent methods'),ec:A('وسائل الطوارئ','Emergency methods')}[g]||g}
 function thesis(){
  TH=[];var A=function(a,e){return isAr()?a:e};
  if(!DATA)return'';var D=thData(),EV=D.ev,n=EV.length,DM=window.__DEM||[],EQ=window.__EVQ||[],LB=(window.__EVL?window.__EVL.lab[isAr()?0:1]:[]),OV=(window.__EVL?window.__EVL.ovl[isAr()?0:1]:[]);
- var tn=0,SK=/الخصائص الاجتماعية|الخصائص التوليدية|تقييم المشاركات للموقع|مدى توافق ترشيح|المعوّقات|Socio-demographic|Obstetric|evaluation of the website|Agreement of the website|Barriers/;function add(title,head,rows,note){if(!SK.test(title))return;var ci=-1;head.forEach(function(h,i){if(/95% CI|فاصل الثقة/.test(h))ci=i});if(ci>=0){head=head.filter(function(_,i){return i!==ci});rows=rows.map(function(r){return r.filter(function(_,i){return i!==ci})})}tn++;TH.push({title:title,head:head,rows:rows,note:note||''})}
+ var tn=0,SK=/الخصائص الاجتماعية|التاريخ الإنجابي|فعالية مرشد|مستوى سهولة|التحديات المدركة|Socio-demographic|Reproductive and Gynecological|Effectiveness of the Family|Usability and Satisfaction|Perceived Challenges/;function add(title,head,rows,note){if(!SK.test(title))return;var ci=-1;head.forEach(function(h,i){if(/95% CI|فاصل الثقة/.test(h))ci=i});if(ci>=0){head=head.filter(function(_,i){return i!==ci});rows=rows.map(function(r){return r.filter(function(_,i){return i!==ci})})}tn++;TH.push({title:title,head:head,rows:rows,note:note||''})}
  function di(k){for(var i=0;i<DM.length;i++)if(DM[i].k===k)return i;return-1}
  function catRows(vals,q){var N=vals.filter(function(v){return v!=null}).length,rows=[];q.o.forEach(function(o,i){var c=vals.filter(function(v){return v===i+1}).length;rows.push([A(o[0],o[1]),np(c,N)])});return rows}
  function numRows(vals,cuts){var v=vals.filter(function(x){return x!=null}),N=v.length,rows=[[A('المتوسط ± الانحراف المعياري','Mean ± SD'),msd(v)],[A('أدنى – أعلى قيمة','Min – Max'),N?Math.min.apply(null,v)+' – '+Math.max.apply(null,v):'-']];
@@ -393,9 +394,8 @@ function thesis(){
  var ia=di('age'),ik=di('kids');
  if(ia>=0)sec(A('العمر (سنة)','Age (years)'),numRows(EV.map(function(e){return e.d[ia]}),[[A('أقل من 20','Under 20'),function(x){return x<20}],[A('20 – 29','20 – 29'),function(x){return x>=20&&x<30}],[A('30 – 39','30 – 39'),function(x){return x>=30&&x<40}],[A('40 فأكثر','40 and over'),function(x){return x>=40}]]));
  ['edu','res','mar','job'].forEach(function(k){var i=di(k);if(i>=0)sec(A(DM[i].q[0],DM[i].q[1]),catRows(EV.map(function(e){return e.d[i]}),DM[i]))});
- if(ik>=0)sec(A('عدد الأطفال الأحياء','Number of living children'),numRows(EV.map(function(e){return e.d[ik]}),[[A('لا يوجد','None'),function(x){return x===0}],[A('1 – 2','1 – 2'),function(x){return x>=1&&x<=2}],[A('3 فأكثر','3 or more'),function(x){return x>=3}]]));
- ['dev','net'].forEach(function(k){var i=di(k);if(i>=0)sec(A(DM[i].q[0],DM[i].q[1]),catRows(EV.map(function(e){return e.d[i]}),DM[i]))});
- add(A('الخصائص الاجتماعية والديموغرافية للمشاركات (ن = '+n+')','Socio-demographic characteristics of participants (n = '+n+')'),[A('المتغير','Variable'),A('العدد (%) أو المتوسط','n (%) or mean')],r1);
+  ['dev','net'].forEach(function(k){var i=di(k);if(i>=0)sec(A(DM[i].q[0],DM[i].q[1]),catRows(EV.map(function(e){return e.d[i]}),DM[i]))});
+ add(A('الخصائص الاجتماعية والديموغرافية للمشاركات (ن = '+n+')','Socio-demographic Characteristics of the Participants (n = '+n+')'),[A('المتغير','Variable'),A('العدد (%) أو المتوسط','n (%) or mean')],r1);
  /* T2 */
  var OB=D.ob,r2=[];function ob(i){return OB.map(function(r){var v=Number(r[i]);return r[i]===''||r[i]==null||isNaN(v)?null:v}).filter(function(v){return v!=null})}
  function osec(t0,a){r2.push([t0,msd(a)])}
@@ -406,16 +406,21 @@ function thesis(){
  r2.push([A('أسباب التوقف عن الوسيلة السابقة (يمكن اختيار أكثر من سبب)','Reasons for stopping a previous method (multiple answers)'),'']);
  var sn=OB.filter(function(r){return String(r[10]||'')!==''}).length;Object.keys(SR).forEach(function(k){r2.push(['   '+SR[k],np(OB.filter(function(r){return String(r[10]||'').split('|').indexOf(k)>=0}).length,sn)])});
  var P2={};D.r2.forEach(function(r){P2[String(r[2])]=r});var pu=D.r2.map(function(r){return String(r[9]||'')}).filter(Boolean);
- r2.push([A('استخدام وسيلة سابقاً (من إجابات مرشد الاختيار)','Previous method use (from the Method Finder)'),'']);
- [['no',A('لم تستخدم وسيلة','Never used')],['current',A('تستخدم وسيلة حالياً','Current user')],['past',A('استخدمت وسيلة في السابق فقط','Past user only')]].forEach(function(x){r2.push(['   '+x[1],np(pu.filter(function(v){return v===x[0]}).length,pu.length)])});
- add(A('الخصائص التوليدية والإنجابية للمشاركات (ن = '+OB.length+')','Obstetric and reproductive characteristics (n = '+OB.length+')'),[A('المتغير','Variable'),A('المتوسط ± الانحراف المعياري أو العدد (%)','Mean ± SD or n (%)')],r2);
+ var ipv=di('prev'),EVB={};EV.forEach(function(e){EVB[e.sid]=e});
+ if(ipv>=0){var pv=OB.map(function(r){return EVB[String(r[2])]}).filter(function(e){return e&&e.d[ipv]!=null}).map(function(e){return e.d[ipv]});
+  r2.push([A('استخدام وسيلة لتنظيم الأسرة سابقاً','Previous use of a family planning method'),'']);
+  DM[ipv].o.forEach(function(o,i){r2.push(['   '+A(o[0],o[1]),np(pv.filter(function(v){return v===i+1}).length,pv.length)])})}
+ add(A('التاريخ الإنجابي والنسائي للمشاركات (ن = '+OB.length+')','Reproductive and Gynecological History (n = '+OB.length+')'),[A('المتغير','Variable'),A('المتوسط ± الانحراف المعياري أو العدد (%)','Mean ± SD or n (%)')],r2);
  /* T3 */
  var r3=[],k=0,dom=[],ND=EQ.length;
  EQ.forEach(function(g,gi){var idx=[];r3.push([A(g.d[0],g.d[1]),'','','','','']);g.i.forEach(function(it,ii){var col=EV.map(function(e){return e.a[k]}).filter(function(v){return v!=null}),N=col.length,row=[(k+1)+'. '+A(it[0],it[1])];
    for(var L=1;L<=3;L++)row.push(np(col.filter(function(v){return v===L}).length,N));row.push(msd(col));row.push(N?np(col.filter(function(v){return v===3}).length,N):'-');r3.push(row);idx.push(k);k++});
   dom.push(idx);var dm=EV.map(function(e){var v=idx.map(function(i){return e.a[i]});return v.every(function(x){return x!=null})?mean(v):null}).filter(function(v){return v!=null});
   r3.push([A('الدرجة الكلية للمحور (المتوسط ± الانحراف)','Domain score (mean ± SD)'),'','','',msd(dm),''])});
- add(A('تقييم المشاركات للموقع حسب العبارات (ن = '+n+')','Participants’ evaluation of the website by statement (n = '+n+')'),[A('العبارة','Statement')].concat(LB).concat([A('المتوسط ± الانحراف','Mean ± SD'),A('نسبة الموافقة (أوافق)','Agreement (agree)')]),r3,A('المقياس من 1 (لا أوافق) إلى 3 (أوافق).','Scale from 1 (disagree) to 3 (agree).'));
+ var ovv=EV.map(function(e){return e.o}).filter(function(v){return v!=null});
+ r3.push([A('التقييم العام للموقع (الأعمدة بالترتيب: '+OV.join(' | ')+')','Overall rating of the website (columns in order: '+OV.join(' | ')+')')].concat([1,2,3].map(function(L){return np(ovv.filter(function(v){return v===L}).length,ovv.length)})).concat([msd(ovv),'-']));
+ var al=alpha(EV.map(function(e){return e.a}));
+ add(A('مستوى سهولة الاستخدام والرضا (ن = '+n+')','Usability and Satisfaction Level (n = '+n+')'),[A('العبارة','Statement')].concat(LB).concat([A('المتوسط ± الانحراف','Mean ± SD'),A('نسبة الموافقة (أوافق)','Agreement (agree)')]),r3,A('المقياس من 1 (لا أوافق) إلى 3 (أوافق). معامل ألفا كرونباخ للمقياس = '+f2(al)+'.','Scale from 1 (disagree) to 3 (agree). Cronbach’s alpha for the scale = '+f2(al)+'.'));
  /* T4 */
  var r4=[];function light(p){return p>=80?A('أخضر','Green'):p>=60?A('أصفر','Amber'):A('أحمر','Red')}
  function dstat(name,idx){var cells=[],mat=[];EV.forEach(function(e){idx.forEach(function(i){if(e.a[i]!=null)cells.push(e.a[i])});mat.push(idx.map(function(i){return e.a[i]}))});
@@ -435,26 +440,34 @@ function thesis(){
  /* effectiveness tables */
  var RS={},RSC={};D.rs.forEach(function(r){RS[String(r[2])]=r;var cd=String(r[26]||'').toUpperCase();if(cd)RSC[cd]=r});var EVBY={};EV.forEach(function(e){EVBY[e.sid]=e});
  var NRK=['tubal','vasectomy','ec'];
- var EF=D.ef.map(function(r){var m=Number(r[3]),id=(window.__MID||[])[m-1],rs=RS[String(r[2])]||RSC[String(r[10]||'').toUpperCase()],st=(window.__MID||[])[Number(r[8])-1],src='auto';if(!id)return null;if(!rs){if(!st)return null;src='self'}
-  var top=rs?String(rs[21]||'').split('|').filter(Boolean):[st],ex=rs?String(rs[22]||'').split('|').filter(Boolean):[],cat;
-  if(NRK.indexOf(id)>=0)cat='nr';else if(top[0]===id)cat='top1';else if(src==='self')cat='oth';else if(top.slice(0,3).indexOf(id)>=0)cat='top3';else if(ex.indexOf(id)>=0)cat='exc';else cat='low';
-  var v=function(x){x=Number(x);return x>0?x:null};
+ var EF=D.ef.map(function(r){var MDl=window.__MID||[],id=MDl[Number(r[3])-1],st=MDl[Number(r[8])-1],pos=Number(r[11])||0,cat,src='auto';if(!id)return null;
+  if(NRK.indexOf(id)>=0)cat='nr';else if(st===id||pos===1)cat='top1';else if(pos===2)cat='top3';else if(pos===3)cat='low';else if(pos===4)cat='exc';else if(st){cat='oth';src='self'}else return null;
+  var top=st?[st]:(pos===1?[id]:[]),v=function(x){x=Number(x);return x>0?x:null};
   return{sid:String(r[2]),id:id,top:top,cat:cat,src:src,st:st||null,nf:v(r[9]),ch:v(r[4]),sat:v(r[5]),cont:v(r[6]),pl:v(r[7]),ev:EVBY[String(r[2])]}}).filter(Boolean);
  var PR=EF.filter(function(x){return x.ch===1}),PRK=PR.filter(function(x){return x.cat!=='nr'}),PRA=PRK.filter(function(x){return x.src==='auto'});
  if(EF.length){
   var cnt=function(a,c){return a.filter(function(x){return c.indexOf(x.cat)>=0}).length},nk=PRK.length,na=PRA.length,nfa=PRK.filter(function(x){return x.nf}),nN=nfa.length,nfc=function(a,v){return a.filter(function(x){return v.indexOf(x.nf)>=0}).length},exn=PRA.filter(function(x){return x.cat==='exc'&&x.nf}),nE=exn.length;
-  add(A('مدى توافق ترشيح الموقع مع الوسيلة التي اختارتها المرأة مع مقدّمة الخدمة الصحية (ن = '+PRK.length+')','Agreement of the website’s recommendation with the method chosen with the health care provider (n = '+PRK.length+')'),[A('المقياس','Measure'),A('العدد (%)','n (%)'),A('فاصل الثقة 95%','95% CI')],[
-   [A('الوسيلة الفعلية هي الأولى المرشّحة (التوافق الأساسي)','Actual method is the first recommended (primary agreement)'),np(cnt(PRK,['top1']),nk),wil(cnt(PRK,['top1']),nk)],
-   [A('الوسيلة الفعلية ضمن أعلى ثلاث وسائل مرشّحة','Actual method is within the top three recommended'),np(cnt(PRA,['top1','top3']),na),wil(cnt(PRA,['top1','top3']),na)],
-   [A('مسموحة طبياً لكنها أقل ترتيباً','Medically allowed but ranked lower'),np(cnt(PRA,['low']),na),wil(cnt(PRA,['low']),na)],
-   [A('استبعدها الموقع لعدم مناسبتها لحالة المرأة الصحية','Excluded by the website as unsuitable for her health status'),np(cnt(PRA,['exc']),na),wil(cnt(PRA,['exc']),na)],
-   [A('وسائل خارج الترتيب (دائمة أو طوارئ) — غير محسوبة في النسب','Methods outside the ranking (permanent or emergency) — not counted above'),String(PR.length-PRK.length),'-'],
-   [A('الحالات المحلَّلة: بالسجل التلقائي لنتيجة المرشد / بإجابة المرأة عن الوسيلة الأولى','Cases analysed: by the automatic record of the guide result / by the woman’s own answer'),na+' / '+(nk-na),'-'],
-   [A('تقدير مقدّمة الخدمة الصحية: الوسيلة الفعلية مناسبة طبياً (ن = '+nN+')','Health care provider assessment: the actual method is medically suitable (n = '+nN+')'),np(nfc(nfa,[1]),nN),wil(nfc(nfa,[1]),nN)],
-   [A('تقدير مقدّمة الخدمة الصحية: مناسبة مع بعض التحفظ','Health care provider assessment: suitable with some reservations'),np(nfc(nfa,[2]),nN),wil(nfc(nfa,[2]),nN)],
-   [A('تقدير مقدّمة الخدمة الصحية: غير مناسبة','Health care provider assessment: not suitable'),np(nfc(nfa,[3]),nN),wil(nfc(nfa,[3]),nN)],
-   [A('من استبعد الموقع وسيلتها ورأت مقدّمة الخدمة الصحية أنها مناسبة أو مناسبة مع تحفظ (ن = '+nE+')','Excluded by the website, yet judged suitable or suitable with reservations by the health care provider (n = '+nE+')'),np(nfc(exn,[1,2]),nE),wil(nfc(exn,[1,2]),nE)]],
-   A('السجل التلقائي لنتيجة المرشد هو المصدر الأساسي، وعند غيابه تُستخدم إجابة المرأة عن الوسيلة الأولى، وتدخل هذه الحالات في التوافق الأساسي فقط. تشمل المحللات فقط من اختيرت وسيلتها بواسطة مقدّمة الخدمة الصحية بعد الفحص والشرح. عدم التوافق لا يعني خطأ الموقع بالضرورة؛ وتُراجَع حالات «الاستبعاد» فرداً فرداً مع الطبيبة المشرفة.','The automatic record of the guide result is the primary source; when it is missing, the woman’s own answer about the first method is used, and those cases enter the primary agreement only. Includes only women whose method was chosen by the health care provider after examination and counselling. Disagreement does not necessarily mean the website is wrong; “excluded” cases are reviewed one by one with the supervising doctor.'));
+  var pc=function(c,N){return(N?(Math.round(c/N*1000)/10).toFixed(1):'0.0')+'%'},SEC=function(t0){return[t0,'','']},R3=function(l,c,N){return[l,String(c),pc(c,N)]},c1=cnt(PRK,['top1']),ex1=cnt(PRA,['exc']),exu=exn.filter(function(x){return x.nf===3}).length,exs=nfc(exn,[1,2]),sf=PRK.filter(function(x){return x.src==='self'}).length,npr=PR.length-PRK.length;
+  add(A('فعالية مرشد تنظيم الأسرة: نسبة التوافق مع الوسيلة المركّبة (ن = '+nk+')','Effectiveness of the Family Planning Navigator (Concordance Rate) (n = '+nk+')'),[A('البيان','Measure'),A('التكرار (ن)','Frequency (n)'),A('النسبة (%)','Percentage (%)')],[
+   SEC(A('أولاً: التوافق مع الوسيلة الأولى المرشّحة (ن = '+nk+')','1. Concordance with the top-recommended method (n = '+nk+')')),
+   R3(A('متوافقة: الوسيلة الفعلية هي الأولى المرشّحة','Matched: the actual method is the top-recommended method'),c1,nk),
+   R3(A('غير متوافقة: الوسيلة الفعلية مختلفة','Mismatched: the actual method is different'),nk-c1,nk),
+   R3(A('المجموع','Total'),nk,nk)].concat(na?[
+   SEC(A('ثانياً: استبعاد الموقع للوسيلة المركّبة (ن = '+na+'، ممن حدّدن موقع الوسيلة في نتيجة الموقع)','2. Fitted method excluded by the platform (n = '+na+', women who located the fitted method in the result)')),
+   R3(A('استبعدها الموقع لعدم مناسبتها طبياً','Excluded by the platform (medically ineligible)'),ex1,na),
+   R3(A('لم يستبعدها الموقع','Not excluded by the platform'),na-ex1,na),
+   SEC(A('ثالثاً: ترتيب الوسيلة المركّبة عند غير المتوافقات (ن = '+(na-cnt(PRA,['top1']))+')','3. Rank of the fitted method among mismatched women (n = '+(na-cnt(PRA,['top1']))+')')),
+   R3(A('ضمن أعلى ثلاث وسائل مرشّحة','Within the top three recommended methods'),cnt(PRA,['top3']),na-cnt(PRA,['top1'])),
+   R3(A('مسموحة طبياً لكن أقل ترتيباً','Medically allowed but ranked lower'),cnt(PRA,['low']),na-cnt(PRA,['top1'])),
+   R3(A('استبعدها الموقع','Excluded by the platform'),ex1,na-cnt(PRA,['top1']))]:[]).concat(nN?[
+   SEC(A('رابعاً: تقدير مقدّمة الخدمة الصحية لمناسبة الوسيلة المركّبة طبياً (ن = '+nN+')','4. Health care provider’s assessment of the fitted method (n = '+nN+')')),
+   R3(A('مناسبة طبياً','Medically suitable'),nfc(nfa,[1]),nN),
+   R3(A('مناسبة مع بعض التحفظ','Suitable with some reservations'),nfc(nfa,[2]),nN),
+   R3(A('غير مناسبة','Medically unsuitable'),nfc(nfa,[3]),nN)]:[]).concat(nE?[
+   SEC(A('خامساً: من استبعد الموقع وسيلتها وقدّرت مقدّمة الخدمة مناسبتها (ن = '+nE+')','5. Methods excluded by the platform, by the provider’s assessment (n = '+nE+')')),
+   R3(A('رأت مقدّمة الخدمة أنها مناسبة أو مناسبة مع تحفظ (قد يدل على تشدد في قواعد الموقع)','Judged suitable or suitable with reservations by the provider (possible over-restriction by the platform)'),exs,nE),
+   R3(A('رأت مقدّمة الخدمة أنها غير مناسبة (استبعاد الموقع في محله)','Judged unsuitable by the provider (the platform’s exclusion was appropriate)'),exu,nE)]:[]),
+   A('تشمل المحللات فقط من اختيرت وسيلتها بواسطة مقدّمة الخدمة الصحية بعد الفحص والشرح (ن = '+nk+'). كل البيانات من استبيان المشاركة وحده دون ربط بجلسة المرشد. النتائج في «ثانياً» و«ثالثاً» تخص من حدّدن موقع الوسيلة المركّبة في نتيجة الموقع (ن = '+na+')، أما من لم يحدّدنه (ن = '+sf+') فتدخل في «أولاً» وحدها. استُبعدت من الحساب '+npr+' حالة وسيلتها دائمة أو طوارئ لأنها خارج الترتيب. عدم التوافق لا يعني خطأ الموقع بالضرورة؛ وتُراجَع حالات الاستبعاد فرداً فرداً مع الطبيبة المشرفة.','Includes only women whose method was chosen by the health care provider after examination and counselling (n = '+nk+'). All data come from the participant survey alone, with no link to the guide session. Sections 2 and 3 include women who located the fitted method in the website result (n = '+na+'); women who did not (n = '+sf+') enter section 1 only. '+npr+' women with a permanent or emergency method were excluded because they are outside the ranking. A mismatch does not necessarily mean the platform is wrong; excluded cases are reviewed one by one with the supervising doctor.'));
   var gl=['iud','imp','inj','pil','pr','bar','nat'],gs2=gl.filter(function(g){return PRK.some(function(x){return mgrp(x.id)===g||(x.top[0]&&mgrp(x.top[0])===g)})});
   if(gs2.length>1){var T=gs2.map(function(c){return gs2.map(function(t0){return PRK.filter(function(x){return mgrp(x.id)===c&&x.top[0]&&mgrp(x.top[0])===t0}).length})}),
     r6=gs2.map(function(c,i){var rt=T[i].reduce(function(a,b){return a+b},0),ex=PRK.filter(function(x){return mgrp(x.id)===c&&x.cat==='top1'}).length;return[gname(c)].concat(T[i].map(String)).concat([String(rt),np(ex,rt)])});
@@ -482,16 +495,31 @@ function thesis(){
   r10.push([A('تنوي الاستمرار في استخدام الوسيلة','Intends to continue using the method'),np(ca.filter(function(v){return v===1}).length,ca.length),np(cb.filter(function(v){return v===1}).length,cb.length),cc?pf(cc.p):'-']);
   add(A('الرضا والنية في الاستمرار حسب توافق الوسيلة الأولى المرشّحة','Satisfaction and intention to continue by agreement with the first recommended method'),[A('المتغير','Variable'),A('متوافقة (ن = '+CO.length+')','Agreement (n = '+CO.length+')'),A('غير متوافقة (ن = '+NC.length+')','No agreement (n = '+NC.length+')'),A('قيمة p','p value')],r10);
  }
- var BFR=D.bf||[];
- if(BFR.length){var NB=BFR.length,BO=window.__BFO||{b:[],f:[]},r5=[];
-  var sect=function(t0,key,col){r5.push([t0,'']);BO[key].forEach(function(o){var c=BFR.filter(function(r){return String(r[col]||'').split('|').indexOf(o[0])>=0}).length;r5.push(['   '+A(o[1],o[2]),np(c,NB)])})};
-  sect(A('المعوّقات المدركة (يمكن اختيار أكثر من إجابة)','Perceived barriers (multiple answers allowed)'),'b',3);
-  sect(A('الميسّرات المدركة (يمكن اختيار أكثر من إجابة)','Perceived facilitators (multiple answers allowed)'),'f',4);
-  add(A('المعوّقات والميسّرات المدركة لاستخدام الموقع (ن = '+NB+')','Perceived barriers and facilitators of using the platform (n = '+NB+')'),[A('البند','Item'),A('العدد (%)','n (%)')],r5,A('النسب محسوبة من عدد المشاركات اللواتي أجبن عن هذين السؤالين.','Percentages are of the participants who answered these two questions.'))}
- var ORD=[/الخصائص الاجتماعية|Socio-demographic/,/الخصائص التوليدية|Obstetric/,/مدى توافق ترشيح|Agreement of the website/,/تقييم المشاركات للموقع|evaluation of the website/,/المعوّقات|Barriers/],oi=function(o){for(var i=0;i<ORD.length;i++)if(ORD[i].test(o.title))return i;return 9};
- TH.sort(function(a,b){return oi(a)-oi(b)});TH.forEach(function(o,i){o.title=A('جدول ('+(i+1)+'): ','Table ('+(i+1)+'): ')+o.title});
+ var CHR=D.ch||[],CHQ=window.__CHQ||[];
+ if(CHR.length){var NC=CHR.length,r5=[],k5=0;
+  CHQ.forEach(function(g){r5.push([A(g.d[0],g.d[1]),'','','','','','']);g.i.forEach(function(it){var col=CHR.map(function(r){var v=Number(r[3+k5]);return v>=1&&v<=3?v:null}).filter(function(v){return v!=null}),N=col.length,row=[(k5+1)+'. '+A(it[0],it[1])];
+    [3,2,1].forEach(function(L){var c=col.filter(function(v){return v===L}).length;row.push(String(c));row.push(N?(Math.round(c/N*1000)/10).toFixed(1)+'%':'0.0%')});r5.push(row);k5++})});
+  add(A('التحديات المدركة لاستخدام المنصة (ن = '+NC+')','Perceived Challenges of Using the Platform (n = '+NC+')'),[A('العبارة','Statement'),A('أوافق (ن)','Agree (n)'),A('أوافق (%)','Agree (%)'),A('محايدة (ن)','Neutral (n)'),A('محايدة (%)','Neutral (%)'),A('لا أوافق (ن)','Disagree (n)'),A('لا أوافق (%)','Disagree (%)')],r5,A('العبارات صيغت سلبياً؛ فالموافقة تعني وجود التحدي. النسب محسوبة من عدد من أجبن عن كل عبارة.','Statements are negatively worded; agreement indicates the presence of the challenge. Percentages are of those who answered each statement.'))}
+ var TXT=[];
+ try{var ia2=di('age'),ages=ia2>=0?EV.map(function(e){return e.d[ia2]}).filter(function(v){return v!=null}):[];
+  TXT[0]=A('شملت الدراسة '+n+' مشاركة، وبلغ متوسط أعمارهن '+msd(ages)+' سنة.','The study included '+n+' participants, and their mean age was '+msd(ages)+' years.');
+  var ob1=function(c){return OB.map(function(r){return r[c]===''||r[c]==null?NaN:Number(r[c])}).filter(function(v){return isFinite(v)})};
+  TXT[1]=A('بلغ متوسط عدد مرات الحمل '+msd(ob1(3))+'، وعدد مرات الولادة '+msd(ob1(4))+'، وعدد مرات الإجهاض '+msd(ob1(5))+'، وعدد الأطفال الأحياء '+msd(ob1(6))+' (ن = '+OB.length+').','The mean number of pregnancies was '+msd(ob1(3))+', deliveries '+msd(ob1(4))+', abortions '+msd(ob1(5))+', and living children '+msd(ob1(6))+' (n = '+OB.length+').');
+  if(typeof PRK!=='undefined'&&PRK.length){var c1=PRK.filter(function(x){return x.cat==='top1'}).length,ce=PRA.filter(function(x){return x.cat==='exc'}).length;
+   TXT[2]=A('تطابقت الوسيلة الأولى المرشّحة من الموقع مع الوسيلة المركّبة فعلياً لدى '+np(c1,PRK.length)+' من النساء',
+    'The first method recommended by the Navigator matched the method actually fitted in '+np(c1,PRK.length)+' of the women')+(PRA.length?A('، بينما استبعد الموقع الوسيلة المركّبة لدى '+np(ce,PRA.length)+'.',', while the fitted method had been excluded by the platform in '+np(ce,PRA.length)+'.'):'.')}
+  var tot=EV.map(function(e){return e.a.every(function(x){return x!=null})?mean(e.a):null}).filter(function(v){return v!=null});
+  TXT[3]=A('بلغ متوسط الدرجة الكلية لتقييم الموقع '+msd(tot)+' من 3 (ن = '+tot.length+').','The mean total score of the website evaluation was '+msd(tot)+' out of 3 (n = '+tot.length+').');
+  if(CHR.length){var best=null,kk=0;CHQ.forEach(function(g){g.i.forEach(function(it){var col=CHR.map(function(r){var v=Number(r[3+kk]);return v>=1&&v<=3?v:null}).filter(function(v){return v!=null}),c=col.filter(function(v){return v===3}).length;if(col.length&&(!best||c/col.length>best[0]))best=[c/col.length,A(it[0],it[1]),np(c,col.length)];kk++})});
+   if(best)TXT[4]=A('كان أكثر التحديات موافقةً: «'+best[1]+'» ('+best[2]+').','The most frequently endorsed challenge was “'+best[1]+'” ('+best[2]+').')}
+ }catch(x){}
+ var ORD=[/الخصائص الاجتماعية|Socio-demographic/,/التاريخ الإنجابي|Reproductive and Gynecological/,/فعالية مرشد|Effectiveness of the Family/,/مستوى سهولة|Usability and Satisfaction/,/التحديات المدركة|Perceived Challenges/],oi=function(o){for(var i=0;i<ORD.length;i++)if(ORD[i].test(o.title))return i;return 9};
+ var PN=[A('الخصائص الاجتماعية والديموغرافية للمشاركات','Socio-demographic Characteristics of the Participants'),A('التاريخ الإنجابي والنسائي للمشاركات','Reproductive and Gynecological History'),A('فعالية مرشد تنظيم الأسرة: نسبة التوافق مع الوسيلة المركّبة','Effectiveness of the Family Planning Navigator (Concordance Rate)'),A('مستوى سهولة الاستخدام والرضا','Usability and Satisfaction Level'),A('التحديات المدركة لاستخدام المنصة','Perceived Challenges of Using the Platform')],PH=[A('لم تصل بعد أي تقييمات من الاستبيان.','No survey evaluations have been received yet.'),A('لم تصل بعد أي إجابات عن الخصائص التوليدية.','No obstetric answers have been received yet.'),A('لم تصل بعد إجابات عن الوسيلة المركّبة مربوطة بنتيجة المرشد.','No answers about the fitted method linked to a guide result have been received yet.'),A('لم تصل بعد أي تقييمات من الاستبيان.','No survey evaluations have been received yet.'),A('لم تصل بعد إجابات عن التحديات المدركة.','No perceived-challenges answers have been received yet.')];
+ for(var pi=0;pi<5;pi++){(function(pi){if(!TH.some(function(o){return oi(o)===pi}))TH.push({title:PN[pi],head:[A('الحالة','Status')],rows:[[PH[pi]]],note:'',empty:1})})(pi)}
+ TH.sort(function(a,b){return oi(a)-oi(b)});TH.forEach(function(o,i){o.k=oi(o);o.txt=o.empty?'':(TXT[o.k]||'');o.title=A('جدول ('+(o.k+1)+'): ','Table ('+(o.k+1)+'): ')+o.title});
  var h='<div class="bc" id="thBox"><h3 style="margin-top:0">'+E(A('جداول الرسالة','Thesis tables'))+'</h3><p class="hint">'+E(A('تُحسب هذه الجداول مباشرة من بيانات التقييم ومرشد الاختيار والبطاقة البحثية (تتأثر بمرشح التاريخ أعلاه). عدد التقييمات المكتملة: '+n+'.','These tables are computed from the evaluation, Method Finder and research-card data (affected by the date filter above). Completed evaluations: '+n+'.'))+'</p><div class="ex noprint"><button id="thW">'+E(A('تنزيل الجداول (Word)','Download tables (Word)'))+'</button></div></div>';
- TH.forEach(function(o){h+='<div class="bc"><h3 style="margin-top:0">'+E(o.title)+'</h3>'+tbl(o.head,o.rows)+(o.note?'<p class="hint">'+E(o.note)+'</p>':'')+'</div>'});
+ h+='<div class="thn noprint">'+TH.map(function(o){return'<button class="ghost" data-go="th'+o.k+'">'+E(A2('جدول ','Table ')+(o.k+1))+(o.empty?' …':'')+'</button>'}).join('')+'</div>';
+ TH.forEach(function(o){h+=thCard(o)});
  return h}
 function thBind(){var b=$i('thW');if(!b)return;b.onclick=function(){var ar=isAr(),html='<div class="rr" dir="'+(ar?'rtl':'ltr')+'">'+TH.map(function(o){return'<h3>'+E(o.title)+'</h3><table class="rt" border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%"><thead><tr>'+o.head.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+o.rows.map(function(r){return'<tr>'+r.map(function(c){return'<td>'+E(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table>'+(o.note?'<p>'+E(o.note)+'</p>':'')}).join('')+'</div>';
   var doc='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Tables</title><style>@page{size:21cm 29.7cm;margin:2cm}'+(window.REPCSS||'')+'</style></head><body>'+html+'</body></html>';
@@ -663,15 +691,107 @@ function evalDS(){
  var n=0;EQ.forEach(function(g,gi){g.i.forEach(function(it,ii){var k=n++;cols.push({name:'D'+(gi+1)+'_Q'+(ii+1),label:ar?it[0]:it[1],raw:rows.map(function(r){var v=r[3+ns+k];return v===''||v==null?null:Number(v)}),hint:{kind:'lik',scale:ar?g.d[0]:g.d[1],inst:inst,labels:lab,start:1,rev:!!it[2]}})})});
  cols.push({name:'overall',label:ar?'التقييم العام للموقع (1 = ضعيف … 3 = ممتاز)':'Overall rating (1 = poor … 3 = excellent)',raw:rows.map(function(r){var v=r[3+ns+tot];return v===''||v==null?null:Number(v)}),hint:{kind:'num'}});
  return ds0('baseera-evaluations',cols,rows.length)}
+function thTable(o){return'<table class="rt" border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%"><thead><tr>'+o.head.map(function(x){return'<th>'+E(x)+'</th>'}).join('')+'</tr></thead><tbody>'+o.rows.map(function(r){return'<tr>'+r.map(function(c){return'<td>'+E(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table>'}
+function chHtml(){
+ var ar=isAr(),A=function(a,e){return ar?a:e};thesis();
+ var NAMES=[A('الخصائص الاجتماعية والديموغرافية للمشاركات','Socio-demographic Characteristics of the Participants'),A('التاريخ الإنجابي والنسائي للمشاركات','Reproductive and Gynecological History'),A('فعالية مرشد تنظيم الأسرة: نسبة التوافق مع الوسيلة المركّبة','Effectiveness of the Family Planning Navigator (Concordance Rate)'),A('مستوى سهولة الاستخدام والرضا','Usability and Satisfaction Level'),A('التحديات المدركة لاستخدام المنصة','Perceived Challenges of Using the Platform')];
+ var h='<h1 style="text-align:center">'+A('النتائج','RESULTS')+'</h1><p>'+E(A('عُرضت نتائج الدراسة في خمسة جداول رئيسية باستخدام الإحصاء الوصفي (التكرارات والنسب المئوية والمتوسط والانحراف المعياري).','The results of the study are presented in five main tables using descriptive statistics (frequencies, percentages, mean and standard deviation).'))+'</p>';
+ for(var i=0;i<5;i++){var o=null;TH.forEach(function(x){if(x.k===i)o=x});
+  if(o){h+='<h3>'+E(o.title)+'</h3>'+thTable(o)+(o.txt?'<p><b>'+E(A('يتضح من الجدول: ','As shown in the table: '))+'</b>'+E(o.txt)+'</p>':'')+(o.note?'<p style="font-size:10pt">'+E(o.note)+'</p>':'')}
+  else h+='<h3>'+E(A('جدول ('+(i+1)+'): ','Table ('+(i+1)+'): ')+NAMES[i])+'</h3><p><i>'+E(A('لا توجد بيانات كافية بعد لهذا الجدول.','There is not yet enough data for this table.'))+'</i></p>'}
+ return h}
+function openChapter(){
+ if(!DATA)return;var ar=isAr(),old=$i('chOv');if(old)old.remove();
+ var ov=document.createElement('div');ov.id='chOv';ov.setAttribute('dir',ar?'rtl':'ltr');ov.style.cssText='position:fixed;inset:0;z-index:100005;background:#fff;color:#000;overflow:auto;padding:16px';
+ ov.innerHTML='<style>'+(window.REPCSS||'')+'@media print{body>*:not(#chOv){display:none!important}#chOv{position:static!important;overflow:visible!important}.noprint{display:none!important}}</style><div class="ex noprint" style="margin-bottom:12px"><button id="chW">'+E(ar?'تصدير Word':'Export Word')+'</button><button id="chP" class="ghost">'+E(ar?'طباعة / PDF':'Print / PDF')+'</button><button id="chX" class="ghost">'+E(ar?'إغلاق':'Close')+'</button></div><div class="rr" id="chBody">'+chHtml()+'</div>';
+ document.body.appendChild(ov);
+ $i('chX').onclick=function(){ov.remove()};$i('chP').onclick=function(){window.print()};
+ $i('chW').onclick=function(){var doc='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Results</title><style>@page{size:21cm 29.7cm;margin:2cm}'+(window.REPCSS||'')+'</style></head><body><div class="rr" dir="'+(ar?'rtl':'ltr')+'">'+$i('chBody').innerHTML+'</div></body></html>';dl('baseera-results-chapter-'+lg()+'.doc',new Blob(['﻿'+doc],{type:'application/msword'}))}}
+function allDS(){
+ var D=thData(),EV=D.ev,DM=window.__DEM||[],EQ=window.__EVQ||[],MD=window.__MID||[],BO=window.__BFO||{b:[],f:[]},ar=isAr(),A=function(a,e){return ar?a:e};
+ var ms=(typeof KB!=='undefined'&&KB.methods)?KB.methods:[],LB=window.__EVL?window.__EVL.lab[ar?0:1]:[],OVL=window.__EVL?window.__EVL.ovl[ar?0:1]:[];
+ var mv=MD.map(function(id,i){var m=ms.filter(function(x){return x.id===id})[0];return[i+1,vlab(m?(ar?m.ar:m.en):id,55)]});
+ var by={},order=[];function rec(s){if(!by[s]){by[s]={sid:s};order.push(s)}return by[s]}
+ EV.forEach(function(e){rec(e.sid).ev=e});
+ D.ob.forEach(function(r){var q=rec(String(r[2]));q.ob=r;q.t=q.t||r[0]});
+ D.ef.forEach(function(r){var q=rec(String(r[2]));q.ef=r;q.t=q.t||r[0]});
+ D.ch.forEach(function(r){var q=rec(String(r[2]));q.ch=r;q.t=q.t||r[0]});
+ EV.forEach(function(e){by[e.sid].t=by[e.sid].t||e.t});
+ var RS={},RSC={};D.rs.forEach(function(r){RS[String(r[2])]=r;var cd=String(r[26]||'').toUpperCase();if(cd)RSC[cd]=r});
+ var NRK=['tubal','vasectomy','ec'];
+ order.forEach(function(s){var q=by[s],ef=q.ef;q.cat=null;q.top1=null;q.src=null;q.an=0;if(!ef)return;
+  var act=MD[Number(ef[3])-1],st=MD[Number(ef[8])-1],pos=Number(ef[11])||0,c;if(!act)return;
+  if(NRK.indexOf(act)>=0)c=6;else if(st===act||pos===1)c=1;else if(pos>=2&&pos<=4)c=pos;else if(st)c=5;else return;
+  q.cat=c;q.src=(c>=1&&c<=4)?1:2;q.top1=st?MD.indexOf(st)+1:(pos===1?MD.indexOf(act)+1:'');
+  q.an=(Number(ef[4])===1&&q.cat<=5)?1:0});
+ var cols=[];function C(n,l,v,f){cols.push({n:n,l:l,v:v,f:f})}
+ var nv=function(x){x=Number(x);return(x===0||x)&&isFinite(x)?x:''};
+ C('id',A('رقم المشاركة','Participant ID'),null,function(q,i){return i+1});
+ C('date',A('تاريخ المشاركة','Date'),null,function(q){return dkey(q.t)||''});
+ DM.forEach(function(d,k){var lbl=ar?d.q[0]:d.q[1];if(d.t==='num')C(d.k,lbl,null,function(q){return q.ev&&q.ev.d[k]!=null?q.ev.d[k]:''});else C(d.k,lbl,d.o.map(function(o,i){return[i+1,ar?o[0]:o[1]]}),function(q){return q.ev&&q.ev.d[k]!=null?q.ev.d[k]:''})});
+ var lk=[];EQ.forEach(function(g,gi){g.i.forEach(function(it,ii){lk.push([gi,ii])})});
+ lk.forEach(function(p,k){var it=EQ[p[0]].i[p[1]];C('D'+(p[0]+1)+'_Q'+(p[1]+1),vlab(ar?it[0]:it[1],120),LB.map(function(x,i){return[i+1,x]}),function(q){return q.ev&&q.ev.a[k]!=null?q.ev.a[k]:''})});
+ EQ.forEach(function(g,gi){var idx=[];lk.forEach(function(p,k){if(p[0]===gi)idx.push(k)});C('D'+(gi+1),A('متوسط محور: ','Domain mean: ')+(ar?g.d[0]:g.d[1]),null,function(q){if(!q.ev)return'';var v=idx.map(function(k){return q.ev.a[k]});return v.every(function(x){return x!=null})?Math.round(mean(v)*100)/100:''})});
+ C('total',A('الدرجة الكلية للتقييم (متوسط العبارات، من 3)','Total evaluation score (mean of items, of 3)'),null,function(q){if(!q.ev||!q.ev.a.every(function(x){return x!=null}))return'';return Math.round(mean(q.ev.a)*100)/100});
+ C('overall',A('التقييم العام للموقع','Overall rating of the website'),OVL.map(function(x,i){return[i+1,x]}),function(q){return q.ev&&q.ev.o!=null?q.ev.o:''});
+ var ob=function(c){return function(q){return q.ob?nv(q.ob[c]):''}};
+ C('gravida',A('عدد مرات الحمل','Number of pregnancies'),null,ob(3));C('para',A('عدد مرات الولادة','Number of deliveries'),null,ob(4));C('abortions',A('عدد مرات الإجهاض','Number of abortions'),null,ob(5));C('living_children',A('عدد الأطفال الأحياء (البطاقة التوليدية)','Living children (obstetric card)'),null,ob(6));
+ C('cycle_reg',A('انتظام الدورة الشهرية','Menstrual cycle regularity'),[[1,A('منتظمة','Regular')],[2,A('غير منتظمة','Irregular')],[3,A('لا توجد دورة حالياً','No cycle at present')]],function(q){if(!q.ob)return'';return{regular:1,irregular:2,none:3}[String(q.ob[7])]||''});
+ C('menarche_age',A('العمر عند أول دورة (سنة)','Age at menarche (years)'),null,ob(8));C('cycle_days',A('طول الدورة (يوم)','Cycle length (days)'),null,ob(9));
+ var YN=[[0,A('لا','No')],[1,A('نعم','Yes')]];
+ [['side','آثار جانبية','Side effects'],['wish','الرغبة في الحمل','Wish to become pregnant'],['preg','حدوث حمل','Pregnancy'],['access','صعوبة الحصول عليها','Difficult access'],['husband','اعتراض الزوج','Husband’s objection'],['medical','نصيحة طبية','Medical advice'],['other','أخرى','Other']].forEach(function(x){C('stop_'+x[0],A('سبب إيقاف وسيلة سابقة: ','Reason for stopping a previous method: ')+A(x[1],x[2]),YN,function(q){if(!q.ob||String(q.ob[10]||'')==='')return'';return String(q.ob[10]).split('|').indexOf(x[0])>=0?1:0})});
+ var ef=function(c){return function(q){return q.ef?nv(q.ef[c]):''}};
+ C('actual_method',A('الوسيلة المركّبة فعلياً','Method actually fitted'),mv,ef(3));
+ C('chosen_by',A('من اختار الوسيلة','Who chose the method'),[[1,A('مقدّمة الخدمة الصحية','Health care provider')],[2,A('المرأة','The woman')],[3,A('الزوج','Husband')],[4,A('قريبة أو صديقة','Relative or friend')]],ef(4));
+ C('provider_fit',A('تقدير مقدّمة الخدمة لمناسبة الوسيلة طبياً','Provider assessment: medical suitability'),[[1,A('مناسبة','Suitable')],[2,A('مناسبة مع تحفظ','Suitable with reservations')],[3,A('غير مناسبة','Not suitable')]],ef(9));
+ C('site_top1',A('الوسيلة الأولى المرشّحة من الموقع','First method recommended by the platform'),mv,function(q){return q.top1==null?'':q.top1});
+ C('result_pos',A('موقع الوسيلة المركّبة في نتيجة الموقع (إفادة المشاركة)','Position of the fitted method in the website result (self-report)'),[[1,A('هي الأولى','First')],[2,A('ضمن الثلاث الأولى','Within the top three')],[3,A('ظهرت في ترتيب أقل','Ranked lower')],[4,A('ضمن غير المناسبة','Among unsuitable methods')],[5,A('لا أتذكر','Do not remember')]],ef(11));
+ C('conc_cat',A('موقع الوسيلة المركّبة من ترشيح الموقع','Fitted method relative to the platform ranking'),[[1,A('هي الأولى المرشّحة','Same as first recommended')],[2,A('ضمن أعلى ثلاث','Within top three')],[3,A('مسموحة طبياً لكن أقل ترتيباً','Allowed but ranked lower')],[4,A('استبعدها الموقع','Excluded by the platform')],[5,A('غير الأولى (إفادة المشاركة)','Not first (self-reported)')],[6,A('خارج الترتيب (دائمة أو طوارئ)','Outside ranking (permanent or emergency)')]],function(q){return q.cat||''});
+ C('analysis_set',A('ضمن عينة تحليل التوافق (اختارتها مقدّمة الخدمة)','In concordance analysis (chosen by provider)'),YN,function(q){return q.ef?q.an:''});
+ C('match_top1',A('تطابق الوسيلة الأولى المرشّحة مع المركّبة','First recommended = fitted'),YN,function(q){return q.an?(q.cat===1?1:0):''});
+ var ck=0;(window.__CHQ||[]).forEach(function(g,gi){g.i.forEach(function(it,ii){var k=ck++;C('C'+(gi+1)+'_Q'+(ii+1),vlab(A('تحدٍّ: ','Challenge: ')+A(it[0],it[1]),120),LB.map(function(x,i){return[i+1,x]}),function(q){if(!q.ch)return'';var v=Number(q.ch[3+k]);return v>=1&&v<=3?v:''})})});
+ var rows=order.map(function(s,i){return cols.map(function(c){return c.f(by[s],i)})});
+ return{cols:cols,names:cols.map(function(c){return c.n}),rows:rows,EQ:EQ}}
+function spssAllCsv(){
+ var d=allDS(),x=[d.names.join(',')].concat(d.rows.map(function(r){return r.map(function(c){return typeof c==='string'&&c!==''?'"'+c.replace(/"/g,'""')+'"':c}).join(',')})).join('\r\n');
+ dl('baseera-study-dataset.csv',new Blob(['﻿'+x],{type:'text/csv;charset=utf-8'}))}
+function spssAllSps(){
+ var d=allDS(),ar=isAr(),L=[],A=function(a,e){return ar?a:e};
+ L.push(A('* بصيرة: أوامر SPSS للدراسة كاملة (أُنشئت تلقائياً) - صف واحد لكل مشاركة.','* Baseera: SPSS syntax for the whole study (auto-generated) - one row per participant.'));
+ L.push(A('* الخطوات: 1) افتحي baseera-study-dataset.csv من File > Open > Data (Variable names at top = Yes، Delimiter = Comma، UTF-8).','* Steps: 1) Open baseera-study-dataset.csv via File > Open > Data (variable names at top = Yes, delimiter = comma, UTF-8).'));
+ L.push(A('* 2) افتحي هذا الملف من File > Open > Syntax ثم Run > All.','* 2) Open this file via File > Open > Syntax, then Run > All.'));L.push('.');
+ L.push('VARIABLE LABELS');d.cols.forEach(function(c,i){L.push((i?' /':' ')+c.n+' '+sq(c.l))});L.push(' .');
+ var wv=d.cols.filter(function(c){return c.v});
+ L.push('VALUE LABELS');wv.forEach(function(c,i){L.push((i?' /':' ')+c.n);c.v.forEach(function(p){L.push('  '+p[0]+' '+sq(p[1]))})});L.push(' .');
+ var num=['age','kids','gravida','para','abortions','living_children','menarche_age','cycle_days'];
+ var cat=d.names.filter(function(n){return num.indexOf(n)<0&&!/^(id|date|total|D\d)$/.test(n)&&!/^D\d_Q\d+$/.test(n)});
+ L.push('VARIABLE LEVEL '+cat.filter(function(n){return n!=='id'&&n!=='date'}).join(' ')+' (NOMINAL) .');L.push('EXECUTE .');
+ var T=function(a,e){L.push('');L.push('* '+A(a,e))};
+ T('الجدول 1: الخصائص الاجتماعية والديموغرافية','Table 1: Socio-demographic characteristics');
+ L.push('DESCRIPTIVES VARIABLES=age kids /STATISTICS=MEAN STDDEV MIN MAX .');
+ L.push('FREQUENCIES VARIABLES=edu res mar job prev dev net /ORDER=ANALYSIS .');
+ T('الجدول 2: التاريخ الإنجابي والنسائي','Table 2: Reproductive and gynecological history');
+ L.push('DESCRIPTIVES VARIABLES=gravida para abortions living_children menarche_age cycle_days /STATISTICS=MEAN STDDEV MIN MAX .');
+ L.push('FREQUENCIES VARIABLES=cycle_reg prev stop_side stop_wish stop_preg stop_access stop_husband stop_medical stop_other /ORDER=ANALYSIS .');
+ T('الجدول 3: فعالية المرشد (نسبة التوافق) - من اختارتها مقدّمة الخدمة فقط','Table 3: Effectiveness (concordance) - provider-chosen cases only');
+ L.push('FREQUENCIES VARIABLES=chosen_by .');L.push('USE ALL .');L.push('COMPUTE filter_$=(analysis_set = 1) .');L.push('FILTER BY filter_$ .');
+ L.push('FREQUENCIES VARIABLES=match_top1 conc_cat provider_fit /ORDER=ANALYSIS .');L.push('FILTER OFF .');L.push('USE ALL .');L.push('EXECUTE .');
+ T('الجدول 4: سهولة الاستخدام والرضا (متوسط ± انحراف)','Table 4: Usability and satisfaction (mean and SD)');
+ L.push('DESCRIPTIVES VARIABLES=D1_Q1 TO '+('D'+d.EQ.length+'_Q'+d.EQ[d.EQ.length-1].i.length)+' '+d.EQ.map(function(g,i){return'D'+(i+1)}).join(' ')+' total overall /STATISTICS=MEAN STDDEV .');
+ L.push('FREQUENCIES VARIABLES=overall /ORDER=ANALYSIS .');
+ L.push('RELIABILITY /VARIABLES=D1_Q1 TO '+('D'+d.EQ.length+'_Q'+d.EQ[d.EQ.length-1].i.length)+' /SCALE(\'ALL\') ALL /MODEL=ALPHA .');
+ T('الجدول 5: التحديات المدركة لاستخدام المنصة','Table 5: Perceived challenges of using the platform');
+ L.push('FREQUENCIES VARIABLES='+d.names.filter(function(n){return/^C\\d_Q\\d+$/.test(n)}).join(' ')+' /ORDER=ANALYSIS .');
+ dl('baseera-study-syntax-'+lg()+'.sps',new Blob(['﻿'+L.join('\r\n')],{type:'text/plain;charset=utf-8'}))}
 function openRes(){
  if(!window.RES)return;var m=LAST||calc();
  RES.open({sources:[{name:t('resUse'),get:function(){return usageDS(m)}},{name:t('resEv'),get:function(){return evalDS()}}]})}
-function effPost(e,c){if(!URL_||!e||(e.length!==5&&e.length!==7))return;post({type:'eff',lang:lg(),sid:sid,code:normCode(c),e:e})}
+function effPost(e,c){if(!URL_||!e||(e.length!==5&&e.length!==7&&e.length!==8))return;post({type:'eff',lang:lg(),sid:sid,code:normCode(c),e:e})}
 function codeCard(){if(!URL_)return;var ar=isAr(),h='<div class="card" id="bsrcode"><h3>'+(ar?'رمز المتابعة':'Follow-up code')+'</h3><p class="hint">'+(ar?'هذا الرمز عشوائي ولا يدل على هويتكِ. إن شاركتِ لاحقاً في «الاستبيان» من جهاز آخر أو بعد إغلاق الصفحة فاكتبيه هناك ليرتبط تقييمكِ بنتيجتكِ.':'This code is random and does not identify you. If you later take part in the “Survey” from another device or after closing the page, enter it there so your evaluation can be linked to your result.')+'</p><p style="font-size:1.7rem;font-weight:700;letter-spacing:.25em;direction:ltr;text-align:center;margin:6px 0">'+code+'</p></div>';var old=document.getElementById('bsrcode');if(old)old.remove();var app=document.getElementById('app');if(app)app.insertAdjacentHTML('beforeend',h)}
 function evalPost(a,d,o){var N=window.__EVN;if(!URL_||!a||a.length!==N||!d||d.length!==window.__DEM.length||!(o>=1&&o<=3)||a.some(function(v){return!(v>=1&&v<=3)}))return;post({type:'eval3',lang:lg(),sid:sid,d:d,a:a,o:o})}
 function init(){visit();chk()}
 window.addEventListener('load',init);window.addEventListener('hashchange',chk);
-return{results:results,evalPost:evalPost,effPost:effPost,codeCard:codeCard,code:function(){return code},canPost:function(){return!!URL_},sid:function(){return sid},bfPost:function(b,f){if(!URL_)return false;post({type:'bf',lang:lg(),sid:sid,b:b,f:f});return true},obsPost:function(o){if(!URL_)return false;post({type:'obs',lang:lg(),sid:sid,o:o});return true}};
+return{results:results,evalPost:evalPost,effPost:effPost,codeCard:codeCard,code:function(){return code},canPost:function(){return!!URL_},sid:function(){return sid},chPost:function(c){if(!URL_||!c||c.length!==12)return false;post({type:'ch',lang:lg(),sid:sid,c:c});return true},obsPost:function(o){if(!URL_)return false;post({type:'obs',lang:lg(),sid:sid,o:o});return true}};
 })();
 
 </script>
@@ -924,11 +1044,10 @@ function about(){
  $('#app').innerHTML=L('<div class="card"><h2>عن الموقع</h2><p>«')+esc(U.site_title_ar)+L('» أداة تعليمية صُممت كمشروع تخرج في قسم صحة المرأة والتوليد، لمساعدة السيدات على فهم وسائل تنظيم الأسرة المناسبة لحالتهن قبل زيارة الطبيب.</p>')+(TEAM?'<p>'+esc(TEAM)+'</p>':'')+L('<h3>المصادر العلمية</h3><ul><li><a href="https://www.cdc.gov/mmwr/volumes/73/rr/rr7304a1.htm" target="_blank" rel="noopener">CDC: U.S. Medical Eligibility Criteria for Contraceptive Use, 2024</a></li><li><a href="https://www.cdc.gov/mmwr/volumes/73/rr/rr7303a1.htm" target="_blank" rel="noopener">CDC: U.S. Selected Practice Recommendations for Contraceptive Use, 2024</a></li><li><a href="https://www.who.int/publications/i/item/9789240115583" target="_blank" rel="noopener">WHO: Medical eligibility criteria for contraceptive use, 6th edition, 2025</a></li><li><a href="https://www.who.int/publications/i/item/9789240115606" target="_blank" rel="noopener">WHO: Selected practice recommendations for contraceptive use, 4th edition, 2025</a></li><li>ACOG Committee Opinion No. 700: Methods for Estimating the Due Date (للحاسبة)</li></ul><p class="hint">اعتُمدت معايير الأهلية الطبية من CDC 2024 وقورنت بمنظمة الصحة العالمية 2025، وعند اختلافهما طُبّق الأشد حذراً. نسب الفعالية تقريبية للاستخدام المعتاد. المعلومات تعليمية ولا تغني عن استشارة الطبيب.</p><h3>كيف يعمل؟</h3><p>تجيبين عن نحو 19 سؤالاً بنظام الاختيار. يحوّل الموقع إجاباتك إلى حالات صحية، ثم يبحث عن تصنيف كل وسيلة لها في معايير MEC، ويستبعد الوسائل غير الآمنة، ويرتب الباقي حسب فعاليتها وما تفضلينه.</p><h3>حدود الأداة</h3><p>')+esc(U.disclaimer_ar)+L('</p><p>بعض قواعد الأداة ما زالت تحتاج مراجعة طبية متخصصة، ولم نتحقق من توفر كل الوسائل تجارياً في مصر.</p></div>')}
 function Z(a,e){return LANG==='en'?e:a}
 var EVQ=[
-{d:["سهولة الاستخدام","Ease of use"],i:[["كان استخدام الموقع سهلاً عليّ.","The website was easy for me to use."],["كانت أسئلة «مرشد الاختيار» واضحة ومفهومة.","The questions in the “Method Finder” were clear and understandable."],["وجدتُ ما أبحث عنه دون الحاجة إلى مساعدة أحد.","I found what I was looking for without needing anyone’s help."],["كان عدد الأسئلة مناسباً.","The number of questions was appropriate."]]},
-{d:["وضوح المحتوى والنتائج","Clarity of content and results"],i:[["كانت نتيجة الترشيح واضحة ومفهومة.","The recommendation result was clear and understandable."],["كانت لغة الموقع بسيطة وسهلة الفهم.","The language of the website was simple and easy to understand."],["ساعدتني الرسوم التوضيحية على فهم المعلومات.","The illustrations helped me understand the information."],["ساعدتني الملاحظات المكتوبة على فهم المعلومات.","The written notes helped me understand the information."],["فهمتُ سبب ترشيح كل وسيلة لي.","I understood why each method was recommended to me."]]},
+{d:["سهولة الاستخدام","Ease of use"],i:[["كان استخدام الموقع سهلاً عليّ.","The website was easy for me to use."],["كانت أسئلة «مرشد الاختيار» واضحة ومفهومة.","The questions in the “Method Finder” were clear and understandable."],["كان عدد الأسئلة مناسباً.","The number of questions was appropriate."]]},
+{d:["وضوح المحتوى والنتائج","Clarity of content and results"],i:[["ساعدتني الرسوم التوضيحية على فهم المعلومات.","The illustrations helped me understand the information."],["ساعدتني الملاحظات المكتوبة على فهم المعلومات.","The written notes helped me understand the information."],["فهمتُ سبب ترشيح كل وسيلة لي.","I understood why each method was recommended to me."]]},
 {d:["الفائدة","Usefulness"],i:[["كانت المعلومات عن وسائل تنظيم الأسرة مفيدة لي.","The information about family planning methods was useful to me."],["زاد الموقع من معرفتي بوسائل تنظيم الأسرة.","The website increased my knowledge of family planning methods."],["ساعدني الموقع على الاستعداد لمناقشة الأمر مع الطبيبة.","The website helped me prepare to discuss the matter with the doctor."],["منحني الموقع ثقة أكبر في اتخاذ القرار بشأن اختيار وسيلة مناسبة.","The website gave me more confidence in making a decision about choosing a suitable method."],["بدت لي الوسائل المرشَّحة مناسبة لحالتي.","The recommended methods seemed suitable for my situation."]]},
-{d:["الثقة والخصوصية","Trust and privacy"],i:[["أثق في المعلومات التي قدّمها الموقع.","I trust the information the website provided."],["شعرتُ أن خصوصيتي محفوظة أثناء استخدام الموقع.","I felt my privacy was protected while using the website."],["لم أشعر بالحرج من الأسئلة الصحية التي طُرحت عليّ.","I did not feel embarrassed by the health questions I was asked."]]},
-{d:["الأداء التقني والتصميم","Technical performance and design"],i:[["كان الموقع سريعاً في الفتح.","The website opened quickly."],["عمل الموقع جيداً على جهازي دون أعطال.","The website worked well on my device without problems."],["كان تصميم الموقع مريحاً للعين.","The website design was pleasant to look at."]]},
+{d:["الثقة والتصميم","Trust and design"],i:[["أثق في المعلومات التي قدّمها الموقع.","I trust the information the website provided."],["كان تصميم الموقع مريحاً للعين.","The website design was pleasant to look at."]]},
 {d:["الرضا ونية الاستخدام","Satisfaction and intention to use"],i:[["سأستخدم الموقع مرة أخرى عند الحاجة.","I will use the website again when needed."],["سأوصي صديقاتي وقريباتي باستخدام الموقع.","I will recommend the website to my friends and relatives."],["سأعود إلى الموقع قبل اتخاذ قرار بشأن وسيلة تنظيم الأسرة.","I will return to the website before making a decision about a family planning method."]]}];
 var MID19=['cu','lng','implant','dmpa','cic','pop','coc','patch','ring','condom_male','condom_female','diaphragm','spermicide','fab','lam','withdrawal','ec','tubal','vasectomy'];
 var DEM=[
@@ -942,20 +1061,24 @@ var DEM=[
 {k:"dev",q:["ما الجهاز الذي استخدمتِه في التقييم؟","Which device did you use for this evaluation?"],o:[["هاتف محمول","Mobile phone"],["حاسوب لوحي (تابلت)","Tablet"],["حاسوب مكتبي أو محمول","Desktop or laptop"]]},
 {k:"net",q:["ما مدى استخدامكِ لشبكة الإنترنت؟","How often do you use the internet?"],o:[["يومياً","Daily"],["عدة مرات في الأسبوع","Several times a week"],["نادراً","Rarely"]]}];
 var EVL={lab:[["لا أوافق","محايدة","أوافق"],["Disagree","Neutral","Agree"]],ovl:[["ضعيف","جيد","ممتاز"],["Poor","Good","Excellent"]]};
-window.__EVQ=EVQ;window.__DEM=DEM;window.__EVL=EVL;window.__MID=MID19;window.__EVN=23;
-var BFO={b:[['net','ضعف الاتصال بالإنترنت','Weak internet connection'],['lang','صعوبة فهم بعض الكلمات','Difficulty understanding some words'],['priv','القلق على الخصوصية','Privacy concerns'],['long','كثرة الأسئلة','Too many questions'],['hard','صعوبة استخدام الموقع','Difficulty using the website'],['trust','عدم الثقة في النتيجة','Low trust in the result'],['other','أخرى','Other'],['none','لا توجد معوّقات','No barriers']],f:[['ar','دعم اللغة العربية','Arabic language support'],['clear','وضوح المعلومات','Clarity of information'],['pics','الرسوم التوضيحية','Illustrations'],['notes','الملاحظات المكتوبة وأسباب الترشيح','Written notes and reasons for the recommendation'],['easy','سهولة الاستخدام','Ease of use'],['priv','الخصوصية','Privacy'],['fast','سرعة الموقع','Speed of the website'],['other','أخرى','Other'],['none','لا توجد ميسّرات','No facilitators']]};window.__BFO=BFO;
-function bfBox(name,l,o){return'<fieldset style="border:0;padding:0;margin:8px 0"><legend><b>'+esc(l)+'</b></legend>'+o.map(function(x){return'<label style="display:block;margin:4px 0"><input type="checkbox" name="'+name+'" value="'+x[0]+'"> '+esc(Z(x[1],x[2]))+'</label>'}).join('')+'</fieldset>'}
+window.__EVQ=EVQ;window.__DEM=DEM;window.__EVL=EVL;window.__MID=MID19;window.__EVN=16;
+var CHQ=[
+{d:["التحديات التقنية والوصول","Technical and access challenges"],i:[["كان اتصال الإنترنت غير مستقر أثناء استخدام الموقع.","The internet connection was unstable while using the website."],["كان الموقع بطيئاً أو يتوقف أحياناً.","The website was slow or sometimes froze."],["لم يعمل الموقع جيداً على جهازي.","The website did not work well on my device."]]},
+{d:["اللغة والفهم","Language and understanding"],i:[["وجدتُ بعض الكلمات صعبة الفهم.","I found some words difficult to understand."],["كانت بعض المعلومات غير واضحة لي.","Some of the information was unclear to me."],["كان من الصعب عليّ فهم نتيجة الترشيح.","It was difficult for me to understand the recommendation result."]]},
+{d:["الخصوصية والثقة","Privacy and trust"],i:[["قلقتُ على خصوصية بياناتي الصحية.","I was worried about the privacy of my health data."],["لم أثق في نتيجة الترشيح.","I did not trust the recommendation result."],["شعرتُ بالحرج من بعض الأسئلة.","I felt embarrassed by some of the questions."]]},
+{d:["المهارات الرقمية والمساندة","Digital skills and support"],i:[["احتجتُ إلى مساعدة من غيري لاستخدام الموقع.","I needed help from others to use the website."],["لم أجد من أسأله عندما واجهتُ مشكلة في الموقع.","I found no one to ask when I had a problem with the website."],["مهاراتي في استخدام الهاتف أو الإنترنت جعلت استخدام الموقع صعباً.","My skills in using the phone or the internet made using the website difficult."]]}];window.__CHQ=CHQ;
+function copt(name,labs){return'<div class="ev5">'+labs.map(function(t,k){return'<label><input type="radio" name="'+name+'" value="'+(k+1)+'"><span>'+esc(t)+'</span></label>'}).join('')+'</div>'}
 function evalView(){
  var n=0,tot=window.__EVN,LB=EVL.lab[LANG==='en'?1:0],OV=EVL.ovl[LANG==='en'?1:0];
  var FS='width:100%;margin:4px 0 10px;padding:8px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit';
  function opts(name,labs){return'<div class="ev5">'+labs.map(function(t,k){return'<label><input type="radio" name="'+name+'" value="'+(k+1)+'" required><span>'+esc(t)+'</span></label>'}).join('')+'</div>'}
- var h='<div class="card"><h2>'+Z('استبيان','Survey')+'</h2><p class="hint">'+Z('مشاركتكِ اختيارية، وتستغرق نحو 5 دقائق، وبدون أسماء. لا توجد إجابة صحيحة وأخرى خاطئة، ورأيكِ الصريح هو الأهم لتحسين الموقع. اختاري الإجابة التي تعبّر عن رأيكِ في كل عبارة.','Taking part is voluntary, takes about 5 minutes, and is anonymous. There are no right or wrong answers; your honest opinion is what matters. For each statement, choose the answer that matches your opinion.')+'</p><div id="evp" class="hint" aria-live="polite"></div><form id="evf"><h3>'+Z('عنكِ (اختياري)','About you (optional)')+'</h3>';
+ var h='<div class="card"><h2>'+Z('استبيان','Survey')+'</h2><p class="hint">'+Z('مشاركتكِ اختيارية، وتستغرق نحو 8 إلى 10 دقائق، وبدون أسماء. لا توجد إجابة صحيحة وأخرى خاطئة، ورأيكِ الصريح هو الأهم لتحسين الموقع. اختاري الإجابة التي تعبّر عن رأيكِ في كل عبارة.','Taking part is voluntary, takes about 8 to 10 minutes, and is anonymous. There are no right or wrong answers; your honest opinion is what matters. For each statement, choose the answer that matches your opinion.')+'</p><div id="evp" class="hint" aria-live="polite"></div><form id="evf"><h3>'+Z('عنكِ','About you')+'</h3>';
  DEM.forEach(function(q){
   var lbl='<label for="d_'+q.k+'"><b id="dl_'+q.k+'">'+esc(Z(q.q[0],q.q[1]))+'</b></label>';
   var ctl=q.t==='num'?'<input type="number" inputmode="numeric" id="d_'+q.k+'" min="'+q.min+'" max="'+q.max+'" style="'+FS+'">'
    :'<select id="d_'+q.k+'" style="'+FS+'"><option value="0">'+Z('اختاري الإجابة','Choose an answer')+'</option>'+q.o.map(function(o,i){return'<option value="'+(i+1)+'">'+esc(Z(o[0],o[1]))+'</option>'}).join('')+'</select>';
   h+=q.after?'<div id="dw_'+q.k+'" hidden>'+lbl+ctl+'</div>':lbl+ctl});
- h+='<h3 style="margin-top:18px">'+Z('أسئلة خاصة بالنساء (اختيارية)','Questions for women (optional)')+'</h3>';
+ h+='<h3 style="margin-top:18px">'+Z('أسئلة عن التاريخ الإنجابي','Reproductive history questions')+'</h3>';
  function onum(id,l,mn,mx){return'<label for="'+id+'"><b>'+esc(l)+'</b></label><input type="number" inputmode="numeric" id="'+id+'" min="'+mn+'" max="'+mx+'" style="'+FS+'">'}
  function osel(id,l,o){return'<label for="'+id+'"><b>'+esc(l)+'</b></label><select id="'+id+'" style="'+FS+'"><option value="">'+Z('اختاري الإجابة','Choose an answer')+'</option>'+o.map(function(x){return'<option value="'+x[0]+'">'+esc(Z(x[1],x[2]))+'</option>'}).join('')+'</select>'}
  h+=onum('ob_g',Z('كم مرة حملتِ؟','How many times have you been pregnant?'),0,20)+onum('ob_p',Z('كم مرة أنجبتِ؟','How many times have you given birth?'),0,20)+onum('ob_a',Z('كم مرة أُصبتِ بإجهاض (تلقائي أو مُجرى)؟','How many times have you had a miscarriage or an abortion?'),0,20)
@@ -966,18 +1089,25 @@ function evalView(){
  h+='<h3 style="margin-top:18px">'+Z('أسئلة عن وسيلتكِ (اختيارية)','About your method (optional)')+'</h3>';
  h+=osel('st_m',Z('ما الوسيلة التي بدأتِ استخدامها أو التي رُكِّبت لكِ مؤخراً؟','Which method did you start using, or have had fitted, recently?'),MID19.map(function(id,i){var m=KB0.methods.filter(function(x){return x.id===id})[0];return[i+1,m.ar,m.en]}))
   +osel('st_t',Z('ما الوسيلة التي ظهرت لكِ في المرتبة الأولى (الأنسب لكِ) على الموقع؟','Which method appeared first (“Best for you”) on the website?'),MID19.map(function(id,i){var m=KB0.methods.filter(function(x){return x.id===id})[0];return[i+1,m.ar,m.en]}).concat([[99,'لا أتذكّر','I do not remember']]))
+  +osel('st_r',Z('أين ظهرت الوسيلة التي رُكِّبت لكِ في نتيجة الموقع؟','Where did the method fitted for you appear in the website result?'),[[1,'هي الوسيلة الأولى (الأنسب لي)','It was the first method (“Best for you”)'],[2,'ظهرت ضمن الوسائل الثلاث الأولى لكنها ليست الأولى','It was within the top three but not first'],[3,'ظهرت في ترتيب أقل من الثلاث الأولى','It appeared lower than the top three'],[4,'ظهرت ضمن الوسائل غير المناسبة لحالتي','It appeared among the methods unsuitable for my case'],[5,'لا أتذكر','I do not remember']])+'<p class="hint" id="st_nr" hidden>'+Z('هذه الوسيلة (دائمة أو طوارئ) خارج ترتيب الموقع، فلا حاجة للإجابة عن السؤالين السابقين.','This method (permanent or emergency) is outside the website ranking, so the two previous questions are not needed.')+'</p>'
   +osel('st_w',Z('من اختار هذه الوسيلة؟','Who chose this method?'),[[1,'مقدّمة الخدمة الصحية بعد الفحص والشرح','The health care provider, after examination and counselling'],[2,'أنا بنفسي','I did, myself'],[3,'زوجي','My husband'],[4,'إحدى القريبات أو الصديقات','A relative or friend']])
-  +osel('st_s',Z('ما درجة رضاكِ عن الوسيلة؟','How satisfied are you with the method?'),[[1,'غير راضية','Not satisfied'],[2,'محايدة','Neutral'],[3,'راضية','Satisfied']])
-  +osel('st_c',Z('هل تنوين الاستمرار في استخدامها؟','Do you intend to keep using it?'),[[1,'نعم','Yes'],[2,'لا','No']])
-  +osel('st_p',Z('ما مكان تلقّي الخدمة؟','Where did you receive the service?'),[[1,'وحدة صحية حكومية','Government health unit'],[2,'مستشفى','Hospital'],[3,'عيادة خاصة','Private clinic']])
   +osel('st_n',Z('تقدير مقدّمة الخدمة الصحية: هل الوسيلة التي رُكِّبت مناسبة طبياً لحالة المرأة؟','Health care provider’s assessment: is the method fitted medically suitable for this woman?'),[[1,'نعم، مناسبة','Yes, suitable'],[2,'مناسبة مع بعض التحفظ','Suitable with some reservations'],[3,'غير مناسبة','Not suitable']])
   +'<div hidden><label for="st_k"><b>'+esc(Z('رمز المتابعة (يظهر في صفحة نتيجة المرشد). اتركيه كما هو إن أنهيتِ المرشد في هذه الجلسة، واكتبيه إن أنهيتِه قبل ذلك أو من جهاز آخر.','Follow-up code (shown on the guide result page). Leave it as it is if you finished the guide in this session; type it if you finished it earlier or on another device.'))+'</b></label><input type="text" id="st_k" maxlength="5" autocomplete="off" autocapitalize="characters" dir="ltr" value="'+esc(BSR.code())+'" style="'+FS+';letter-spacing:.2em;text-transform:uppercase"></div>';
  EVQ.forEach(function(g){h+='<h3 style="margin-top:18px">'+esc(Z(g.d[0],g.d[1]))+'</h3>';g.i.forEach(function(it){var i=n++;h+='<fieldset style="border:0;padding:0;margin:12px 0"><legend><b>'+(i+1)+'. '+esc(Z(it[0],it[1]))+'</b></legend>'+opts('e'+i,LB)+'</fieldset>'})});
- h+='<h3 style="margin-top:18px">'+Z('المعوّقات والميسّرات (اختيارية)','Barriers and facilitators (optional)')+'</h3>'+bfBox('bf_b',Z('ما المعوّقات التي واجهتِها أثناء استخدام الموقع؟ (يمكنكِ اختيار أكثر من إجابة)','What barriers did you face while using the website? (you may choose more than one)'),BFO.b)+bfBox('bf_f',Z('ما الذي سهّل عليكِ استخدام الموقع؟ (يمكنكِ اختيار أكثر من إجابة)','What made the website easier for you to use? (you may choose more than one)'),BFO.f);
+ h+='<h3 style="margin-top:18px">'+Z('التحديات التي واجهتِها (اختيارية)','Challenges you faced (optional)')+'</h3><p class="hint">'+Z('اختاري ما يعبّر عن تجربتكِ مع الموقع في كل عبارة.','For each statement, choose what matches your experience with the website.')+'</p>';
+ var cn=0;CHQ.forEach(function(g){h+='<h4 style="margin:14px 0 4px">'+esc(Z(g.d[0],g.d[1]))+'</h4>';g.i.forEach(function(it){var i=cn++;h+='<fieldset style="border:0;padding:0;margin:10px 0"><legend><b>'+(i+1)+'. '+esc(Z(it[0],it[1]))+'</b></legend>'+copt('c'+i,LB)+'</fieldset>'})});
  h+='<h3 style="margin-top:18px">'+Z('رأيكِ العام','Your overall opinion')+'</h3><fieldset style="border:0;padding:0;margin:12px 0"><legend><b>'+Z('كيف تقيّمين الموقع بوجه عام؟','How would you rate the website overall?')+'</b></legend>'+opts('eo',OV)+'</fieldset>'
   +'<p class="hint">'+Z('لا تكتبي اسمكِ أو أي بيانات شخصية في أي مكان.','Please do not write your name or any personal details anywhere.')+'</p><div class="row" style="margin-top:10px"><button type="submit">'+Z('حفظ تقييمي','Save my evaluation')+'</button></div></form><div id="evo"></div></div>';
  $('#app').innerHTML=h;
+ DEM.forEach(function(q){var el=$('#d_'+q.k);el.required=true;if(el.tagName==='SELECT')el.options[0].value=''});['ob_g','ob_p','ob_a','ob_r'].forEach(function(i){$('#'+i).required=true});
  DEM.forEach(function(q){if(!q.after)return;var p=$('#d_'+q.after);function sync(){var v=+p.value,w=$('#dw_'+q.k);w.hidden=!(v===1||v===2);if(v===1||v===2){$('#dl_'+q.k).textContent=Z((v===1?q.q:q.q2)[0],(v===1?q.q:q.q2)[1])}else $('#d_'+q.k).value='0'}p.addEventListener('change',sync);sync()});
+ (function(){var m=$('#st_m'),t=$('#st_t'),r=$('#st_r'),NR=['tubal','vasectomy','ec'].map(function(x){return MID19.indexOf(x)+1}).filter(function(x){return x>0});
+  function sync(w){var mv=+m.value,tv=+t.value,perm=NR.indexOf(mv)>=0;t.disabled=r.disabled=perm;$('#st_nr').hidden=!perm;
+   if(perm){t.value='';r.value='';return}
+   if(w==='r'){if(+r.value===1&&mv)t.value=String(mv);else if(+r.value>1&&+t.value===mv)t.value=''}
+   else if(w==='t'||w==='m'){if(mv&&+t.value===mv)r.value='1';else if(+r.value===1)r.value=''}
+   tv=+t.value;r.options[1].disabled=!!(tv&&tv!==99&&tv!==mv)}
+  m.addEventListener('change',function(){sync('m')});t.addEventListener('change',function(){sync('t')});r.addEventListener('change',function(){sync('r')});sync('')})();
  (function(){var p=$('#d_prev');function sw(){$('#ob_sw').hidden=(+p.value!==2)}p.addEventListener('change',sw);sw()})();
  function prog(){var d=0;for(var i=0;i<tot;i++)if(document.querySelector('input[name=e'+i+']:checked'))d++;if(document.querySelector('input[name=eo]:checked'))d++;$('#evp').textContent=Z('أجبتِ عن '+d+' من '+(tot+1)+' سؤالاً.','You have answered '+d+' of '+(tot+1)+' questions.')}
  $('#evf').addEventListener('change',prog);prog();
@@ -990,8 +1120,8 @@ function evalView(){
    var ik=DEM.map(function(q){return q.k}).indexOf('kids');
    var ob={g:nv('ob_g',0,20),p:nv('ob_p',0,20),ab:nv('ob_a',0,20),kids:(ik>=0&&d[ik]!=null&&d[ik]<=20)?d[ik]:null,reg:gv('ob_r'),menarche:nv('ob_m',8,20),cyc:nv('ob_c',15,60),stop:$('#ob_sw').hidden?[]:Array.prototype.map.call(document.querySelectorAll('input[name=ob_s]:checked'),function(x){return x.value})};
    if(Object.keys(ob).some(function(k){return k==='stop'?ob.stop.length:ob[k]!==null}))BSR.obsPost(ob)}catch(x){}
-  try{var ef=['st_m','st_w','st_s','st_c','st_p','st_t','st_n'].map(function(id){return+$('#'+id).value||null});if(ef.some(function(v){return v!==null}))BSR.effPost(ef,($('#st_k')||{}).value)}catch(x){}
-  try{var gb=function(n){var v=Array.prototype.map.call(document.querySelectorAll('input[name='+n+']:checked'),function(x){return x.value});return v.indexOf('none')>=0?['none']:v},bb=gb('bf_b'),bf2=gb('bf_f');if(bb.length||bf2.length)BSR.bfPost(bb,bf2)}catch(x){}
+  try{var ef=['st_m','st_w',null,null,null,'st_t','st_n','st_r'].map(function(id){return id?(+$('#'+id).value||null):null});if(ef.some(function(v){return v!==null}))BSR.effPost(ef,($('#st_k')||{}).value)}catch(x){}
+  try{var cv=[];for(var ci=0;ci<12;ci++){var cc=document.querySelector('input[name=c'+ci+']:checked');cv.push(cc?+cc.value:0)}if(cv.some(function(v){return v>0}))BSR.chPost(cv)}catch(x){}
   try{var l=JSON.parse(localStorage.getItem('fp_eval3')||'[]');l.push({a:a,d:d,o:o,t:Date.now()});localStorage.setItem('fp_eval3',JSON.stringify(l))}catch(x){}
   var k=0,lines=[];EVQ.forEach(function(g){lines.push(Z(g.d[0],g.d[1]));g.i.forEach(function(it){lines.push(' - '+Z(it[0],it[1])+' '+LB[a[k++]-1])})});
   var txt=Z('تقييم «','Evaluation of «')+U.site_title_ar+'»\n'+lines.join('\n')+'\n'+Z('التقييم العام: ','Overall: ')+OV[o-1];
